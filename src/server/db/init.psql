@@ -1,0 +1,170 @@
+--
+-- INSERTIONS
+--
+
+INSERT INTO states(name) 
+VALUES('created'),
+	('modified'),
+	('deleted'),
+	('waiting'),
+	('active'),
+	('banned');
+
+
+INSERT INTO scopes(name)
+VALUES('personal'), -- personal for user
+	('local'), -- current organization
+	('enclosing'), -- current organization and subordinate
+	('global'); -- all organizations and users
+
+
+INSERT INTO actions(name) 
+VALUES('create_org'),
+	('read_org'),
+	('update_org'),
+	('delete_org'),
+	-- users
+	('create_user'),
+	('read_user'),
+	('update_user'),
+	('delete_user'),
+	-- forms
+	('create_form'),
+	('update_form'),
+	('send_form'),
+	('delete_form'),
+	('share_form'),
+	('read_responses'),
+	('export_responses'),
+	-- response
+	('create_response'),
+	('read_response'),
+	('update_response'),
+	('delete_response'),
+	--roles
+	('create_role'),
+	('read_role'),
+	('update_role'),
+	('delete_role'),
+	-- receivers
+	('create_receiver'),
+	('read_receiver'),
+	('update_receiver'),
+	('delete_receiver'),
+	-- receiver_lists
+	('create_rec_list'),
+	('read_rec_list'),
+	('update_rec_list'),
+	('delete_rec_list');
+
+
+INSERT INTO table_ids(name)
+VALUES('organizations'),
+	('users'),
+	('forms'),
+	('responses'),
+	('roles'),
+	('receivers'),
+	('receiver_lists');
+
+
+-- create root role
+INSERT INTO roles(info) VALUES('{ "name": "root" }');
+
+-- define the actions with global scope for the root role
+CREATE OR REPLACE FUNCTION role_actions_insert_root_role() RETURNS VOID AS $$
+	DECLARE
+		role_id INTEGER;
+		action_id INTEGER;
+		scope_id INTEGER;
+	BEGIN
+		SELECT id INTO role_id FROM roles WHERE info::json->>'name' = 'root'; 
+		SELECT id INTO scope_id FROM scopes WHERE name = 'global';
+
+		FOR action_id IN
+			SELECT id FROM actions
+		LOOP
+			INSERT INTO role_actions(role_id, action_id, scope_id)
+			VALUES (role_id, action_id, scope_id);
+		END LOOP;
+	END
+$$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+    PERFORM role_actions_insert_root_role();
+END $$;
+
+
+-- CREATE EXTENSION pgcrypto;
+
+INSERT INTO receivers(email) VALUES('root@') RETURNING id;
+
+INSERT INTO users(
+	receiver_id,
+	role_id,
+	status_id,
+	login,
+	hash
+) VALUES (
+	(SELECT id FROM receivers WHERE email = 'root@'),
+	(SELECT id FROM roles WHERE info::json ->> 'name' = 'root'),
+	(SELECT id FROM states WHERE name = 'active'),
+	'root',
+	'superroot'
+	-- (SELECT crypt( 'superroot', gen_salt('bf', 8) ))
+);
+
+
+ALTER TABLE receiver_lists
+	ADD COLUMN author_id INTEGER NOT NULL REFERENCES users(id),
+	ADD COLUMN status_id INTEGER NOT NULL REFERENCES states(id);
+
+
+ALTER TABLE roles
+	ADD COLUMN org_id INTEGER REFERENCES organizations(id),
+	ADD COLUMN author_id INTEGER REFERENCES users(id);
+
+
+ALTER TABLE organizations
+	ADD COLUMN author_id INTEGER NOT NULL REFERENCES users(id);
+
+
+ALTER TABLE users
+	ADD COLUMN author_id INTEGER REFERENCES users(id);
+
+
+
+
+
+-- INSERT INTO receivers(email) VALUES('root@');
+
+-- INSERT INTO users(receiver_id, info, role_id, status_id, login, hash)
+-- VALUES((SELECT id FROM receivers WHERE email = 'root@'),
+-- 	'{}',
+-- 	(SELECT id FROM roles WHERE info::json->>'name' = 'root'),
+-- 	(SELECT id FROM states WHERE name = 'active'),
+-- 	'root',
+-- 	'password'
+-- );
+--
+-- TEST
+--
+
+-- INSERT INTO receivers(email) VALUES('edcom@'), ('eddep@'), ('imc@'), ('366@'), ('459@');
+-- INSERT INTO receiver_info(receiver_id, info) VALUES (1, '{ "name": "education committee" }'), (2, '{ "name": "education department" }'), (3, '{ "name": "imc" }'), (4, '{ "name": "366 school" }'), (5, '{ "name": "459 school" }');
+-- INSERT INTO organizations(info_id) VALUES(1), (2), (3), (4), (5);
+-- SELECT * FROM organizations JOIN receiver_info ON organizations.info_id = receiver_info.id JOIN receivers ON receiver_info.receiver_id = receivers.id;
+
+-- INSERT INTO org_links VALUES(2, 1);
+-- INSERT INTO org_links VALUES(4, 3);
+-- INSERT INTO org_links VALUES(3, 2);
+-- INSERT INTO org_links VALUES(5, 3);
+
+-- SELECT * FROM org_links;
+-- SELECT * FROM organizations 
+-- 	JOIN receiver_info ON organizations.info_id = receiver_info.id 
+-- 	JOIN receivers ON receiver_info.receiver_id = receivers.id 
+-- 	WHERE organizations.id IN (
+-- 		SELECT org_id FROM org_links 
+-- 		WHERE chief_org_id = 2 AND distance > 0
+-- 	); 

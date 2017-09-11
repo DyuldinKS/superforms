@@ -1,0 +1,100 @@
+CREATE OR REPLACE FUNCTION org_links_insert_link_to_itself() RETURNS TRIGGER AS $$
+	BEGIN
+		INSERT INTO org_links (org_id, chief_org_id, distance) 
+			VALUES (NEW.id, NEW.id, 0);
+		RETURN NULL;
+	END
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION org_links_insert_links() RETURNS TRIGGER AS $$
+	DECLARE
+		row RECORD;
+	BEGIN
+		RAISE NOTICE 'NEW: % | % | %', NEW.org_id, NEW.chief_org_id, NEW.distance;
+		IF (NEW.distance = 1) THEN
+			RAISE NOTICE 'NEW filtered: % | % | %', NEW.org_id, NEW.chief_org_id, NEW.distance;
+			FOR row IN
+				SELECT down.org_id, up.chief_org_id, 
+					down.distance + up.distance + 1 AS distance
+				FROM org_links up, org_links down
+				WHERE up.org_id = NEW.chief_org_id
+					AND down.chief_org_id = NEW.org_id
+					AND down.distance + up.distance > 0
+			LOOP
+				INSERT INTO org_links VALUES(row.org_id, row.chief_org_id, row.distance);
+				RAISE NOTICE 'new row: % | % | %', row.org_id, row.chief_org_id, row.distance;
+			END LOOP;
+		END IF;
+		RETURN NULL;
+	END
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION org_links_delete_orgs_subtree() RETURNS TRIGGER AS $org_links_bd$
+	DECLARE 
+		row RECORD;
+	BEGIN
+		RAISE NOTICE 'OLD: % | % | %', OLD.org_id, OLD.chief_org_id, OLD.distance;
+		IF (OLD.distance = 1) THEN 
+			RAISE NOTICE 'OLD filtered: % | % | %', OLD.org_id, OLD.chief_org_id, OLD.distance;
+			FOR row IN 
+				SELECT down.org_id, up.chief_org_id, down.distance + up.distance AS distance
+				FROM org_links down
+					JOIN org_links up
+					ON up.org_id = OLD.org_id
+						AND down.chief_org_id = OLD.org_id
+						AND up.distance > 0
+						AND up.distance + down.distance > 1
+			LOOP
+				RAISE NOTICE 'deleted row: % | % | %', row.org_id, row.chief_org_id, row.distance;
+				DELETE FROM org_links 
+				WHERE org_id = row.org_id AND chief_org_id = row.chief_org_id;
+			END LOOP;
+		END IF;
+		RETURN NULL;
+	END
+$org_links_bd$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER organizations_ai
+	AFTER INSERT ON organizations
+	FOR EACH ROW
+	EXECUTE PROCEDURE org_links_insert_link_to_itself();
+
+
+CREATE TRIGGER org_links_ai
+	AFTER INSERT ON org_links
+	FOR EACH ROW
+	EXECUTE PROCEDURE org_links_insert_links();
+
+
+CREATE TRIGGER org_links_ad
+	AFTER DELETE ON org_links
+	FOR EACH ROW
+	EXECUTE PROCEDURE org_links_delete_orgs_subtree();
+
+
+-- CREATE EXCEPTION tree_e_incorrect_operation
+--   ‘Incorrect operation’;
+
+
+-- CREATE TRIGGER org_links_au FOR org_links
+--   BEFORE UPDATE
+--   POSITION 32000
+-- AS
+-- BEGIN
+--   EXCEPTION tree_e_incorrect_operation;
+-- END;
+
+
+-- CREATE TRIGGER org_links_ad FOR org_links
+--   AFTER DELETE
+--   POSITION 32000
+-- AS
+-- BEGIN
+--   IF (OLD.distance = 0) THEN
+--   BEGIN
+--     DELETE FROM organizations WHERE id = OLD.org_id;
+--   END
+-- END;
