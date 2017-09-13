@@ -4,11 +4,6 @@ const pool = new Pool(config.pg);
 // const logger = require('../libs/logger');
 
 
-process.on('unhandledRejection', function(e) {
-	console.log(e.message, e.stack)
-})
-
-
 function query(queryString, data) {
 	console.log(queryString, data)
 	return pool.query(queryString, data)
@@ -79,4 +74,4 @@ function update(table, updatedFields, searchParams, operator='AND') {
 }
 
 
-export { query, queryAll, insert, update, };
+export { pool, query, queryAll, insert, update, };

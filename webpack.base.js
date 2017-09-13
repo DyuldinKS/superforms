@@ -4,6 +4,13 @@ const webpack = require('webpack');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+
+const definePlugin = new webpack.DefinePlugin({
+	"process.env": {
+		NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+	}
+});
+
 // The configuration for the client-side rendering
 const clientConfig = {
 	name: 'client-side rendering',
@@ -19,11 +26,7 @@ const clientConfig = {
 				filename: 'index.html',
 				template: './src/client/index.html'
 		}),
-		new webpack.DefinePlugin({
-			"process.env": {
-				NODE_ENV: JSON.stringify(process.env.NODE_ENV),
-			}
-		}), 
+		definePlugin, 
 	],
 	module: {
 		rules: [
@@ -75,6 +78,7 @@ const serverConfig = {
 		libraryTarget: "commonjs2"
 	},
 	externals: nodeModules,
+	plugins: [ definePlugin ],
 	module: {
 		rules: [
 			{

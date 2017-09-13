@@ -1,13 +1,11 @@
 import db from '../db/index.js';
 
+
 const orgs = {
 
 	create(req, res, next) {
 		// need to check email
-		// emailCheck(req.body.email)
-		// 	.then(res => console.log('Does the email exist? ', res))
-		// 	.catch(err => console.log('Err:', err))
-		// 	.then(() => { console.log('END of email checking: ' + Date.now()); })
+		
 		// create receiver. If exists - get its id
 		db.receivers.createIfNotExists(req.data)
 			// create organization

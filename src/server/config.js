@@ -1,21 +1,19 @@
 const config = {
 	port : 3000,
 	domain : 'http://5.17.125.174:40080/',
-	pg : {
+	pg: {
 		host: 'localhost',
 		user: 'postgres',
 		password: 'postgres',
 		database: 'new-sf'
 	},
-	session : {
-		secret : 'forCookieSign',
-		cookie: {
-			path : '/',
-			httpOnly : true,
-			maxAge : null
+	session: {
+		secret: 'absolute mystery',
+		cookie: { 
+			maxAge: null
 		},
-		resave : false,
-		saveUninitialized : false
+		resave: false,
+		saveUninitialized: false
 	},
 	nodemailer: {
 		from: 'Form Generator <g-f@mosk.spb.ru>',

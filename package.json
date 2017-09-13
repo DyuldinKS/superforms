@@ -4,7 +4,7 @@
   "description": "Node.js web-app that allows to generate forms, send them, collect responses and export data to XLSX.",
   "main": "index.js",
   "scripts": {
-    "init-db": "./createdb.sh",
+    "init-db": "chmod ugo+x createdb.sh && ./createdb.sh",
     "start": "cross-env NODE_ENV=development webpack",
     "watch": "cross-env NODE_ENV=development webpack --watch",
     "build": "cross-env NODE_ENV=production webpack",
@@ -38,13 +38,16 @@
   },
   "dependencies": {
     "body-parser": "^1.17.2",
+    "connect-pg-simple": "^4.2.1",
     "cookie-parser": "^1.4.3",
     "email-check": "^1.1.0",
+    "email-verify": "^0.1.1",
     "express": "^4.15.4",
-    "express-session": "^1.13.0",
+    "express-session": "^1.15.5",
     "nodemailer": "^4.1.0",
     "pg": "^7.3.0",
     "react": "^15.6.1",
-    "react-dom": "^15.6.1"
+    "react-dom": "^15.6.1",
+    "winston": "^2.3.1"
   }
 }
