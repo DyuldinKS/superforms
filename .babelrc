@@ -1,15 +1,15 @@
 {
-  "presets": [
-    [
-    	"es2015", 
-    	{
-	      "es2015": {
-	        "loose": true,
-	        "modules": false
-	      }
-	    }
-	  ],
-	  "react",
-	  "stage-2"
-  ]
+	"presets": [
+		[
+			"es2015", 
+			{
+				"es2015": {
+					"loose": true,
+					"modules": false
+				}
+			}
+		],
+		"react",
+		"stage-2"
+	]
 }
