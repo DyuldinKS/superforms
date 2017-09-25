@@ -2,14 +2,14 @@ import config from '../config';
 import * as db from './query.js';
 // import * as a from '../libs/extraMethods'
 
-const receivers = {
+const recipients = {
 
 	createIfNotExists({email}) {
 		return db.query(
 			`WITH s AS (
-			    SELECT id, email FROM receivers WHERE email = $1
+			    SELECT id, email FROM recipients WHERE email = $1
 			), i AS (
-			    INSERT INTO receivers(email)
+			    INSERT INTO recipients(email)
 			    SELECT $1
 			    WHERE NOT EXISTS (SELECT 1 FROM s)
 			    RETURNING *
@@ -33,7 +33,7 @@ const receivers = {
 				r.id AS receiver_id, r.email 
 			FROM users u 
 			FULL OUTER JOIN organizations o ON true
-			JOIN receivers r ON u.receiver_id = r.id OR o.receiver_id = r.id 
+			JOIN recipients r ON u.receiver_id = r.id OR o.receiver_id = r.id 
 			WHERE r.${column} IN (${paramsString});`,
 			values
 		)
@@ -48,7 +48,7 @@ const receivers = {
 	// read({email, id}) {
 	// 	const column = email? 'email' : 'id';
 	// 	return db.query(
-	// 		`SELECT * FROM receivers WHERE receivers.${column} = $1;`,
+	// 		`SELECT * FROM recipients WHERE recipients.${column} = $1;`,
 	// 		[ email || id ]
 	// 	);
 	// },
@@ -60,28 +60,33 @@ const receivers = {
 	// 		.join(', ');
 	// 	console.log(column, set, searchValues);
 	// 	return db.queryAll(
-	// 		`SELECT receivers.*, receiver_info.info, receiver_info.scope_id
-	// 		FROM receivers LEFT JOIN receiver_info
-	// 		ON receivers.id = receiver_info.receiver_id
-	// 		WHERE receivers.${column} IN (${set});`,
+	// 		`SELECT recipients.*, receiver_info.info, receiver_info.scope_id
+	// 		FROM recipients LEFT JOIN receiver_info
+	// 		ON recipients.id = receiver_info.receiver_id
+	// 		WHERE recipients.${column} IN (${set});`,
 	// 		searchValues
 	// 	);
 	// },
+	// { column: 'id',  values: [...] }
+	
+	readAll(searchParams) {
+		return db.select('recipients', searchParams);
+	},
 
 	// { column: 'id', value: '2701' }
 	update(searchValue, updatedFields) {
 		const column = typeof searchValue === 'string'? 'email' : 'id';
-		return db.update('receivers', updatedFields, searchValue);
+		return db.update('recipients', updatedFields, searchValue);
 	},
 
 	delete(id) {
 		const column = typeof id === 'string'? 'email' : 'id';
 		return db.query(
-			`DELETE FROM receivers WHERE ${column} = $1`,
+			`DELETE FROM recipients WHERE ${column} = $1`,
 			[ id ]
 		)
 	}
 
 }
 
-export default receivers;
+export default recipients;

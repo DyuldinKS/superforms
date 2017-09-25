@@ -1,19 +1,22 @@
 import config from '../config';
 import * as queries from './query.js';
-import receivers from './receivers.js';
+import recipients from './recipients.js';
 import organizations from './organizations';
 // import constTables from './constTables.js';
 import users from './users.js';
+import rights from './rights.js';
+import * as initialValues from './initialValues.js';
 // import forms from './forms.js';
 // import responses from './responses.js';
 
 
 // console.log(receivers, organizations)
 const db = {
-	receivers,
+	recipients,
 	organizations,
 	users,
-	// ...constTables,
+	...initialValues,
+	...queries
 }
 
 export default db;

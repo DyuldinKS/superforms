@@ -30,7 +30,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 router(app);
 
-// using arrow syntax
 app.use((req, res, next) => {
 	let err = new Error('Not Found');
 	err.status = 404;

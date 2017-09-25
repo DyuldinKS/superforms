@@ -2,7 +2,7 @@ import db from '../db/index.js';
 import * as smtpEmailVerifier from 'email-verify';
 
 
-const receivers = {
+const recipients = {
 
 	checkEmail(req, res, end) {
 		const email = req.body.email;
@@ -17,4 +17,4 @@ const receivers = {
 
 }
 
-export default receivers;
+export default recipients;

@@ -1,11 +1,11 @@
 const config = {
 	port : 3000,
-	domain : 'http://5.17.125.174:40080/',
+	domain : 'http://gf.imc-mosk.ru:40080/',
 	pg: {
 		host: 'localhost',
 		user: 'postgres',
 		password: 'postgres',
-		database: 'new-sf'
+		database: 'sf2'
 	},
 	session: {
 		secret: 'absolute mystery',
@@ -27,6 +27,12 @@ const config = {
 			},
 			tls:{ rejectUnauthorized: false	}
 		},
+	},
+	// first user with absolute rights
+	root: {
+		email: 'root@',
+		password: 'superroot',
+		roleInfo: { value: 'root', label: 'Администратор ИС' },
 	}
 
 	// hash : {
