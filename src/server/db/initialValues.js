@@ -1,43 +1,40 @@
 const recipientTypes = {
 	name: 'recipient_types',
-	columns: { 
-		type: ['unregistered', 'user', 'organization']
-	},
-}
+	column: 'type',
+	values: ['unregistered', 'user', 'organization'],
+};
 
 const states = {
 	name: 'states',
-	columns: {
-		value: [
-			'created',
-			'updated',
-			'deleted',
-			'waiting',
-			'active',
-			'banned',
-			'not_available'
-		]
-	}
-}
+	column: 'value',
+	values: [
+		'created',
+		'updated',
+		'deleted',
+		'waiting',
+		'active',
+		'blocked',
+		'notAvailable',
+	],
+};
 
 const shareableTables = {
 	name: 'shareable_tables',
-	columns: { 
-		name: [
-			'organizations',
-			'users',
-			'forms',
-			'responses',
-			'roles',
-			'receivers',
-			'receiver_lists'
-		]
-	},
-}
+	column: 'name',
+	values: [
+		'organizations',
+		'users',
+		'forms',
+		'responses',
+		'roles',
+		'recipients',
+		'recipients_lists',
+	],
+};
 
 
 export {
 	recipientTypes,
 	states,
-	shareableTables
-}
+	shareableTables,
+};

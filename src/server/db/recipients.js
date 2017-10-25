@@ -1,10 +1,9 @@
-import config from '../config';
-import * as db from './query.js';
+import db from './queries';
 // import * as a from '../libs/extraMethods'
 
 const recipients = {
 
-	createIfNotExists({email}) {
+	createIfNotExists({ email }) {
 		return db.query(
 			`WITH s AS (
 			    SELECT id, email FROM recipients WHERE email = $1
@@ -15,78 +14,61 @@ const recipients = {
 			    RETURNING *
 			)
 			SELECT * FROM i UNION ALL SELECT * FROM s;`,
-			[ email ]
-		)
+			[email],
+		);
 	},
 
-	getBy(column, values) {
-		let paramsString;
-		if(typeof values === 'object') {
-			paramsString = values.map( (v, i) => '$' + ++i ).join(',');
-		} else {
-			paramsString = '$1';
-			values = [values];
-		}
-		return db.queryAll(
-			`SELECT u.id AS user_id, 
-				o.id AS org_id, 
-				r.id AS receiver_id, r.email 
-			FROM users u 
-			FULL OUTER JOIN organizations o ON true
-			JOIN recipients r ON u.receiver_id = r.id OR o.receiver_id = r.id 
-			WHERE r.${column} IN (${paramsString});`,
-			values
-		)
+	get(email) {
+		return db.query(
+			`SELECT r.*, s.value AS status, t.type FROM recipients r
+			JOIN states s ON r.status_id = s.id
+			JOIN recipient_types t ON r.type_id = t.id
+			WHERE r.email = $1;`,
+			[email]
+		);
 	},
 
-	getRegistered({id, email, ids, emails}) {
-		return ids || id
-		? this.getBy('id', ids || id)
-		: this.getBy('email', emails || email)
+	insert({ email, status, type }) {
+		return db.query(
+			`INSERT INTO recipients(email, status_id, type_id)
+			VALUES($1, $2, $3)`,
+			[email, status, type]
+		);
 	},
 
-	// read({email, id}) {
-	// 	const column = email? 'email' : 'id';
-	// 	return db.query(
-	// 		`SELECT * FROM recipients WHERE recipients.${column} = $1;`,
-	// 		[ email || id ]
-	// 	);
-	// },
+	upsert({ email, status, type }) {
+		return db.query(
+			`WITH status AS (
+				SELECT * FROM states WHERE value = $2
+			), type AS (
+				SELECT * FROM recipient_types WHERE type = $3
+			)
+			INSERT INTO recipients(email, status_id, type_id)
+			VALUES(
+				$1,
+				(SELECT status.id FROM status),
+				(SELECT type.id FROM type)
+			)
+			ON CONFLICT (email) DO UPDATE
+			SET status_id = (SELECT id FROM status),
+				type_id = (SELECT id FROM type)
+			RETURNING *;`,
+			[email, status, type]
+		);
+	},
 
-	// readAll(searchValues) {
-	// 	const column = typeof searchValues[0] === 'string'? 'email' : 'id';
-	// 	const set = searchValues
-	// 		.map((col, i) => '$' + (i + 1))
-	// 		.join(', ');
-	// 	console.log(column, set, searchValues);
-	// 	return db.queryAll(
-	// 		`SELECT recipients.*, receiver_info.info, receiver_info.scope_id
-	// 		FROM recipients LEFT JOIN receiver_info
-	// 		ON recipients.id = receiver_info.receiver_id
-	// 		WHERE recipients.${column} IN (${set});`,
-	// 		searchValues
-	// 	);
-	// },
-	// { column: 'id',  values: [...] }
-	
-	readAll(searchParams) {
+	getAll(searchParams) {
 		return db.select('recipients', searchParams);
 	},
 
-	// { column: 'id', value: '2701' }
-	update(searchValue, updatedFields) {
-		const column = typeof searchValue === 'string'? 'email' : 'id';
-		return db.update('recipients', updatedFields, searchValue);
-	},
-
 	delete(id) {
-		const column = typeof id === 'string'? 'email' : 'id';
+		const column = typeof id === 'string' ? 'email' : 'id';
 		return db.query(
 			`DELETE FROM recipients WHERE ${column} = $1`,
-			[ id ]
-		)
-	}
+			[id]
+		);
+	},
 
-}
+};
 
 export default recipients;

@@ -30,7 +30,7 @@ readonly DB_SCHEMA="schema.psql"
 [ "$RESET_DB" == true ] && 
 	(dropdb -U $DB_USER $DB_NAME) && 
 	(echo \'$DB_NAME\' database has been deleted by \'$DB_USER\' user)
-	
-createdb -U $DB_USER $DB_NAME &&
-	(psql -U $DB_USER $DB_NAME < $INPUT_PATH$DB_SCHEMA) &&
+
+createdb -U $DB_USER $DB_NAME
+psql -U $DB_USER $DB_NAME < $INPUT_PATH$DB_SCHEMA &&
 	(echo \'$DB_NAME\' database has been successfully created by \'$DB_USER\' user)

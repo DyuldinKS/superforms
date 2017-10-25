@@ -5,23 +5,23 @@ const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 const devClientConfig = {
 	watchOptions: {
-		ignored: '/node_modules/'
+		ignored: '/node_modules/',
 	},
 	devtool: 'source-map',
-}
+};
 
 const prodClientConfig = {
 	plugins: [
 		new UglifyJSPlugin(),
-	]
-}
+	],
+};
 
 module.exports = [
 	merge(
 		base.clientConfig,
 		process.env.NODE_ENV === 'production'
-		? prodClientConfig
-		: devClientConfig
+			? prodClientConfig
+			: devClientConfig
 	),
-	base.serverConfig
+	base.serverConfig,
 ];

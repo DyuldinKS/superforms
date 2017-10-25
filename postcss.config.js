@@ -1,7 +1,7 @@
 module.exports = {
-    plugins: [
+	plugins: [
     		require('postcss-inline-svg'),
-        require('precss'),
-        require('autoprefixer')
-    ]
-}
+		require('precss'),
+		require('autoprefixer'),
+	],
+};
