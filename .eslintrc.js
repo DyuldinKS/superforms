@@ -2,7 +2,8 @@ module.exports = {
     "extends": "airbnb",
 		"env": {
 				"browser": true,
-				"node": true
+				"node": true,
+				"mocha": true,
 		},
 		"parserOptions": {
 			"ecmaVersion": 8,
@@ -11,8 +12,7 @@ module.exports = {
 			},
 			"sourceType": "module"
 		},
-		"plugins": [ "react" ],
-		// "plugins": [ "react" ],
+		"plugins": ["mocha"],
 		"rules": {
 			"comma-dangle": [
 				"error",
@@ -29,6 +29,7 @@ module.exports = {
 					}
 				}
 			],
+    	"mocha/no-exclusive-tests": "error",
 			"no-fallthrough": [
 				"error", 
 				{ "commentPattern": "/falls?\s?through/i" }

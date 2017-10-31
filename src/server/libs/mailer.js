@@ -35,7 +35,7 @@ const sendAll = (messages) => {
 	});
 };
 
-export {
+export default {
 	send,
 	sendAll,
 };

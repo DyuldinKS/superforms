@@ -49,6 +49,10 @@ const roles = {
 		);
 	},
 
+	getAll() {
+		return db.queryAll('SELECT * FROM roles;');
+	},
+
 	update({ role }) {
 		return role instanceof Role && role.isValid()
 			? db.queryAll(
@@ -102,23 +106,4 @@ const roles = {
 	},
 };
 
-
-const testRole = new Role({
-	id: 3,
-	label: 'test3',
-	info: { description: 'simple another role description' },
-	rights: {
-		forms: 22111,
-		users: 210,
-		responses: 11101,
-		recipients: 24323,
-	},
-});
-
-// roles.get({ id: 2 })
-roles.update({
-	role: testRole,
-	self: { id: 1 },
-})
-	.then(console.log)
-	.catch(console.log);
+export default roles;

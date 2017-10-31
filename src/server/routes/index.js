@@ -6,7 +6,7 @@ const router = (app) => {
 	app.get('/test', (req, res, next) => {
 		res.sendFile(path.resolve(__dirname, 'public/index.html'));
 	});
-	// app.get('/setpass/:token', users.sendPassChangingPage);
+	app.get('/setpass/:token', users.sendPassSettingPage);
 	// app.post('/setpass/:token', users.setPass);
 
 	app.post('/api/emails/check', recipients.checkEmail);

@@ -7,7 +7,7 @@ class Role {
 			throw new TypeError('Cannot convert undefined or null to role');
 		}
 		const {
-			id, label, info, rights, author_id, created,
+			id, label, info, rights, authorId, created,
 		} = role;
 		this.label = label;
 		this.info = info;
@@ -25,7 +25,7 @@ class Role {
 		}
 		if(id) this.id = id;
 		if(created) this.created = created;
-		if(author_id) this.authorId = author_id;
+		if(authorId) this.authorId = authorId;
 	}
 
 	isValid() {

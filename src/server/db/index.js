@@ -4,6 +4,7 @@ import queries from './queries';
 import recipients from './recipients';
 import organizations from './organizations';
 import users from './users';
+import roles from './roles';
 // import rights from './rights';
 // import forms from './forms.js';
 // import responses from './responses.js';
@@ -16,4 +17,5 @@ export default {
 	recipients,
 	organizations,
 	users,
+	roles,
 };

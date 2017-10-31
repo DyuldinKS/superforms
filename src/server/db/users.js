@@ -5,20 +5,7 @@ import { PgError } from '../libs/errors';
 const users = {
 	table: 'users',
 	// columns: ['id', 'org_id', 'info', 'role_id', 'hash', 'author_id'],
-
-	getPassSettingToken({ id }) {
-		const token = crypto.randomBytes(20).toString('hex');
-		return db.query(
-			`INSERT INTO user_tokens(user_id, token)
-			VALUES($1, $2)
-			ON CONFLICT(user_id) DO UPDATE
-			SET token = $2 WHERE user_tokens.user_id = $1
-			RETURNING *;`,
-			[id, token]
-		);
-	},
-
-	add({ user, self }) {
+	add(user, self) {
 		return db.query(
 			`WITH
 				rcp AS (
@@ -35,9 +22,20 @@ const users = {
 							SELECT id FROM states WHERE value='active'
 						)
 					RETURNING *
+				),
+				usr AS (
+					INSERT INTO users(id, org_id, info, role_id, author_id)
+					VALUES((SELECT id FROM rcp), $3, $4, $5, $6) RETURNING *
 				)
-			INSERT INTO users(id, org_id, info, role_id, author_id)
-			VALUES((SELECT id FROM rcp), $3, $4, $5, $6) RETURNING *;`,
+			SELECT
+				usr.id,
+				usr.info,
+				usr.org_id AS "orgId",
+				usr.role_id as "roleId",
+				usr.author_id as "authorId",
+				rcp.email,
+				rcp.status_id as "statusId"
+			FROM usr, rcp;`,
 			[
 				user.id,
 				user.email,
@@ -52,7 +50,14 @@ const users = {
 	get({ email, id }) {
 		const column = id ? 'id' : 'email';
 		return db.query(
-			`SELECT usr.*, rcp.email, rcp.status_id
+			`SELECT
+				usr.id,
+				usr.info,
+				usr.org_id as "orgId",
+				usr.role_id as "roleId",
+				usr.author_id as "authorId",
+				rcp.email,
+				rcp.status_id as "statusId"
 			FROM users usr
 			JOIN recipients rcp ON usr.id = rcp.id
 			WHERE rcp.${column} = $1;`,
@@ -60,27 +65,10 @@ const users = {
 		);
 	},
 
-	set({ id }, updated) {
-		const columns = Object.entries(updated)
-			.map(([col, val]) => ({ col, val }));
-		const where = { col: 'id', val: id };
-		return columns.length > 0
-			? db.update(this.table, columns, { where })
-			: Promise.reject(new PgError('invalid user updating'));
-	},
-
-	getByToken(token) {
-		return db.query('SELECT * FROM user_tokens WHERE token = $1;', [token]);
-	},
-
-	deleteToken(token) {
-		return db.query('DELETE FROM user_tokens WHERE token = $1;', [token]);
-	},
-
 	getFully({ email, id }) {
 		const column = id ? 'id' : 'email';
 		return db.query(
-			`SELECT usr.id, usr.info, usr.hash, usr.author_id, rcp.email,
+			`SELECT usr.id, usr.info, usr.author_id as "authorId", rcp.email,
 				(
 					SELECT json_build_object(
 						'id', states.id,
@@ -115,6 +103,48 @@ const users = {
 			WHERE rcp.${column} = $1;`,
 			[id || email]
 		);
+	},
+
+	set({ id }, updated) {
+		const columns = Object.entries(updated)
+			.map(([col, val]) => ({ col, val }));
+		const where = { col: 'id', val: id };
+		return columns.length > 0
+			? db.update(this.table, columns, { where })
+			: Promise.reject(new PgError('invalid user updating'));
+	},
+
+	remove({ id }) {
+		return db.query(
+			'DELETE FROM users WHERE id = $1 RETURNING *;',
+			[id],
+		);
+	},
+
+	genPassSettingToken() {
+		return crypto.randomBytes(20).toString('hex');
+	},
+
+	setToken({ id, token }) {
+		return db.query(
+			`INSERT INTO user_tokens(user_id, token)
+			VALUES($1, $2)
+			ON CONFLICT(user_id) DO UPDATE
+			SET token = $2 WHERE user_tokens.user_id = $1
+			RETURNING *;`,
+			[id, token]
+		);
+	},
+
+	getByToken(token) {
+		return db.query(
+			'SELECT user_id AS "userId", token FROM user_tokens WHERE token = $1;',
+			[token]
+		);
+	},
+
+	deleteToken(token) {
+		return db.query('DELETE FROM user_tokens WHERE token = $1;', [token]);
 	},
 };
 

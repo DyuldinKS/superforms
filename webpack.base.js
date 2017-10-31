@@ -1,6 +1,6 @@
-const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
+const nodeExternals = require('webpack-node-externals');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
@@ -32,8 +32,8 @@ const clientConfig = {
 		rules: [
 			{ // scripts
 				test: /\.js(x?)$/,
-				exclude: /node_modules/,
 				use: 'babel-loader',
+				exclude: /node_modules/,
 			},
 			{ // styles
 				test: /\.css$/,
@@ -53,11 +53,6 @@ const clientConfig = {
 	},
 };
 
-
-// externals for server side
-// const nodeModules = Object.keys(JSON.parse(fs.readFileSync('package.json')).dependencies);
-const nodeModules = fs.readdirSync('node_modules');
-
 // The configuration for the server-side rendering
 const serverConfig = {
 	name: 'server-side rendering',
@@ -71,20 +66,26 @@ const serverConfig = {
 		filename: 'server.js',
 		libraryTarget: 'commonjs2',
 	},
-	externals: nodeModules,
+	externals: [nodeExternals()],
 	plugins: [definePlugin],
 	module: {
 		rules: [
 			{
 				test: /\.js$/,
-				exclude: /(node_modules|bower_components)/,
 				use: [
 					'babel-loader',
 					'eslint-loader',
 				],
+				exclude: /node_modules/,
 			}, {
 				test: /\.json$/,
 				loader: 'json-loader',
+				exclude: /node_modules/,
+			},
+			{
+				test: /\.hbs$/,
+				loader: 'handlebars-loader',
+				exclude: /node_modules/,
 			},
 		],
 	},

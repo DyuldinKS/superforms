@@ -4,7 +4,9 @@ import { PgError } from '../libs/errors';
 export default {
 
 	queryAll(queryString, values) {
-		console.log(queryString, values);
+		if(process.env.NODE_ENV === 'development') {
+			console.log(queryString, values);
+		}
 		return pool.query(queryString, values)
 			.then(result => result.rows)
 			.catch((err) => {

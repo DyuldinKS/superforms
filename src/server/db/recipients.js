@@ -3,7 +3,7 @@ import db from './queries';
 
 const recipients = {
 
-	createIfNotExists({ email }) {
+	addIfNotStored({ email }) {
 		return db.query(
 			`WITH s AS (
 			    SELECT id, email FROM recipients WHERE email = $1
@@ -18,6 +18,24 @@ const recipients = {
 		);
 	},
 
+	add({ email, status, type = 'unregistered' }) {
+		return db.query(
+			`WITH status AS (
+				SELECT * FROM states WHERE value = $2
+			), type AS (
+				SELECT * FROM recipient_types WHERE type = $3
+			)
+			INSERT INTO recipients(email, status_id, type_id)
+			VALUES(
+				$1,
+				(SELECT status.id FROM status),
+				(SELECT type.id FROM type)
+			)
+			RETURNING *`,
+			[email, status, type]
+		);
+	},
+
 	get(email) {
 		return db.query(
 			`SELECT r.*, s.value AS status, t.type FROM recipients r
@@ -28,15 +46,11 @@ const recipients = {
 		);
 	},
 
-	insert({ email, status, type }) {
-		return db.query(
-			`INSERT INTO recipients(email, status_id, type_id)
-			VALUES($1, $2, $3)`,
-			[email, status, type]
-		);
+	getAll(searchParams) {
+		return db.select('recipients', searchParams);
 	},
 
-	upsert({ email, status, type }) {
+	set({ email, status, type }) {
 		return db.query(
 			`WITH status AS (
 				SELECT * FROM states WHERE value = $2
@@ -57,15 +71,11 @@ const recipients = {
 		);
 	},
 
-	getAll(searchParams) {
-		return db.select('recipients', searchParams);
-	},
-
-	delete(id) {
-		const column = typeof id === 'string' ? 'email' : 'id';
+	remove({ id, email }) {
+		const column = id ? 'id' : 'email';
 		return db.query(
 			`DELETE FROM recipients WHERE ${column} = $1`,
-			[id]
+			[id || email]
 		);
 	},
 
