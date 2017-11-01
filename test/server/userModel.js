@@ -7,8 +7,7 @@ chai.use(chaiAsPromised);
 const should = chai.should();
 const { expect } = chai;
 
-describe('db-user module', () => {
-	const self = { id: 1 };
+function runTests(firstUser) {
 	const userShortFormKeys = [
 		'id',
 		'email',
@@ -28,13 +27,12 @@ describe('db-user module', () => {
 		'authorId',
 	];
 
-
-	describe('#get()', () => {
+	describe('.get()', () => {
 		it('should return user with full info by recipient id', () => (
-			db.users.get(self)
+			db.users.get(firstUser)
 				.then((user) => {
 					expect(user).to.have.all.keys(userShortFormKeys);
-					expect(user).to.be.include(self);
+					expect(user).to.be.include(firstUser);
 				})
 		));
 
@@ -52,12 +50,12 @@ describe('db-user module', () => {
 	});
 
 
-	describe('#getFully()', () => {
+	describe('.getFully()', () => {
 		it('should return user with full info by recipient id', () => (
-			db.users.getFully(self)
+			db.users.getFully(firstUser)
 				.then((user) => {
 					expect(user).to.have.all.keys(userFullFormKeys);
-					expect(user).to.be.include(self);
+					expect(user).to.be.include(firstUser);
 				})
 		));
 
@@ -65,7 +63,7 @@ describe('db-user module', () => {
 			db.users.getFully({ email: 'root@' })
 				.then((user) => {
 					expect(user).to.have.all.keys(userFullFormKeys);
-					expect(user).to.be.include(self);
+					expect(user).to.be.include(firstUser);
 				})
 		));
 
@@ -86,7 +84,7 @@ describe('db-user module', () => {
 	});
 
 
-	describe('#add()', () => {
+	describe('.add()', () => {
 		const rcp = { email: 'test@mail.com', status: 'active' };
 		const user = { info: { test: true } };
 
@@ -100,7 +98,7 @@ describe('db-user module', () => {
 		));
 
 		it('should add a user into database', () => (
-			db.users.add(user, self)
+			db.users.add(user, firstUser)
 				.then((added) => {
 					expect(added).to.be.an('object');
 					return db.users.get(added).should.eventually.deep.equal(added);
@@ -110,9 +108,9 @@ describe('db-user module', () => {
 		// reject by not null violation constraint
 		const invalidParams = [
 			// nonexistent recipient id - email pair
-			[{ ...user, email: 'another@test.email' }, self],
-			[{ ...user, info: undefined }, self], // undefined required field
-			[{}, self], // empty user object
+			[{ ...user, email: 'another@test.email' }, firstUser],
+			[{ ...user, info: undefined }, firstUser], // undefined required field
+			[{}, firstUser], // empty user object
 			[user, { id: 0 }], // nonexistent author
 		];
 		invalidParams.forEach(([usr, author]) => {
@@ -132,12 +130,12 @@ describe('db-user module', () => {
 	});
 
 
-	describe('#setToken', () => {
+	describe('.setToken', () => {
 		it('should set user token', () => {
 			const token = db.users.genPassSettingToken();
-			const result = { user_id: self.id, token };
+			const result = { user_id: firstUser.id, token };
 
-			return db.users.setToken({ ...self, token })
+			return db.users.setToken({ ...firstUser, token })
 				.then(() => (
 					db.query('SELECT * FROM user_tokens WHERE token = $1', [token])
 						.should.become(result)
@@ -151,27 +149,27 @@ describe('db-user module', () => {
 		it('should overrite user token', () => {
 			const oldToken = db.users.genPassSettingToken();
 			const newToken = db.users.genPassSettingToken();
-			const result = { userId: self.id, token: newToken };
+			const result = { userId: firstUser.id, token: newToken };
 
-			return db.users.setToken({ ...self, token: oldToken })
-				.then(() => db.users.setToken({ ...self, token: newToken }))
+			return db.users.setToken({ ...firstUser, token: oldToken })
+				.then(() => db.users.setToken({ ...firstUser, token: newToken }))
 				.then(() => db.users.getByToken(newToken).should.become(result))
 				.then(() => (
 					db.queryAll(
 						'SELECT * FROM user_tokens WHERE user_id = $1;',
-						[self.id]
+						[firstUser.id]
 					).should.eventually.have.length(1)
 				));
 		});
 	});
 
 
-	describe('#getByToken()', () => {
+	describe('.getByToken()', () => {
 		it('should return user id-token pair by pass setting token', () => {
 			const token = db.users.genPassSettingToken();
-			const result = { userId: self.id, token };
+			const result = { userId: firstUser.id, token };
 
-			return db.users.setToken({ ...self, token })
+			return db.users.setToken({ ...firstUser, token })
 				.then(() => (
 					db.users.getByToken(token).should.become(result)
 				));
@@ -184,4 +182,11 @@ describe('db-user module', () => {
 			));
 		});
 	});
+}
+
+
+describe('db-user module', () => {
+	db.query('SELECT id FROM users WHERE id = (SELECT min(id) FROM users);')
+		.then(runTests)
+		.catch(console.log);
 });
