@@ -20,7 +20,10 @@ class Rights {
 		const scopes = Rights._scopes[mode];
 		if(scopes === undefined || typeof encoded !== 'number') return null;
 		const decoded = Array.from(Rights._unshiftWithZeros(encoded))
-			.map(n => scopes[n] || scopes[0]);
+			.map(n => scopes[n]);
+		if(decoded.length !== Rights._actions.length || decoded.includes(undefined)) {
+			return null;
+		}
 		return mode === 'short' ? decoded.join('') : decoded;
 	}
 
