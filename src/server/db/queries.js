@@ -72,7 +72,7 @@ export default {
 		const counter = { val: 1 };
 		return this.queryAll(
 			`SELECT * FROM ${table} ${this.genWhereConditions(search, counter)};`,
-			this.genWherePartValues(search)
+			this.genWherePartValues(search),
 		);
 	},
 
@@ -106,7 +106,7 @@ export default {
 		return this.query(
 			`INSERT INTO ${table}(${fields.join(', ')}) VALUES${valuesPart} 
 			${genOnConflictPart(onConflict)} RETURNING *;`,
-			valuesList
+			valuesList,
 		);
 	},
 
@@ -143,7 +143,7 @@ export default {
 		return this.query(
 			`UPDATE ${table} SET ${this.genUpdatePart(updated, counter)}
 			${this.genWhereConditions(search, counter)} RETURNING *;`,
-			values
+			values,
 		);
 	},
 
