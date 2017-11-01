@@ -33,7 +33,7 @@ const shareableTables = {
 };
 
 
-export {
+export default {
 	recipientTypes,
 	states,
 	shareableTables,

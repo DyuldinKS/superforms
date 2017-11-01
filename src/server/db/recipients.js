@@ -18,7 +18,7 @@ const recipients = {
 		);
 	},
 
-	add({ email, status, type = 'unregistered' }) {
+	add({ email, status = 'active', type = 'unregistered' }) {
 		return db.query(
 			`WITH status AS (
 				SELECT * FROM states WHERE value = $2
@@ -32,7 +32,7 @@ const recipients = {
 				(SELECT type.id FROM type)
 			)
 			RETURNING *`,
-			[email, status, type]
+			[email, status, type],
 		);
 	},
 
@@ -42,7 +42,7 @@ const recipients = {
 			JOIN states s ON r.status_id = s.id
 			JOIN recipient_types t ON r.type_id = t.id
 			WHERE r.email = $1;`,
-			[email]
+			[email],
 		);
 	},
 
@@ -67,7 +67,7 @@ const recipients = {
 			SET status_id = (SELECT id FROM status),
 				type_id = (SELECT id FROM type)
 			RETURNING *;`,
-			[email, status, type]
+			[email, status, type],
 		);
 	},
 
@@ -75,7 +75,7 @@ const recipients = {
 		const column = id ? 'id' : 'email';
 		return db.query(
 			`DELETE FROM recipients WHERE ${column} = $1`,
-			[id || email]
+			[id || email],
 		);
 	},
 

@@ -12,12 +12,8 @@ module.exports = {
 			},
 			"sourceType": "module"
 		},
-		"plugins": ["mocha"],
+		"plugins": ["react", "mocha"],
 		"rules": {
-			"comma-dangle": [
-				"error",
-				"always-multiline"
-			],
 			"indent": ["error", "tab"],
 			"keyword-spacing": [
 				"error",
