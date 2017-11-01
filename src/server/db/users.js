@@ -1,26 +1,23 @@
 import crypto from 'crypto';
 import db from './queries';
 import { PgError } from '../libs/errors';
+import constants from './constants';
 
 const users = {
 	table: 'users',
 	// columns: ['id', 'org_id', 'info', 'role_id', 'hash', 'author_id'],
 	add(user, self) {
+		const { states, recipientTypes: types } = constants;
 		return db.query(
 			`WITH
 				rcp AS (
 					UPDATE recipients
-					SET type_id = (
-						SELECT id FROM recipient_types WHERE type='user'
-					), status_id = (
-						SELECT id FROM states WHERE value='waiting'
-					)
-					WHERE id = $1 AND email = $2 
-						AND type_id = (
-							SELECT id FROM recipient_types WHERE type='unregistered'
-						) AND status_id = (
-							SELECT id FROM states WHERE value='active'
-						)
+					SET type_id = ${types.getId('user')},
+						status_id = ${states.getId(user.status || 'waiting')}
+					WHERE id = $1
+						AND email = $2 
+						AND type_id = ${types.getId('unregistered')}
+						AND status_id = ${states.getId('active')}
 					RETURNING *
 				),
 				usr AS (
@@ -43,7 +40,7 @@ const users = {
 				user.info,
 				user.roleId,
 				self.id,
-			]
+			],
 		);
 	},
 
@@ -61,7 +58,7 @@ const users = {
 			FROM users usr
 			JOIN recipients rcp ON usr.id = rcp.id
 			WHERE rcp.${column} = $1;`,
-			[id || email]
+			[id || email],
 		);
 	},
 
@@ -101,7 +98,7 @@ const users = {
 			FROM users usr
 			JOIN recipients rcp ON usr.id = rcp.id
 			WHERE rcp.${column} = $1;`,
-			[id || email]
+			[id || email],
 		);
 	},
 
@@ -132,14 +129,14 @@ const users = {
 			ON CONFLICT(user_id) DO UPDATE
 			SET token = $2 WHERE user_tokens.user_id = $1
 			RETURNING *;`,
-			[id, token]
+			[id, token],
 		);
 	},
 
 	getByToken(token) {
 		return db.query(
 			'SELECT user_id AS "userId", token FROM user_tokens WHERE token = $1;',
-			[token]
+			[token],
 		);
 	},
 

@@ -45,7 +45,7 @@ const roles = {
 			JOIN roles r ON rr.role_id = r.id
 			WHERE r.id = $1
 			GROUP by r.id;`,
-			[id]
+			[id],
 		);
 	},
 

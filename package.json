@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "createdb": "chmod ugo+x createdb.sh && ./createdb.sh",
+    "initdb": "babel-node --presets 'es2015,stage-2' ./src/server/db/init.js",
     "test": "./node_modules/.bin/mocha-webpack --growl",
     "start": "cross-env NODE_ENV=development webpack",
     "watch": "cross-env NODE_ENV=development webpack --watch",

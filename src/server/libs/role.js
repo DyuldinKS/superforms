@@ -1,21 +1,22 @@
-import { shareableTables } from '../db/initialValues';
+import constants from '../db/constants';
 import Rights from './rights';
 
 class Role {
-	constructor(role) {
-		if(typeof role !== 'object') {
-			throw new TypeError('Cannot convert undefined or null to role');
-		}
-		const {
-			id, label, info, rights, authorId, created,
-		} = role;
+	constructor({
+		id,
+		label,
+		info,
+		rights,
+		authorId,
+		created,
+	}) {
 		this.label = label;
 		this.info = info;
 		this.rights = {};
 		if(typeof rights === 'object') {
 			const categories = Object.keys(rights);
 			let categoryRights;
-			categories.filter(category => Role.shareable.includes(category))
+			categories.filter(category => (category in Role.shareable))
 				.forEach((category) => {
 					categoryRights = new Rights(rights[category]);
 					if(categoryRights.isValid()) {
@@ -55,6 +56,6 @@ class Role {
 	}
 }
 
-Role.shareable = shareableTables.values;
+Role.shareable = constants.shareableTables.values;
 
 export default Role;

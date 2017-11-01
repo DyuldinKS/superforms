@@ -1,27 +1,34 @@
+import fs from 'fs';
+import { promisify } from 'util';
 import config from '../config';
 import db from './queries';
-import { recipientTypes, states, shareableTables } from './initialValues';
 import Rights from '../libs/rights';
+import initialValues from './initialValues';
 import logger from '../libs/logger';
 
 
-function fillTable({ name, column, values }) {
-	return db.queryAll(`SELECT ${column} FROM ${name};`)
-		.then((dbRows) => {
-			if(dbRows.length === values.length) return null;
-			const newValues = values.filter(val => (
-				!dbRows.find(row => row[column] === val)
-			));
-			return newValues.length > 0
-				? db.query(
-					`INSERT INTO ${name}(${column})
-					SELECT * FROM json_array_elements_text($1);`,
-					[JSON.stringify(newValues)],
-				)
-				: null;
-		});
-}
+const toCamelCase = str => (
+	str.replace(/[-_]+(.)?/g, (match, g) => (g ? g.toUpperCase() : ''))
+);
 
+function fillTable({ name, column, values }) {
+	return db.query(
+		`WITH values_list AS (
+			SELECT * FROM json_array_elements_text($1)
+		), inserted AS (
+			INSERT INTO ${name}(${column})
+			SELECT value FROM values_list WHERE value NOT IN (
+				SELECT value from ${name}
+			)
+			RETURNING *
+		)
+		SELECT json_object_agg(${column}, id) AS "${toCamelCase(name)}"
+		FROM (
+			SELECT * FROM ${name} UNION ALL SELECT * FROM inserted
+		) AS selected;`,
+		[JSON.stringify(values)],
+	);
+}
 
 function createRoot({
 	email,
@@ -71,16 +78,24 @@ function createRoot({
 			role.label,
 			role.info,
 			new Rights('ggggg').toInt(),
-		]
+		],
 	);
 }
 
-// init db
+const fsWriteFile = promisify(fs.writeFile);
+
 function initdb() {
-	Promise.all([recipientTypes, states, shareableTables].map(fillTable))
+	const path = './src/server/db/storedConstValues.json';
+
+	Promise.all(Object.values(initialValues).map(fillTable))
+		.then(stored => fsWriteFile(
+			path,
+			JSON.stringify(Object.assign({}, ...stored)),
+		))
+		.then(() => logger.info(`all constant values were writted to '${path}'\n`))
 		.then(() => db.query('SELECT * FROM recipients;'))
 		.then(recs => (recs ? null : createRoot(config.root)))
 		.catch(logger.error);
 }
 
-export default initdb;
+initdb();
