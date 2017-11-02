@@ -281,46 +281,6 @@ describe('Rights-class', () => {
 				});
 			},
 		);
-		// correct.forEach((r) => {
-		// 	const rights = new Rights(r.number);
-		// 	Rights._actions.forEach((action, i) => {
-		// 		const intRes = +Rights._unshiftWithZeros(rights.toInt())
-		// 			.toString()[Rights._actions.indexOf(action)];
-		// 		const shortRes = rights.toString()[Rights._actions.indexOf(action)];
-		// 		const fullRes = rights.toArray()[Rights._actions.indexOf(action)];
-
-		// 		it(
-		// 			`should return scope of the '${action}' action in required form`,
-		// 			() => {
-		// 				expect(rights.getScope(action)).to.be.equal(intRes);
-		// 				expect(rights.getScope(action, 'short')).to.be.equal(shortRes);
-		// 				expect(rights.getScope(action, 'full')).to.be.equal(fullRes);
-		// 			},
-		// 		);
-
-		// 		it(
-		// 			`should return scope by the action-index (${i}) in required form`,
-		// 			() => {
-		// 				expect(rights.getScope(i)).to.be.equal(intRes);
-		// 				expect(rights.getScope(i, 'short')).to.be.equal(shortRes);
-		// 				expect(rights.getScope(i, 'full')).to.be.equal(fullRes);
-		// 			},
-		// 		);
-
-		// 		// mode should be in [undefined, 'int', 'short', 'full']
-		// 		it('should return null as invalid mode', () => {
-		// 			expect(rights.getScope(action, 'invMode')).to.be.equal(null);
-		// 			expect(rights.getScope(action, null)).to.be.equal(null);
-		// 		});
-		// 	});
-
-		// 	// mode should be in [undefined, 'int', 'short', 'full']
-		// 	it('should return null as invalid action', () => {
-		// 		expect(rights.getScope('invAction')).to.be.equal(null);
-		// 		expect(rights.getScope()).to.be.equal(null);
-		// 		expect(rights.getScope(undefined, undefined)).to.be.equal(null);
-		// 	});
-		// });
 
 		Object.entries({
 			incomplite,
