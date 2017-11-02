@@ -56,10 +56,11 @@ describe('Rights-class', () => {
 		['yo', 'local'],
 	];
 
+
 	describe('.isValid()', () => {
 		correct.forEach((r) => {
 			it(
-				'should be a valid Rights object created from correct rights string',
+				`should be a valid Rights object created from '${r.string}'`,
 				() => {
 					const rights = new Rights(r.string);
 					expect(rights.isValid()).to.be.equal(true);
@@ -69,7 +70,7 @@ describe('Rights-class', () => {
 
 		correct.forEach((r) => {
 			it(
-				'should be a valid Rights object created from correct rights array',
+				`should be a valid Rights object created from [${r.array}]`,
 				() => {
 					const rights = new Rights(r.array);
 					expect(rights.isValid()).to.be.equal(true);
@@ -77,36 +78,38 @@ describe('Rights-class', () => {
 			);
 		});
 
-		correctEncoded.forEach((item) => {
+		correctEncoded.forEach((enc) => {
 			it(
-				'should be a valid Rights object created from correct rights number',
+				`should be a valid Rights object created from ${enc}`,
 				() => {
-					const rights = new Rights(item);
+					const rights = new Rights(enc);
 					expect(rights.isValid()).to.be.equal(true);
 				},
 			);
 		});
 
-		[
-			...incomplite,
-			...invalid,
-			...overflowingEncoded,
-			...overflowingDecoded,
-		].forEach((item) => {
+
+		Object.entries({
+			incomplite,
+			invalid,
+			overflowingEncoded,
+			overflowingDecoded,
+		}).forEach(([category, rights]) => {
 			it(
-				'should create an invalid Rights object',
+				`should be an invalid Rights object created from all ${category} rights`,
 				() => {
-					const rights = new Rights(item);
-					rights.should.be.instanceOf(Rights);
-					expect(rights.isValid()).to.be.equal(false);
+					rights.forEach((r) => {
+						expect(new Rights(r).isValid()).to.be.equal(false);
+					});
 				},
 			);
 		});
 	});
 
+
 	describe('.toInt()', () => {
 		correct.forEach((r) => {
-			it(`should return required valid <number></number>: ${r.number}`, () => {
+			it(`should return required valid: ${r.number}`, () => {
 				new Rights(r.number).toInt().should.be.equal(r.number);
 				new Rights(r.string).toInt().should.be.equal(r.number);
 				new Rights(r.array).toInt().should.be.equal(r.number);
@@ -127,13 +130,22 @@ describe('Rights-class', () => {
 			});
 		});
 
-		[...overflowingDecoded, ...incomplite, ...invalid].forEach((rights) => {
-			const result = null;
-			it(`should return invalid: ${result}`, () => {
-				expect(new Rights(rights).toInt()).to.be.equal(result);
-			});
+		Object.entries({
+			incomplite,
+			invalid,
+			overflowingDecoded,
+		}).forEach(([category, rights]) => {
+			it(
+				`should return null for all ${category} rights`,
+				() => {
+					rights.forEach((r) => {
+						expect(new Rights(r).toInt()).to.be.equal(null);
+					});
+				},
+			);
 		});
 	});
+
 
 	describe('.toString()', () => {
 		correct.forEach((r) => {
@@ -147,25 +159,31 @@ describe('Rights-class', () => {
 			);
 		});
 
-		correctEncoded.forEach((enc) => {
-			it('should return valid rights string', () => {
-				expect(new Rights(enc).toString()).to.be.a('string')
-					.and.have.length(Rights._actions.length);
-			});
-		});
+		it(
+			'should return valid rights string for all correctEncoded rights',
+			() => {
+				correctEncoded.forEach((enc) => {
+					expect(new Rights(enc).toString()).to.be.a('string')
+						.and.have.length(Rights._actions.length);
+				});
+			},
+		);
 
-		[
-			...incomplite,
-			...invalid,
-			...overflowingEncoded,
-			...overflowingDecoded,
-		].forEach((rights) => {
-			const result = null;
-			it(`should return invalid: ${result}`, () => {
-				expect(new Rights(rights).toString()).to.be.equal(result);
+		Object.entries({
+			incomplite,
+			invalid,
+			overflowingEncoded,
+			overflowingDecoded,
+		}).forEach(([category, rights]) => {
+			it(`should return null for all ${category} rights`, () => {
+				rights.forEach((r) => {
+					const result = null;
+					expect(new Rights(r).toString()).to.be.equal(result);
+				});
 			});
 		});
 	});
+
 
 	describe('.toArray()', () => {
 		correct.forEach((r) => {
@@ -183,16 +201,146 @@ describe('Rights-class', () => {
 			});
 		});
 
-		[
-			...incomplite,
-			...invalid,
-			...overflowingEncoded,
-			...overflowingDecoded,
-		].forEach((rights) => {
-			const result = null;
-			it(`should return invalid: ${result}`, () => {
-				expect(new Rights(rights).toArray()).to.be.equal(result);
+		Object.entries({
+			incomplite,
+			invalid,
+			overflowingEncoded,
+			overflowingDecoded,
+		}).forEach(([category, rights]) => {
+			it(`should return null for all ${category} rights`, () => {
+				rights.forEach((r) => {
+					const result = null;
+					expect(new Rights(r).toArray()).to.be.equal(result);
+				});
 			});
+		});
+	});
+
+
+	describe('.getScope()', () => {
+		it(
+			'should return scope in required form for all correctEncoded rights',
+			() => {
+				correctEncoded.forEach((enc) => {
+					const rights = new Rights(enc);
+					Rights._actions.forEach((action) => {
+						expect(rights.getScope(action)).to.be.a('number');
+						expect(rights.getScope(action, 'int')).to.be.a('number');
+						expect(rights.getScope(action, 'short')).to.be.a('string')
+							.and.have.length(1);
+						expect(rights.getScope(action, 'full')).to.be.a('string');
+					});
+				});
+			},
+		);
+
+		it(
+			'should return required scope in integer form',
+			() => {
+				correct.forEach((r) => {
+					Rights._actions.forEach((action, i) => {
+						const rights = new Rights(r.number);
+						const intRes = +Rights._unshiftWithZeros(rights.toInt())
+							.toString()[Rights._actions.indexOf(action)];
+
+						expect(rights.getScope(action)).to.be.equal(intRes)
+							.and.to.be.equal(rights.getScope(action, 'int'))
+							.and.to.be.equal(rights.getScope(i))
+							.and.to.be.equal(rights.getScope(i, 'int'));
+					});
+				});
+			},
+		);
+
+		it(
+			'should return required scope in short form',
+			() => {
+				correct.forEach((r) => {
+					Rights._actions.forEach((action, i) => {
+						const rights = new Rights(r.number);
+						const shortRes = r.string[Rights._actions.indexOf(action)];
+
+						expect(rights.getScope(action, 'short')).to.be.equal(shortRes)
+							.and.to.be.equal(rights.getScope(i, 'short'));
+					});
+				});
+			},
+		);
+
+		it(
+			'should return required scope in full form',
+			() => {
+				correct.forEach((r) => {
+					Rights._actions.forEach((action, i) => {
+						const rights = new Rights(r.number);
+						const fullRes = r.array[Rights._actions.indexOf(action)];
+
+						expect(rights.getScope(action, 'full')).to.be.equal(fullRes)
+							.and.to.be.equal(rights.getScope(i, 'full'));
+					});
+				});
+			},
+		);
+		// correct.forEach((r) => {
+		// 	const rights = new Rights(r.number);
+		// 	Rights._actions.forEach((action, i) => {
+		// 		const intRes = +Rights._unshiftWithZeros(rights.toInt())
+		// 			.toString()[Rights._actions.indexOf(action)];
+		// 		const shortRes = rights.toString()[Rights._actions.indexOf(action)];
+		// 		const fullRes = rights.toArray()[Rights._actions.indexOf(action)];
+
+		// 		it(
+		// 			`should return scope of the '${action}' action in required form`,
+		// 			() => {
+		// 				expect(rights.getScope(action)).to.be.equal(intRes);
+		// 				expect(rights.getScope(action, 'short')).to.be.equal(shortRes);
+		// 				expect(rights.getScope(action, 'full')).to.be.equal(fullRes);
+		// 			},
+		// 		);
+
+		// 		it(
+		// 			`should return scope by the action-index (${i}) in required form`,
+		// 			() => {
+		// 				expect(rights.getScope(i)).to.be.equal(intRes);
+		// 				expect(rights.getScope(i, 'short')).to.be.equal(shortRes);
+		// 				expect(rights.getScope(i, 'full')).to.be.equal(fullRes);
+		// 			},
+		// 		);
+
+		// 		// mode should be in [undefined, 'int', 'short', 'full']
+		// 		it('should return null as invalid mode', () => {
+		// 			expect(rights.getScope(action, 'invMode')).to.be.equal(null);
+		// 			expect(rights.getScope(action, null)).to.be.equal(null);
+		// 		});
+		// 	});
+
+		// 	// mode should be in [undefined, 'int', 'short', 'full']
+		// 	it('should return null as invalid action', () => {
+		// 		expect(rights.getScope('invAction')).to.be.equal(null);
+		// 		expect(rights.getScope()).to.be.equal(null);
+		// 		expect(rights.getScope(undefined, undefined)).to.be.equal(null);
+		// 	});
+		// });
+
+		Object.entries({
+			incomplite,
+			invalid,
+			overflowingDecoded,
+		}).forEach(([category, rightsList]) => {
+			it(
+				`should return null for all ${category} rights`,
+				() => {
+					rightsList.forEach((r) => {
+						const result = null;
+						const rights = new Rights(r);
+						Rights._actions.forEach((action) => {
+							expect(rights.getScope(action)).to.be.equal(result);
+							expect(rights.getScope(action, 'int')).to.be.equal(result);
+							expect(rights.getScope(action, 'short')).to.be.equal(result);
+						});
+					});
+				},
+			);
 		});
 	});
 });

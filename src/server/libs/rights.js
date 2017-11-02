@@ -64,15 +64,18 @@ class Rights {
 	}
 
 	getScope(action, mode = 'int') {
-		if(!action) return null;
+		if((!action && action !== 0) || !Rights._isEncodedValid(this.encoded)) {
+			return null;
+		}
 		const i = action.length ? Rights._actions.indexOf(action) : action;
-		if(i === -1) return null;
-		const decoded = mode === 'int'
-			? Rights._unshiftWithZeros(this.encoded.toString())
-			: Rights._decode(this.encoded, mode);
-		return decoded
-			? Number.parseInt(decoded[i], 10) || decoded[i]
-			: null;
+		if(i < 0 || i >= Rights._actions.length) return null;
+		let decoded;
+		if(mode === 'int') {
+			decoded = Rights._unshiftWithZeros(this.encoded.toString());
+			return Number.parseInt(decoded[i], 10);
+		}
+		decoded = Rights._decode(this.encoded, mode);
+		return decoded ? decoded[i] : null;
 	}
 }
 
