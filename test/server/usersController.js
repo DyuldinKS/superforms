@@ -8,8 +8,8 @@ chai.use(chaiAsPromised);
 const should = chai.should();
 const { expect } = chai;
 
-describe('db-user module', () => {
-	describe('#add()', () => {
+describe('user controller', () => {
+	describe('.add()', () => {
 		it('should add user and send registration email', () => {
 
 		});

@@ -2,6 +2,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import db from '../../src/server/db';
 import { PgError } from '../../src/server/libs/errors';
+import logger from '../../src/server/libs/logger';
 
 chai.use(chaiAsPromised);
 const should = chai.should();
@@ -113,13 +114,13 @@ function runTests(firstUser) {
 			[{}, firstUser], // empty user object
 			[user, { id: 0 }], // nonexistent author
 		];
-		invalidParams.forEach(([usr, author]) => {
-			it('should return PgError as invalid input params', () => (
+		it('should return PgError for all invalid input params', () => {
+			invalidParams.forEach(([usr, author]) => {
 				db.users.add(usr, author)
 					.should.eventually.be.rejected.and.be.instanceOf(PgError)
 					// postgreSQL code for 'not null violation'
-					.and.include({ code: '23502' })
-			));
+					.and.include({ code: '23502' });
+			});
 		});
 
 		// remove added user, remove test recipient
@@ -157,7 +158,7 @@ function runTests(firstUser) {
 				.then(() => (
 					db.queryAll(
 						'SELECT * FROM user_tokens WHERE user_id = $1;',
-						[firstUser.id]
+						[firstUser.id],
 					).should.eventually.have.length(1)
 				));
 		});
@@ -175,18 +176,18 @@ function runTests(firstUser) {
 				));
 		});
 
-		const invalidParams = ['stringlikeAToken', 37, [], {}, () => 73];
-		invalidParams.forEach((param) => {
-			it('should return undefined as nonexistent token', () => (
-				db.users.getByToken(param).should.become(undefined)
-			));
+		it('should return undefined for all nonexistent token', () => {
+			const invalidParams = ['stringlikeAToken', 37, [], {}, () => 73];
+			invalidParams.forEach((param) => {
+				db.users.getByToken(param).should.become(undefined);
+			});
 		});
 	});
 }
 
 
-describe('db-user module', () => {
+describe('user model', () => {
 	db.query('SELECT id FROM users WHERE id = (SELECT min(id) FROM users);')
 		.then(runTests)
-		.catch(console.log);
+		.catch(logger.error);
 });
