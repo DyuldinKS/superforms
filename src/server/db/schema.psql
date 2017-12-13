@@ -1,10 +1,16 @@
 CREATE TABLE IF NOT EXISTS states (
 	id SERIAL PRIMARY KEY,
-	value VARCHAR(255) UNIQUE NOT NULL
+	name VARCHAR(255) UNIQUE NOT NULL
 );
 
 
-CREATE TABLE IF NOT EXISTS shareable_tables (
+CREATE TABLE IF NOT EXISTS roles (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(255) UNIQUE NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS tables (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(255) UNIQUE NOT NULL 
 );
@@ -12,7 +18,7 @@ CREATE TABLE IF NOT EXISTS shareable_tables (
 
 CREATE TABLE IF NOT EXISTS recipient_types (
 	id SERIAL PRIMARY KEY,
-	type VARCHAR(255) UNIQUE NOT NULL
+	name VARCHAR(255) UNIQUE NOT NULL
 );
 
 
@@ -51,28 +57,11 @@ CREATE TABLE IF NOT EXISTS recipient_tags (
 );
 
 
-CREATE TABLE IF NOT EXISTS roles (
-	id SERIAL PRIMARY KEY,
-	label VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS organizations (
+	id INTEGER PRIMARY KEY REFERENCES recipients(id),
 	info JSONB NOT NULL,
 	author_id INTEGER NOT NULL,
 	created TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
-
-CREATE TABLE IF NOT EXISTS role_rights (
-	table_id INTEGER NOT NULL REFERENCES shareable_tables(id),
-	role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
-	rights INTEGER NOT NULL,
-	PRIMARY KEY (table_id, role_id)
-);
-
-
-CREATE TABLE IF NOT EXISTS organizations (
-	id INTEGER PRIMARY KEY REFERENCES recipients(id),
-	label VARCHAR(255) NOT NULL,
-	info JSONB NOT NULL,
-	author_id INTEGER NOT NULL
 );
 
 
@@ -85,11 +74,12 @@ CREATE TABLE IF NOT EXISTS org_links (
 
 CREATE TABLE IF NOT EXISTS users (
 	id INTEGER PRIMARY KEY REFERENCES recipients(id),
-	org_id INTEGER REFERENCES organizations(id),
+	org_id INTEGER NOT NULL REFERENCES organizations(id),
 	info JSONB NOT NULL,
 	role_id INTEGER NOT NULL REFERENCES roles(id),
 	hash VARCHAR(255),
-	author_id INTEGER NOT NULL
+	author_id INTEGER NOT NULL,
+	created TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 
@@ -140,21 +130,16 @@ CREATE TABLE IF NOT EXISTS form_recipient_lists (
 );
 
 
-CREATE TABLE IF NOT EXISTS shared_objects (
-	table_id INTEGER NOT NULL REFERENCES shareable_tables(id),
+CREATE TABLE IF NOT EXISTS status_log (
+	table_id INTEGER NOT NULL REFERENCES tables(id),
 	object_id INTEGER NOT NULL,
-	rights INTEGER NOT NULL,
-	recipient_id INTEGER NOT NULL REFERENCES recipients(id),
-	shared TIMESTAMP WITH TIME ZONE,
-	author_id INTEGER NOT NULL REFERENCES users(id)
+	info JSONB NOT NULL,
+	author_id INTEGER NOT NULL REFERENCES users(id),
+	timestamp TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 
 ALTER TABLE recipient_lists ADD CONSTRAINT recipient_lists
-FOREIGN KEY (author_id) REFERENCES users(id);
-
-
-ALTER TABLE roles ADD CONSTRAINT roles_fk0 
 FOREIGN KEY (author_id) REFERENCES users(id);
 
 
@@ -181,7 +166,7 @@ CREATE OR REPLACE FUNCTION org_links_insert_links() RETURNS TRIGGER AS $$
 	BEGIN
 		RAISE NOTICE 'NEW: % | % | %', NEW.org_id, NEW.chief_org_id, NEW.distance;
 		IF (NEW.distance = 1) THEN
-			RAISE NOTICE 'NEW filtered: % | % | %', NEW.org_id, NEW.chief_org_id, NEW.distance;
+			RAISE NOTICE 'NEW with distance = 1: % | % | %', NEW.org_id, NEW.chief_org_id, NEW.distance;
 			FOR row IN
 				SELECT down.org_id, up.chief_org_id, 
 					down.distance + up.distance + 1 AS distance

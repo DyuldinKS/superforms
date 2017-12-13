@@ -22,10 +22,6 @@ const clientConfig = {
 	},
 	plugins: [
 		new CleanWebpackPlugin(['dist']),
-		new HtmlWebpackPlugin({
-			filename: 'index.html',
-			template: './src/client/index.html',
-		}),
 		definePlugin,
 	],
 	module: {
@@ -64,17 +60,20 @@ const serverConfig = {
 	output: {
 		path: path.resolve(__dirname, 'dist/'),
 		filename: 'server.js',
-		libraryTarget: 'commonjs2',
+		// libraryTarget: 'commonjs2',
 	},
 	externals: [nodeExternals()],
-	plugins: [definePlugin],
+	plugins: [
+		definePlugin,
+		new webpack.optimize.ModuleConcatenationPlugin(),
+	],
 	module: {
 		rules: [
 			{
 				test: /\.js$/,
 				use: [
 					'babel-loader',
-					'eslint-loader',
+					// 'eslint-loader',
 				],
 				exclude: /node_modules/,
 			}, {

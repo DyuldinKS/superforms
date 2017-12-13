@@ -1,26 +1,39 @@
 import { HttpError, PgError } from '../libs/errors';
+import hbs from '../templates/pages';
 import logger from '../libs/logger';
 
+
 function errorHandler(err, req, res, next) {
-	let error;
-	if(typeof err === 'number') {
-		error = new HttpError(err);
-	} else if(typeof err === 'object') {
-		logger.error(err);
-		switch (err.constructor) {
-		case HttpError: break;
-		case PgError: // fall through
-		default: {
-			error = new HttpError(500);
-		}
-		}
-	} else {
-		logger.log(err);
-		error = new HttpError(500);
+	let httpError;
+	// console.log(err);
+	logger.error(err);
+
+	switch (err.constructor) {
+	case HttpError: {
+		httpError = err;
+		break;
 	}
-	const { status, message } = error;
+	case Number: {
+		httpError = new HttpError(err);
+		break;
+	}
+	case PgError: {
+		httpError = err.toHttpError();
+		break;
+	}
+	default: {
+		httpError = new HttpError(500);
+	}
+	}
+
+	const { status, message } = httpError;
 	logger.warn({ status, message });
-	res.status(status).send(message);
+
+	if(req.url.includes('api')) {
+		res.status(status).send(message);
+	} else {
+		res.send(hbs.errorPage({ status, message }));
+	}
 }
 
 export default errorHandler;

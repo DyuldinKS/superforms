@@ -1,108 +1,109 @@
-import crypto from 'crypto';
 import db from './queries';
 import { PgError } from '../libs/errors';
-import constants from './constants';
+import staticTables from './staticTables.json';
+
+const { states, rcptTypes } = staticTables;
+
 
 const users = {
 	table: 'users',
 	// columns: ['id', 'org_id', 'info', 'role_id', 'hash', 'author_id'],
-	add(user, self) {
-		const { states, recipientTypes: types } = constants;
+	insert(user) {
 		return db.query(
 			`WITH
-				rcp AS (
+				rcpt_u AS (
 					UPDATE recipients
-					SET type_id = ${types.getId('user')},
-						status_id = ${states.getId(user.status || 'waiting')}
-					WHERE id = $1
-						AND email = $2 
-						AND type_id = ${types.getId('unregistered')}
-						AND status_id = ${states.getId('active')}
+					SET type_id = $2,
+						status_id = $3
+					WHERE email = $1
+						AND type_id = ${rcptTypes.ids.unregistered}
+						AND status_id = ${states.ids.active}
 					RETURNING *
 				),
-				usr AS (
+				rcpt_i AS (
+					INSERT INTO recipients(email, type_id, status_id)
+					SELECT $1, $2, $3
+					WHERE NOT EXISTS (SELECT 1 FROM (
+						SELECT * FROM recipients WHERE email = $1
+					) AS stored)
+					RETURNING *
+				),
+				rcpt AS (
+					SELECT * FROM rcpt_i UNION ALL SELECT * FROM rcpt_u
+				),
+				usr_i AS (
 					INSERT INTO users(id, org_id, info, role_id, author_id)
-					VALUES((SELECT id FROM rcp), $3, $4, $5, $6) RETURNING *
+					VALUES((SELECT id FROM rcpt), $4, $5, $6, $7) RETURNING *
 				)
-			SELECT
-				usr.id,
-				usr.info,
-				usr.org_id AS "orgId",
-				usr.role_id as "roleId",
-				usr.author_id as "authorId",
-				rcp.email,
-				rcp.status_id as "statusId"
-			FROM usr, rcp;`,
+			SELECT rcpt.id, usr_i.info, rcpt.email, usr_i.org_id,
+				usr_i.role_id, usr_i.author_id, rcpt.status_id
+			FROM usr_i JOIN rcpt ON usr_i.id = rcpt.id;`,
 			[
-				user.id,
 				user.email,
+				rcptTypes.ids.user,
+				states.ids.waiting,
 				user.orgId,
 				user.info,
 				user.roleId,
-				self.id,
+				user.authorId,
 			],
 		);
 	},
 
-	get({ email, id }) {
+
+	select({ email, id }) {
 		const column = id ? 'id' : 'email';
 		return db.query(
-			`SELECT
-				usr.id,
-				usr.info,
-				usr.org_id as "orgId",
-				usr.role_id as "roleId",
-				usr.author_id as "authorId",
-				rcp.email,
-				rcp.status_id as "statusId"
+			`SELECT usr.id, usr.info, rcpt.email,
+				usr.org_id, usr.role_id, usr.author_id, rcpt.status_id
 			FROM users usr
-			JOIN recipients rcp ON usr.id = rcp.id
-			WHERE rcp.${column} = $1;`,
+			JOIN recipients rcpt ON usr.id = rcpt.id
+			WHERE rcpt.${column} = $1;`,
 			[id || email],
 		);
 	},
 
-	getFully({ email, id }) {
+
+	selectFully({ email, id }) {
 		const column = id ? 'id' : 'email';
 		return db.query(
-			`SELECT usr.id, usr.info, usr.author_id as "authorId", rcp.email,
+			`SELECT usr.id, usr.info, usr.author_id, rcpt.email,
 				(
-					SELECT json_build_object(
-						'id', states.id,
-						'value', states.value
-					)
-					FROM states
-					WHERE states.id = rcp.status_id
+					SELECT json_build_object('id', states.id, 'name', states.name)
+					FROM states WHERE states.id = rcpt.status_id
 				) as status,
 				(
-					SELECT json_build_object(
-						'id', r.id,
-						'info', r.info,
-						'rights', json_object_agg(st.name, rr.rights)
-					) 
-					FROM role_rights rr
-					JOIN shareable_tables st ON rr.table_id = st.id
-					JOIN roles r ON rr.role_id = r.id
-					WHERE r.id = usr.role_id
-					GROUP by r.id
+					SELECT json_build_object('id', id, 'name', name)
+					FROM roles WHERE roles.id = usr.role_id
 				) AS role,
 				(
 					SELECT json_build_object(
 						'id', org.id,
-						'info', org.info,
-						'label', org.label
+						'info', org.info
 					) 
 					FROM organizations org
-					WHERE org.id = usr.id
-				) AS organization
+					WHERE org.id = usr.org_id
+				) AS org
 			FROM users usr
-			JOIN recipients rcp ON usr.id = rcp.id
-			WHERE rcp.${column} = $1;`,
+			JOIN recipients rcpt ON usr.id = rcpt.id
+			WHERE rcpt.${column} = $1;`,
 			[id || email],
 		);
 	},
 
-	set({ id }, updated) {
+
+	selectSecret({ email }) {
+		return db.query(
+			`SELECT usr.id, rcpt.email, usr.hash
+			FROM users usr
+			JOIN recipients rcpt ON usr.id = rcpt.id
+			WHERE rcpt.email = $1;`,
+			[email],
+		);
+	},
+
+
+	update({ id }, updated) {
 		const columns = Object.entries(updated)
 			.map(([col, val]) => ({ col, val }));
 		const where = { col: 'id', val: id };
@@ -111,16 +112,14 @@ const users = {
 			: Promise.reject(new PgError('invalid user updating'));
 	},
 
-	remove({ id }) {
+
+	delete({ id }) {
 		return db.query(
 			'DELETE FROM users WHERE id = $1 RETURNING *;',
 			[id],
 		);
 	},
 
-	genPassSettingToken() {
-		return crypto.randomBytes(20).toString('hex');
-	},
 
 	setToken({ id, token }) {
 		return db.query(
@@ -133,12 +132,17 @@ const users = {
 		);
 	},
 
-	getByToken(token) {
+
+	selectIdByToken(token) {
 		return db.query(
-			'SELECT user_id AS "userId", token FROM user_tokens WHERE token = $1;',
+			`SELECT rcpt.id, rcpt.email, tokens.token
+			FROM user_tokens tokens
+			JOIN recipients rcpt ON r.id = tokens.user_id
+			WHERE token = $1;`,
 			[token],
 		);
 	},
+
 
 	deleteToken(token) {
 		return db.query('DELETE FROM user_tokens WHERE token = $1;', [token]);

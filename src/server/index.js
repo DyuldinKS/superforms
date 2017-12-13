@@ -6,11 +6,14 @@ import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
 import pool from './db/pool';
 import config from './config';
+import loadModels from './middleware/loadModels';
 import router from './routes';
 import errorHandler from './middleware/errorHandler';
 import logger from './libs/logger';
 
 const app = express();
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -25,8 +28,7 @@ app.use(session({
 	}),
 }));
 
-app.use(express.static(path.join(__dirname, 'public')));
-
+app.use(loadModels);
 router(app);
 
 app.use(errorHandler);

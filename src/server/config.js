@@ -1,6 +1,6 @@
 export default {
 	port: 3000,
-	domain: 'your.domain',
+	get domain() { return `localhost:${this.port}`; },
 	pg: {
 		host: 'localhost',
 		user: 'postgres',
@@ -16,13 +16,13 @@ export default {
 		saveUninitialized: false,
 	},
 	nodemailer: {
-		from: 'Your Name <your@email.com>',
+		from: 'Your Name <your-email@domain.com>',
 		smtp: {
-			host: 'smtp.your@email.com',
+			host: 'smtp.domain.com',
 			port: 465,
 			secure: true,
 			auth: {
-				user: 'your@email.com',
+				user: 'your-email@domain.com',
 				pass: 'yourPass',
 			},
 			tls: { rejectUnauthorized: false },
@@ -31,13 +31,15 @@ export default {
 	bcrypt: {
 		saltRound: 10,
 	},
-	// first user with absolute rights
 	root: {
 		email: 'root@',
-		password: 'passForRoot',
-		role: {
-			label: 'System admin',
-			info: { description: 'user with absolute CRUD rights' },
+		password: 'justDoIt',
+		org: {
+			email: 'root@org',
+			info: {
+				label: '1984',
+				slogan: 'Big Brother is watching you',
+			},
 		},
 	},
 };

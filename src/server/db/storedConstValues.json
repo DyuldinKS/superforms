@@ -1,1 +1,0 @@
-{"recipientTypes":{"unregistered":1,"user":2,"organization":3},"states":{"created":1,"updated":2,"deleted":3,"waiting":4,"active":5,"blocked":6,"notAvailable":7},"shareableTables":{"organizations":1,"users":2,"forms":3,"responses":4,"roles":5,"recipients":6,"recipients_lists":7}}

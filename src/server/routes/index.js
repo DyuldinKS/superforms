@@ -1,16 +1,20 @@
-import path from 'path';
+import loadModels from '../middleware/loadModels';
+import sessions from './sessions';
 import recipients from './recipients';
 import users from './users';
+import hbs from '../templates/pages';
 
 const router = (app) => {
-	app.get('/test', (req, res, next) => {
-		res.sendFile(path.resolve(__dirname, 'public/index.html'));
+	app.get('/', (req, res, next) => {
+		res.send(hbs.mainPage());
 	});
-	app.get('/setpass/:token', users.sendPassSettingPage);
-	// app.post('/setpass/:token', users.setPass);
 
-	app.post('/api/emails/check', recipients.checkEmail);
-	app.post('/api/users/register', users.add);
+	sessions(app);
+	recipients(app);
+	users(app);
+
+	// app.post('/api/emails/check', recipients.checkEmail);
+	// app.post('/api/users/register', users.add);
 	// app.get('/admin', sendAdminPage())
 	// app.post('/api/orgs/create', orgs.create);
 	// app.get('/api/orgs/:id', orgs.getOne)

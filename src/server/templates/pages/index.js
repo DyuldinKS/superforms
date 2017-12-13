@@ -1,5 +1,9 @@
-import passSettingPage from './passSetting.hbs';
+import mainPage from './main.hbs';
+import passRecoveryPage from './passRecovery.hbs';
+import errorPage from './error.hbs';
 
 export default {
-	passSettingPage,
+	mainPage,
+	passRecoveryPage,
+	errorPage,
 };
