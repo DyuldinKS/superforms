@@ -1,7 +1,10 @@
 import * as emailVerify from 'email-verify';
 import AbstractModel from './AbstractModel';
 import db from '../db/index';
-import config from '../config';
+// import config from '../config';
+// import staticTables from '../db/staticTables.json';
+
+// const { states, rcptTypes } = staticTables;
 // import AbstractModel from './abstractModel';
 // import mailer from '../libs/mailer';
 
@@ -10,14 +13,20 @@ class Recipient extends AbstractModel {
 	// ***************** STATIC METHODS ***************** //
 
 	static find({ id, email }) {
-		return db.recipients.select({
-			id: typeof id === 'string' ? Number.parseInt(id, 10) : id,
-			email,
-		})
+		const column = id ? 'id' : 'email';
+		return db.query(
+			`SELECT * FROM recipients rcp
+			WHERE rcp.${column} = $1`,
+			[id || email],
+		)
 			.then(rcp => (rcp ? new Recipient(rcp) : null));
 	}
 
-	// ***************** INSTANCE METHODS ***************** //
+
+	static findById(id) {
+		return Recipient.find({ id });
+	}
+
 
 	static verify(email) {
 		return new Promise((resolve, reject) => {
@@ -28,48 +37,72 @@ class Recipient extends AbstractModel {
 	}
 
 
-	isUnregistered() {
-		return this.type === 'unregistered';
-	}
+	// ***************** INSTANCE METHODS ***************** //
+
+	// isUnregistered() {
+	// 	return this.type === 'unregistered';
+	// }
 
 
-	isActive() {
-		return this.status === 'active';
-	}
+	// isActive() {
+	// 	return this.status === 'active';
+	// }
 
 
-	isBlocked() {
-		return this.status === 'blocked';
-	}
+	// isBlocked() {
+	// 	return this.status === 'blocked';
+	// }
 
 
-	testForRegistration() {
-		if(!this.isUnregistered()) {
-			throw new Error('Email is already used');
-		}
-		if(!this.isBlocked()) {
-			throw new Error('Email is blacklisted');
-		}
-		return this;
-	}
+	// testForRegistration() {
+	// 	if(!this.isUnregistered()) {
+	// 		throw new Error('Email is already used');
+	// 	}
+	// 	if(!this.isBlocked()) {
+	// 		throw new Error('Email is blacklisted');
+	// 	}
+	// 	return this;
+	// }
 
 
 	save() {
-		const { email } = this;
-		return db.recipients.insert({ email })
+		return db.query(
+			'INSERT INTO recipients(email) VALUES($1) RETURNING *;',
+			[this.email],
+		)
 			.then(saved => this.assign(saved));
 	}
 
 
+	saveIfNotExists() {
+		return db.query(
+			'SELECT * FROM get_or_create_rcpt($1)',
+			[this.email],
+		)
+			.then(rcpt => this.assign(rcpt));
+	}
+
+
 	update(props) {
-		console.log(props, super.convertToSchema(props))
 		return db.createQuery()
 			.update(this.tableName)
-			.set(super.convertToSchema(props))
+			.set(super.convertToPgSchema(props))
 			.where({ id: this.id })
 			.returning()
 			.run()
-			.then(updated => this.assign(updated));
+			.then(updated => this.assign(updated[0]));
+	}
+
+
+	toJSON() {
+		const { info } = this;
+		const unpacked = typeof info === 'object'
+			? { ...info, ...this }
+			: { ...this };
+		delete unpacked.info;
+		delete unpacked.type;
+		delete unpacked.updated;
+		return unpacked;
 	}
 }
 
@@ -81,11 +114,12 @@ Recipient.prototype.props = new Set([
 	'email',
 	'updated',
 	// ids
-	'typeId',
-	'statusId',
+	// 'typeId',
+	// 'statusId',
 	// related objects
 	'type',
-	'status',
+	// 'status'
+	'active',
 ]);
 
 

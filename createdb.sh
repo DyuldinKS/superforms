@@ -5,7 +5,7 @@ RESET_DB=false
 
 
 usage() { 
-	echo "Usage: $0 [-u <user>] [-r]" 1>&2;
+	echo "Usage: $0 [-u <user>]" 1>&2;
 	exit 1;
 }
 
@@ -13,7 +13,6 @@ usage() {
 while getopts 'u:r' flag; do
   case "${flag}" in
     u) DB_USER=${OPTARG:-postgres} ;;
-    r) RESET_DB=true ;;
     *) error "Unexpected option ${flag}."; usage ;;
   esac
 done
@@ -24,13 +23,24 @@ shift $(($OPTIND - 1))
 readonly CWD=$(pwd)
 readonly DB_NAME=${1:-sf2}
 readonly INPUT_PATH="$CWD/src/server/db/"
-readonly DB_SCHEMA="schema.psql"
+readonly INPUT_FILES=(
+	'schema.psql'
+	'recipients.psql'
+	'common.psql'
+	'users.psql'
+	'orgs.psql'
+)
 
 
-[ "$RESET_DB" == true ] && 
-	(dropdb -U $DB_USER $DB_NAME) && 
-	(echo \'$DB_NAME\' database has been deleted by \'$DB_USER\' user)
+function init_db {
+	for INIT_FILE_NAME in "$@"
+	do
+		echo \'$INIT_FILE_NAME\' is loading
+		psql $DB_NAME < $INPUT_PATH$INIT_FILE_NAME
+	done
+	echo \'$DB_NAME\' database has successfully initialized
+}
+
 
 createdb -U $DB_USER $DB_NAME
-psql -U $DB_USER $DB_NAME < $INPUT_PATH$DB_SCHEMA &&
-	(echo \'$DB_NAME\' database has been successfully created by \'$DB_USER\' user)
+init_db ${INPUT_FILES[@]}

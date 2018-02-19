@@ -13,12 +13,13 @@ function fillTable({
 	values,
 }) {
 	return db.query(
-		`WITH values_list AS (
-			SELECT * FROM json_array_elements_text($1)
-		), 
-		inserted AS (
+		`WITH inserted AS (
 			INSERT INTO ${name}(${column})
-			SELECT value FROM values_list WHERE value NOT IN (
+			SELECT value
+			FROM (
+				SELECT json_array_elements_text($1) AS value
+			) AS default_values
+			WHERE value NOT IN (
 				SELECT ${column} FROM ${name}
 			)
 			RETURNING *
@@ -47,41 +48,39 @@ function createRootWithOrg({
 }) {
 	return bcrypt.hash(password, config.bcrypt.saltRound)
 		.then(hash => db.query(
-			`WITH rcp_user_i AS (
-				INSERT INTO recipients(email, type_id, status_id)
+			`WITH rcpt_user_i AS (
+				INSERT INTO recipients(email, type_id)
 				VALUES(
 					$1,
-					(SELECT id FROM recipient_types WHERE name='user'),
-					(SELECT id FROM states WHERE name='active')
+					(SELECT id FROM recipient_types WHERE name='user')
 				)
 				RETURNING id
 			),
-			rcp_org_i AS (
-				INSERT INTO recipients(email, type_id, status_id)
+			rcpt_org_i AS (
+				INSERT INTO recipients(email, type_id)
 				VALUES(
 					$2,
-					(SELECT id FROM recipient_types WHERE name='organization'),
-					(SELECT id FROM states WHERE name='active')
+					(SELECT id FROM recipient_types WHERE name='org')
 				)
 				RETURNING id
 			),
 			org_i AS (
 				INSERT INTO organizations(id, info, author_id)
 				VALUES(
-					(SELECT id FROM rcp_org_i),
+					(SELECT id FROM rcpt_org_i),
 					$3,
-					(SELECT id FROM rcp_user_i)
+					(SELECT id FROM rcpt_user_i)
 				)
 				RETURNING id
 			)
 			INSERT INTO users(id, org_id, info, role_id, hash, author_id)
 			VALUES(
-				(SELECT id FROM rcp_user_i),
-				(SELECT id FROM rcp_org_i),
+				(SELECT id FROM rcpt_user_i),
+				(SELECT id FROM rcpt_org_i),
 				$4,
 				(SELECT id FROM roles WHERE name = 'root'),
 				$5,
-				(SELECT id FROM rcp_user_i)
+				(SELECT id FROM rcpt_user_i)
 			)
 			RETURNING *;`,
 			[
@@ -101,7 +100,7 @@ const rcptTypes = {
 	name: 'recipient_types',
 	label: 'rcptTypes',
 	column: 'name',
-	values: ['unregistered', 'user', 'organization'],
+	values: ['unregistered', 'user', 'org'],
 };
 
 const states = {
@@ -128,7 +127,7 @@ const tables = {
 		'forms',
 		'responses',
 		'roles',
-		'rcptLists',
+		'rcpttLists',
 	],
 };
 

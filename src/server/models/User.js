@@ -3,21 +3,41 @@ import crypto from 'crypto';
 import config from '../config';
 import db from '../db/index';
 import Recipient from './Recipient';
-import { ModelError } from '../libs/errors';
+import staticTables from '../db/staticTables.json';
+import { HttpError, SmtpError, PgError } from '../libs/errors';
+
+const { states, rcptTypes, roles } = staticTables;
 
 
 class User extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
-	static find(userData, mode = 'short') {
-		return Promise.resolve()
-			.then(() => {
-				switch (mode) {
-				case 'full': return db.users.selectFully(userData);
-				case 'secret': return db.users.selectSecret(userData);
-				default: return db.users.select(userData);
-				}
-			})
+	static findOne({ email, id }, options = {}) {
+		const column = id ? 'id' : 'email';
+
+		return db.query(
+			`SELECT usr.id, usr.info, usr.role_id, usr.org_id,
+				rcpt.email, rcpt.active
+				${options.secret ? ', usr.hash ' : ''}
+			FROM users usr
+			JOIN recipients rcpt ON usr.id = rcpt.id
+			WHERE rcpt.${column} = $1;`,
+			[id || email],
+		);
+	}
+
+
+	static findById(id) {
+		return User.findOne({ id })
+			.then((found) => {
+				if(!found) return null;
+				return new User(found);
+			});
+	}
+
+	// for authentication or password recovery
+	static findByEmail(email) {
+		return User.findOne({ email }, { secret: true })
 			.then((found) => {
 				if(!found) return null;
 				return new User(found);
@@ -26,7 +46,14 @@ class User extends Recipient {
 
 
 	static findByToken(token) {
-		return db.tokens.select({ token })
+		return db.query(
+			`SELECT rcpt.id, rcpt.email, ut.token
+			FROM user_tokens ut
+			JOIN recipients rcpt ON rcpt.id = ut.user_id
+			WHERE token = $2
+				AND now() - ut.created < interval '1 day';`,
+			[token],
+		)
 			.then((user) => {
 				if(!user) return null;
 				return new User(user);
@@ -44,46 +71,92 @@ class User extends Recipient {
 	}
 
 
-	recovery() {
-		this.token = User.genPassSettingToken();
-		return db.tokens.upsert(this).then(() => this);
+	setToken(token) {
+		return db.query(
+			`INSERT INTO user_tokens(user_id, token)
+			VALUES($1, $2)
+			ON CONFLICT(user_id) DO UPDATE
+			SET token = $2 WHERE user_tokens.user_id = $1
+			RETURNING *;`,
+			[this.id, token],
+		);
 	}
 
 
-	static genPassSettingToken() {
-		return crypto.randomBytes(20).toString('hex');
+	deleteToken(token) {
+		return db.query(
+			'DELETE FROM user_tokens WHERE user_id = $1 AND token = $2;',
+			[this.id, token],
+		);
 	}
 
-	// @implement
-	save() {
-		return Promise.resolve()
-			// .then(() => {
-			// 	if(!this.email) throw new ModelError(this, 'Missing email');
-			// 	if(!this.role) throw new ModelError(this, 'Missing user role');
-			// 	if(!this.authorId) throw new ModelError(this, 'Unknown author');
-			// })
-			.then(() => db.users.insert(this))
-			.then(user => this.assign(user));
+
+	recoverPass() {
+		this.token = crypto.randomBytes(20).toString('hex');
+		return this.setToken(this.token)
+			.then(() => this);
 	}
 
 
 	setPass(pass) {
 		return bcrypt.hash(pass, config.bcrypt.saltRound)
-			.then(hash => db.users.update(this, { hash }))
-			.then(() => db.tokens.delete(this))
+			.then(hash => this.update({ hash }))
+			.then(() => this.deleteToken(this.token))
 			.then(() => this);
 	}
 
+	// @implements
+	save() {
+		const rcpt = new Recipient({ email: this.email });
+		return rcpt.saveIfNotExists()
+			.then(() => {
+				if(!rcpt.active || rcpt.type !== 'unregistered') {
+					throw new HttpError(403, 'This email is not available');
+				}
+				return db.query(
+					'SELECT * FROM create_user($1, $2, $3, $4, $5)',
+					[
+						rcpt.id,
+						this.orgId,
+						this.info,
+						this.role,
+						this.authorId,
+					],
+				);
+			})
+			.then(user => this.assign(user));
+	}
+
+
+	update(props) {
+		return super.update(props);
+	}
+
+
+	getDisplayName() {
+		const { name, patronymic } = this;
+		if(name) {
+			return patronymic
+				? `${name} ${patronymic}`
+				: `${name}`;
+		}
+		return '';
+	}
+
+
 	// @override
 	toJSON() {
-		const res = { ...this };
-		delete res.hash;
-		return JSON.stringify(res);
+		const obj = super.toJSON();
+		delete obj.hash;
+		delete obj.token;
+		return obj;
 	}
 }
 
 
 // ***************** PROTOTYPE PROPERTIES ***************** //
+
+User.prototype.tableName = 'users';
 
 User.prototype.props = new Set([
 	'id',
@@ -91,14 +164,14 @@ User.prototype.props = new Set([
 	'info',
 	'created',
 	// ids
-	'roleId',
+	// 'roleId',
+	// 'statusId',
 	'orgId',
-	'statusId',
 	'authorId',
-	// related objects
+	// values
 	'role',
-	'org',
-	'status',
+	// 'status',
+	'active',
 	// token for password setting
 	'token',
 	// secret
@@ -110,18 +183,3 @@ Object.freeze(User);
 
 
 export default User;
-
-User.find({ id: 1 }, 'short')
-// const query = db.createQuery();
-// query.select(['id', 'hash']).from('users').where({ id: 2 });
-// query.run()
-	.then(console.log)
-	.catch(console.log)
-// console.log(res)
-// const q = new Query();
-// // q.update('users').set({ email: 'some@new.email', hash: 'djk21a19' })
-// // 	.in([1, 4, 67, 28], 'int');
-// // console.log(q)
-
-// q.
-// console.log(q)

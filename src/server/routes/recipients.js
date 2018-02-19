@@ -8,7 +8,6 @@ export default (app) => {
 		'/api/v1/verification',
 		isAuthenticated,
 		(req, res, next) => {
-			console.log(req.loaded)
 			const { email } = req.body;
 			const { mode } = req.query;
 
@@ -89,15 +88,14 @@ export default (app) => {
 		},
 	);
 
-
+	// update recipients
 	app.patch(
 		'/api/v1/recipients/:id',
 		isAuthenticated,
 		(req, res, next) => {
 			const { rcpt } = req.loaded;
-
 			rcpt.update(req.body)
-				.then(rcpt => res.send())
+				.then(() => res.json(rcpt))
 				.catch(next);
 		},
 	);

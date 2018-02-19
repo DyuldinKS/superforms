@@ -1,11 +1,14 @@
-import pool from './pool';
+import { Pool } from 'pg';
+import config from '../config';
 import { PgError } from '../libs/errors';
+
+const pool = new Pool(config.pg);
 
 
 function queryAll(queryString, values) {
-	if(process.env.NODE_ENV === 'development') {
-		// console.log(queryString, values);
-	}
+	// if(process.env.NODE_ENV !== 'production') {
+	// console.log(queryString, values);
+	// }
 	return pool.query(queryString, values)
 		.then(result => result.rows)
 		.catch((err) => {
@@ -115,6 +118,7 @@ function createQuery() {
 
 
 export default {
+	pool,
 	createQuery,
 	query,
 	queryAll,

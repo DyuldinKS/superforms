@@ -22,7 +22,7 @@ class PgError extends Error {
 	}
 
 	toHttpError() {
-		if(process.env.NODE_ENV === 'development') {
+		if(process.env.NODE_ENV !== 'production') {
 			return new HttpError(400, `table: ${this.table}\ncode: ${this.code}\nmessage: ${this.message}\ndetail: ${this.detail}`);
 		}
 		const errProps = PgError.codes[this.code];

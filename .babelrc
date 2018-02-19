@@ -1,12 +1,21 @@
 {
-	"presets": [
-		"es2015",
-		"react",
-		"stage-2"
-	],
-	"plugins": [
-			["babel-plugin-transform-builtin-extend", {
-					globals: ["Error", "Array"]
-			}]
-	]
+  "presets": [
+    [
+      "latest", {
+        "es2015": {
+          "modules": false
+        }
+      }
+    ],
+    "stage-0",
+    "react"
+  ],
+  "plugins": [
+    [
+      "babel-plugin-transform-builtin-extend",
+      {
+        globals: ["Error", "Array"]
+      }
+    ]
+  ]
 }

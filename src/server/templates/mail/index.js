@@ -1,7 +1,7 @@
 import registration from './registration.hbs';
-import passwordReсovery from './passwordReсovery.hbs';
+import passwordRecovery from './passwordRecovery.hbs';
 
 export default {
 	registration,
-	passwordReсovery,
+	passwordRecovery,
 };

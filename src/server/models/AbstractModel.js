@@ -1,4 +1,12 @@
-import convertedProps from './convertedProps';
+import {
+	camelCasedProps,
+	snakeCasedProps,
+	staticValuesProps,
+	staticIdsProps,
+} from './convertedProps';
+import { HttpError } from '../libs/errors';
+
+// const { toCamelCase, toSnakeCase, toId } = convertedProps;
 
 
 class AbstractModel {
@@ -14,23 +22,40 @@ class AbstractModel {
 	assign(instance) {
 		if(!instance) return null;
 
-		let converted;
-		Object.keys(instance).forEach((prop) => {
-			converted = convertedProps.toCamelCase[prop] || prop;
-			if(this.props.has(converted)) {
-				this[converted] = instance[prop];
+		const unexpected = {};
+		Object.entries(instance).forEach(([prop, value]) => {
+			prop = camelCasedProps[prop] || prop;
+			if(prop in staticValuesProps) {
+				value = staticValuesProps[prop].convert(value);
+				prop = staticValuesProps[prop].propName;
 			}
+			if(this.props.has(prop)) {
+				this[prop] = value;
+			} else {
+				unexpected[prop] = value;
+			}
+			if(typeof this.info !== 'object') this.info = unexpected;
 		});
 
 		return this;
 	}
 
 
-	convertToSchema(props) {
+	convertToPgSchema(props) {
 		const pgProps = {};
-		Object.keys(props).forEach((prop) => {
+		Object.entries(props).forEach(([prop, value]) => {
 			if(this.props.has(prop)) {
-				pgProps[convertedProps.toSnakeCase[prop] || prop] = props[prop];
+				if(prop in staticIdsProps) {
+					value = staticIdsProps[prop].convert(value);
+					if(value === undefined) {
+						throw new HttpError(
+							400,
+							`Invalid value: ${value} for property '${prop}'`,
+						);
+					}
+					prop = staticIdsProps[prop].propName;
+				}
+				pgProps[snakeCasedProps[prop] || prop] = value;
 			}
 		});
 		return pgProps;
@@ -38,7 +63,7 @@ class AbstractModel {
 
 
 	save() { throw new Error(`The \'save\' method of ${this} must be implemented`); }
-	toJSON() { return JSON.stringify(this); }
+	toJSON() { return this; }
 }
 
 

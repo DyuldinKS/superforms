@@ -1,34 +1,32 @@
-import path from 'path';
-import { createLogger, transports, format } from 'winston';
-const { combine, prettyPrint, colorize } = format;
+import winston from 'winston';
 
 
-const logger = createLogger({
-	format: combine(
-		colorize(),
-		prettyPrint(),
-		format.printf((info) => {
-			const { level, message, ...args } = info;
-
-			return `[${level}]: ${message} ${Object.keys(args).length ? JSON.stringify(args, null, 2) : ''}`;
-		}),
-	),
+export default new (winston.Logger)({
+	levels: {
+		info: 2,
+		warn: 1,
+		error: 0,
+	},
+	colors: {
+		info: 'green',
+		warn: 'yellow',
+		error: 'red',
+	},
 	transports: [
-		new transports.Console()
-		// new transports.File({
-		// 	filename: path.join(__dirname, 'errors.log'),
-		// 	level: 'error',
-		// }),
-		// new transports.File({
-		// 	filename: path.join(__dirname, 'logs/combined.log'),
-		// }),
+		new (winston.transports.Console)({
+			level: 'info',
+			colorize: true,
+			prettyPrint: JSON.stringify,
+		}),
 	],
 });
 
-
 // if(process.env.NODE_ENV === 'production') {
-// 	logger.add(new transports.Console());
+// 	logger.transports.push(
+// 		new (require('winston-daily-rotate-file'))({
+// 			level: 'info', 
+// 			filename: path.join('logs', 'errors.log'), 
+// 			datePattern: 'yy-MM-dd' 
+// 		})
+// 	)
 // }
-
-
-export default logger;

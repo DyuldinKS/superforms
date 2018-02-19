@@ -4,17 +4,13 @@ import logger from '../libs/logger';
 
 
 function errorHandler(err, req, res, next) {
+	console.log(err);
 	let httpError;
-	// console.log(err);
 	logger.error(err);
 
 	switch (err.constructor) {
 	case HttpError: {
 		httpError = err;
-		break;
-	}
-	case Number: {
-		httpError = new HttpError(err);
 		break;
 	}
 	case PgError: {

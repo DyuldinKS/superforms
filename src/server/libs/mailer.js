@@ -38,40 +38,40 @@ const sendAll = (messages) => {
 	});
 };
 
-const getNameString = ({ name, patronymic }) => {
-	if(name) {
-		return patronymic ? `${name} ${patronymic}` : `${name}`;
-	}
-	return '';
+
+const sendRegistrationTo = (user) => {
+	const { email, token } = user;
+
+	return send({
+		to: email,
+		subject: 'Регистрация в ИС «РАСККО»',
+		html: hbs.registration({
+			name: user.getDisplayName(),
+			mainLink: domain,
+			passSettingLink: `${domain}/password/${token}`,
+		}),
+	});
 };
 
-const sendRegistration = ({ email, info, token }) => (
-	send({
-		to: email,
-		subject: 'Регистрация в ИС «Генератор Форм»',
-		html: hbs.registration({
-			name: getNameString(info),
-			mainLink: domain,
-			passSettingLing: `${domain}/password/${token}`,
-		}),
-	})
-);
 
-const sendPasswordReсovery = ({ email, info, token }) => (
-	send({
+const sendPassReсovery = (user) => {
+	const { email, token } = user;
+
+	return send({
 		to: email,
-		subject: 'Смена пароля в ИС «Генератор Форм»',
+		subject: 'Смена пароля в ИС «РАСККО»',
 		html: hbs.passwordReсovery({
-			name: getNameString(info),
+			name: user.getDisplayName(),
 			mainLink: domain,
-			passSettingLing: `${domain}/password/${token}`,
+			passSettingLink: `${domain}/password/${token}`,
 		}),
-	})
-);
+	});
+};
+
 
 export default {
 	send,
 	sendAll,
-	sendRegistration,
-	sendPasswordReсovery,
+	sendRegistrationTo,
+	sendPassReсovery,
 };
