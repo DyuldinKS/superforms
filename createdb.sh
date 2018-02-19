@@ -24,11 +24,11 @@ readonly CWD=$(pwd)
 readonly DB_NAME=${1:-sf2}
 readonly INPUT_PATH="$CWD/src/server/db/"
 readonly INPUT_FILES=(
-	'schema.psql'
-	'recipients.psql'
-	'common.psql'
-	'users.psql'
-	'orgs.psql'
+	'schema.sql'
+	'recipients.sql'
+	'common.sql'
+	'users.sql'
+	'orgs.sql'
 )
 
 
