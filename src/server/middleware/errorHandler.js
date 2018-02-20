@@ -4,9 +4,8 @@ import logger from '../libs/logger';
 
 
 function errorHandler(err, req, res, next) {
-	console.log(err);
+	// console.log(err);
 	let httpError;
-	logger.error(err);
 
 	switch (err.constructor) {
 	case HttpError: {
@@ -23,13 +22,16 @@ function errorHandler(err, req, res, next) {
 	}
 
 	const { status, message } = httpError;
-	logger.warn({ status, message });
+
 
 	if(req.url.includes('api')) {
 		res.status(status).send(message);
 	} else {
 		res.send(hbs.errorPage({ status, message }));
 	}
+
+	req.log.error({ res, err });
+	req.log.debug({ status, message });
 }
 
 export default errorHandler;

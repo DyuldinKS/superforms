@@ -40,7 +40,6 @@ export default (req, res, next) => {
 	Promise.all(modelsToSearch.map(({ model, id }) => model.findById(id)))
 		.then((loaded) => {
 			loaded.forEach((instance, i) => {
-				console.log(instance);
 				if(!instance) {
 					throw new HttpError(404, `${modelsToSearch[i].key} not found`);
 				}

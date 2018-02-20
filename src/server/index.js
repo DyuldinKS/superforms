@@ -13,8 +13,9 @@ import db from './db';
 import config from './config';
 import deserializeUser from './middleware/deserializeUser';
 import router from './routes';
+import log from './libs/logger';
+import logger from './middleware/logger';
 import errorHandler from './middleware/errorHandler';
-import logger from './libs/logger';
 
 
 const app = express();
@@ -42,15 +43,15 @@ app.use(session({
 	}),
 }));
 
+app.use(logger);
 app.use(deserializeUser);
 router(app);
-
 app.use(errorHandler);
 
 app.listen(config.port, () => {
-	logger.info(`Express server is listening on PORT ${config.port}`);
+	log.info(`Express server is listening on PORT ${config.port}`);
 });
 
-process.on('unhandledRejection', (e) => {
-	logger.error(e.message, e.stack);
+process.on('unhandledRejection', (err) => {
+	log.warn(err.message, err.stack);
 });

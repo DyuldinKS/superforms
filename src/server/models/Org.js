@@ -99,7 +99,6 @@ class Org extends Recipient {
 
 
 	findAllUsers(options = {}) {
-		console.log(Org.buildFilter(options))
 		return db.query(
 			'SELECT * FROM find_users_of_subordinate_orgs($1::int, $2::jsonb)',
 			[this.id, Org.buildFilter(options)],

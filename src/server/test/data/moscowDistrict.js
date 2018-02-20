@@ -99,4 +99,4 @@ getRoot()
 	.then(createIMC)
 	.then(createSchoolsAndKindergartens)
 	.then(() => console.log('Success! All organizations have been saved.'))
-	.catch(console.log);
+	.catch(console.error);

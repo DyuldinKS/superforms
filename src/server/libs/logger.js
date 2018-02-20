@@ -1,32 +1,55 @@
-import winston from 'winston';
+import path from 'path';
+import bunyan from 'bunyan';
 
 
-export default new (winston.Logger)({
-	levels: {
-		info: 2,
-		warn: 1,
-		error: 0,
-	},
-	colors: {
-		info: 'green',
-		warn: 'yellow',
-		error: 'red',
-	},
-	transports: [
-		new (winston.transports.Console)({
-			level: 'info',
-			colorize: true,
-			prettyPrint: JSON.stringify,
-		}),
+function reqSerializer(req) {
+	if(!req || !req.connection) return req;
+	const censored = { ...req.body };
+	if('password' in req.body) {
+		censored.password = 'censored';
+	}
+	return {
+		method: req.method,
+		url: req.url,
+		body: censored,
+		headers: req.headers,
+		remoteAddress: req.connection.remoteAddress,
+		remotePort: req.connection.remotePort,
+	};
+}
+
+
+function errSerializer(err) {
+	const { name } = Object.getPrototypeOf(err);
+	return { ...err, name };
+}
+
+
+const logger = bunyan.createLogger({
+	name: 'sf2',
+	streams: [
+		{
+			level: 'debug',
+			stream: process.stdout,
+		},
 	],
+	serializers: {
+		req: reqSerializer,
+		res: bunyan.stdSerializers.res,
+		err: errSerializer,
+	},
 });
 
-// if(process.env.NODE_ENV === 'production') {
-// 	logger.transports.push(
-// 		new (require('winston-daily-rotate-file'))({
-// 			level: 'info', 
-// 			filename: path.join('logs', 'errors.log'), 
-// 			datePattern: 'yy-MM-dd' 
-// 		})
-// 	)
-// }
+
+if(process.env.NODE_ENV === 'production') {
+	logger.addStream({
+		type: 'rotating-file',
+		level: 'info',
+		path: path.join(__dirname, 'logs/webapi.log'),
+		period: '1d',
+		count: 10,
+	});
+}
+
+
+export default logger;
