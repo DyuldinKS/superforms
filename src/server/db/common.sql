@@ -116,13 +116,13 @@ $$
 			WHEN _search_text IS NULL THEN RETURN QUERY
 				-- find all subordinate
 				SELECT id FROM get_subordinate(_table, _org_id, _filter)
-				ORDER BY created DESC;
+				ORDER BY id;
 
 			WHEN _filter->>'email' IS NOT NULL THEN RETURN QUERY
 				-- find by email
 				SELECT id FROM get_subordinate(_table, _org_id, _filter)
 				WHERE email ILIKE _search_text
-				ORDER BY email;
+				ORDER BY id;
 
 			WHEN _filter->>'info' IS NOT NULL THEN RETURN QUERY
 				-- find by full text search on info
@@ -131,7 +131,7 @@ $$
 					FROM get_subordinate(_table, _org_id, _filter)
 				) AS subordinate_orgs
 				WHERE document @@ to_tsquery('russian', _search_text)
-				ORDER BY ts_rank(document, to_tsquery('russian', _search_text)) DESC;
+				ORDER BY ts_rank(document, to_tsquery('russian', _search_text)) DESC, id;
 				
 		END CASE;
 	END;

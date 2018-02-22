@@ -3,7 +3,6 @@ import bcrypt from 'bcrypt';
 import { promisify } from 'util';
 import config from '../config';
 import db from './queries';
-import logger from '../libs/logger';
 
 
 function fillTable({
@@ -127,7 +126,7 @@ const tables = {
 		'forms',
 		'responses',
 		'roles',
-		'rcpttLists',
+		'rcptLists',
 	],
 };
 
@@ -159,11 +158,11 @@ function initdb() {
 			path,
 			JSON.stringify(Object.assign({}, ...stored)),
 		))
-		.then(() => logger.info(`All constant values were writted to '${path}'`))
+		.then(() => console.log(`All constant values were writted to '${path}'`))
 		// create the root-user
 		.then(() => createRootWithOrg(config.root))
-		.then(() => logger.info('The root-user was successfully created'))
-		.catch(logger.error);
+		.then(() => console.log('The root-user was successfully created'))
+		.catch(console.error);
 }
 
 initdb();

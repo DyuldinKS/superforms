@@ -27,6 +27,7 @@ export default (app) => {
 					req.session.user = { id: user.id };
 					return res.redirect('/');
 				})
+				.then(next)
 				.catch(next);
 		},
 	);

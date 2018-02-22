@@ -14,7 +14,7 @@ class PgError extends Error {
 			super(err.message);
 			// this.stack += `\nExtends: ${err.stack}`;
 			Object.entries(err).forEach(([prop, value]) => {
-				this[prop] = value;
+				if(prop !== 'name') this[prop] = value;
 			});
 		} else {
 			super(err);
