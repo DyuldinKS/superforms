@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS recipients (
 	email VARCHAR(255) NOT NULL UNIQUE,
 	type_id INTEGER NOT NULL REFERENCES recipient_types(id),
 	active BOOLEAN DEFAULT true,
-	updated TIMESTAMP WITH TIME ZONE DEFAULT now()
+	updated TIMESTAMP DEFAULT now()
 );
 
 
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS recipient_lists (
 	id SERIAL PRIMARY KEY,
 	author_id INTEGER NOT NULL,
 	status_id INTEGER NOT NULL REFERENCES states(id),
-	created TIMESTAMP WITH TIME ZONE
+	created TIMESTAMP DEFAULT now()
 );
 
 
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS organizations (
 	id INTEGER PRIMARY KEY REFERENCES recipients(id),
 	info JSONB NOT NULL,
 	author_id INTEGER NOT NULL,
-	created TIMESTAMP WITH TIME ZONE DEFAULT now()
+	created TIMESTAMP DEFAULT now()
 );
 
 
@@ -79,14 +79,14 @@ CREATE TABLE IF NOT EXISTS users (
 	role_id INTEGER NOT NULL REFERENCES roles(id),
 	hash VARCHAR(255),
 	author_id INTEGER NOT NULL,
-	created TIMESTAMP WITH TIME ZONE DEFAULT now()
+	created TIMESTAMP DEFAULT now()
 );
 
 
 CREATE TABLE IF NOT EXISTS user_tokens (
 	user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 	token VARCHAR(255) UNIQUE NOT NULL,
-	created TIMESTAMP WITH TIME ZONE DEFAULT now()
+	created TIMESTAMP DEFAULT now()
 );
 
 
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS forms (
 	options JSONB,
 	author_id INTEGER NOT NULL REFERENCES users(id),
 	status_id INTEGER NOT NULL REFERENCES states(id),
-	modified TIMESTAMP WITH TIME ZONE
+	modified TIMESTAMP
 );
 
 
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS responses (
 	author_id INTEGER NOT NULL REFERENCES users(id),
 	recipient_id INTEGER NOT NULL REFERENCES recipients(id),
 	status_id INTEGER NOT NULL,
-	modified TIMESTAMP WITH TIME ZONE
+	modified TIMESTAMP
 );
 
 
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS status_log (
 	object_id INTEGER NOT NULL,
 	info JSONB NOT NULL,
 	author_id INTEGER NOT NULL REFERENCES users(id),
-	timestamp TIMESTAMP WITH TIME ZONE DEFAULT now()
+	timestamp TIMESTAMP DEFAULT now()
 );
 
 
