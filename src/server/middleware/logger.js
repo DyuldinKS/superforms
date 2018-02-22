@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import uuidv1 from 'uuid/v1';
 import logger from '../libs/logger';
 
 
@@ -9,7 +9,7 @@ const ignoredURLs = new Set([
 
 export default (req, res, next) => {
 	if(ignoredURLs.has(req.url)) return;
-	req.log = logger.child({ reqId: uuid() });
+	req.log = logger.child({ reqId: uuidv1() });
 	req.log.info({ req });
 	next();
 };
