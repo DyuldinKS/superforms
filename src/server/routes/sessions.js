@@ -11,9 +11,6 @@ export default (app) => {
 		res.send('There will be sign in page.');
 	});
 
-	app.get('/signin', (req, res, next) => {
-		res.send('There will be sign in page.');
-	});
 
 	// signin development stub
 	app.get(
@@ -32,6 +29,37 @@ export default (app) => {
 		},
 	);
 
+
+	// page to sign in or enter email and send pass reset link to it
+	app.get(
+		[
+			'/recovery',
+			'/signin',
+		],
+		isNotAuthenticated,
+		(req, res, next) => {
+			const page = req.url.includes('signin')
+				? 'There will be signin page!'
+				: 'There will be pass recovery page!';
+			res.status(200).send(page);
+		},
+	);
+
+
+	// (!) DEFERRED
+
+	// send password recovery page
+	// app.get('/recovery/:token', (req, res, next) => {
+	// 	const { token } = req.params;
+	// 	User.findByToken(token)
+	// 		.then((user) => {
+	// 			if(!user) throw new HttpError(404, 'Not Found');
+	// 			res.send(hbs.passRecoveryPage());
+	// 		})
+	// 		.catch(next);
+	// });
+
+
 	// sign in
 	app.post(
 		'/api/v1/session',
@@ -42,9 +70,8 @@ export default (app) => {
 			User.findByEmail(email)
 				.then((user) => {
 					if(!user) throw new HttpError(403, 'Incorrect email or password');
-					return user.login(password);
+					return user.authenticate(password);
 				})
-				.then(user => user.login(password))
 				.then((user) => {
 					if(user.isAuthenticated) {
 						req.session.user = { id: user.id };
@@ -56,51 +83,6 @@ export default (app) => {
 		},
 	);
 
-
-	// send password recovery page
-	app.get('/recovery/:token', (req, res, next) => {
-		const { token } = req.params;
-		User.findByToken(token)
-			.then((user) => {
-				if(!user) throw new HttpError(404, 'Not Found');
-				res.send(hbs.passRecoveryPage());
-			})
-			.catch(next);
-	});
-
-	// create password recovery token
-	app.post('/api/v1/recovery', (req, res, next) => {
-		const { email } = req.body;
-
-		return User.findByEmail({ email })
-			.then((user) => {
-				if(!user) throw new HttpError(404, 'Not Found');
-				return user.recoverPass();
-			})
-			.then(user => mailer.sendPassReсovery(user))
-			.then(() => res.status(200).send())
-			.catch(err => {
-				console.log(err);
-				next(err);
-			});
-	});
-
-	// set password
-	app.patch(
-		'/api/v1/recovery/:token',
-		(req, res, next) => {
-			const { password } = req.body;
-			const { token } = req.params;
-
-			User.findByToken(token)
-				.then((user) => {
-					if(!user) throw new HttpError(404, 'Not Found');
-					return user.setPass(password);
-				})
-				.then(() => res.status(200).send())
-				.catch(next);
-		},
-	);
 
 	// sign out
 	app.delete('/api/v1/session', (req, res, next) => {

@@ -34,21 +34,6 @@ export default (app) => {
 		},
 	);
 
-	// get all users
-	app.get(
-		'/api/v1/orgs/:id/users',
-		(req, res, next) => {
-			const { org } = req.loaded;
-			const options = req.query;
-
-			org.findAllUsers(options)
-				.then((result) => {
-					res.json(result);
-				})
-				.catch(next);
-		},
-	);
-
 	// get one org
 	app.get(
 		'/api/v1/orgs/:id',
@@ -77,6 +62,21 @@ export default (app) => {
 			const options = req.query;
 
 			org.findAllOrgs(options)
+				.then((result) => {
+					res.json(result);
+				})
+				.catch(next);
+		},
+	);
+
+	// get all users
+	app.get(
+		'/api/v1/orgs/:id/users',
+		(req, res, next) => {
+			const { org } = req.loaded;
+			const options = req.query;
+
+			org.findAllUsers(options)
 				.then((result) => {
 					res.json(result);
 				})

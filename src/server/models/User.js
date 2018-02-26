@@ -4,6 +4,7 @@ import config from '../config';
 import db from '../db/index';
 import Recipient from './Recipient';
 import staticTables from '../db/staticTables.json';
+import passwordGenerator from '../libs/passwordGenerator';
 import { HttpError, SmtpError, PgError } from '../libs/errors';
 
 const { states, rcptTypes, roles } = staticTables;
@@ -60,9 +61,10 @@ class User extends Recipient {
 			});
 	}
 
+
 	// ***************** INSTANCE METHODS ***************** //
 
-	login(password) {
+	authenticate(password) {
 		return bcrypt.compare(password, this.hash)
 			.then((isPassValid) => {
 				this.isAuthenticated = isPassValid;
@@ -98,9 +100,16 @@ class User extends Recipient {
 	}
 
 
-	setPass(pass) {
+	resetPassword() {
+		this.password = passwordGenerator(8);
+		return bcrypt.hash(this.password, config.bcrypt.saltRound)
+			.then(hash => super.update({ hash }));
+	}
+
+
+	setPassword(pass) {
 		return bcrypt.hash(pass, config.bcrypt.saltRound)
-			.then(hash => this.update({ hash }))
+			.then(hash => super.update({ hash }))
 			.then(() => this.deleteToken(this.token))
 			.then(() => this);
 	}
@@ -147,6 +156,7 @@ class User extends Recipient {
 	// @override
 	toJSON() {
 		const obj = super.toJSON();
+		delete obj.password;
 		delete obj.hash;
 		delete obj.token;
 		return obj;
@@ -175,6 +185,7 @@ User.prototype.props = new Set([
 	// token for password setting
 	'token',
 	// secret
+	'password',
 	'hash',
 ]);
 

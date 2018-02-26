@@ -39,31 +39,33 @@ const sendAll = (messages) => {
 };
 
 
-const sendRegistrationTo = (user) => {
-	const { email, token } = user;
+const sendRegistrationEmail = (user) => {
+	const { email, password } = user;
 
 	return send({
 		to: email,
 		subject: 'Регистрация в ИС «РАСККО»',
 		html: hbs.registration({
+			password,
+			login: email,
 			name: user.getDisplayName(),
-			mainLink: domain,
-			passSettingLink: `${domain}/password/${token}`,
+			mainURL: domain,
 		}),
 	});
 };
 
 
-const sendPassReсovery = (user) => {
-	const { email, token } = user;
+const sendPasswordResetEmail = (user) => {
+	const { email, password } = user;
 
 	return send({
 		to: email,
 		subject: 'Смена пароля в ИС «РАСККО»',
-		html: hbs.passwordReсovery({
+		html: hbs.passwordReset({
+			password,
+			login: email,
 			name: user.getDisplayName(),
-			mainLink: domain,
-			passSettingLink: `${domain}/password/${token}`,
+			mainURL: domain,
 		}),
 	});
 };
@@ -72,6 +74,6 @@ const sendPassReсovery = (user) => {
 export default {
 	send,
 	sendAll,
-	sendRegistrationTo,
-	sendPassReсovery,
+	sendRegistrationEmail,
+	sendPasswordResetEmail,
 };
