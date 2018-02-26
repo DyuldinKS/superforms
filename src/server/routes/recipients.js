@@ -5,11 +5,10 @@ import { HttpError, PgError } from '../libs/errors';
 
 export default (app) => {
 	app.post(
-		'/api/v1/verification',
+		'/api/v1/recipients/verification',
 		isAuthenticated,
 		(req, res, next) => {
-			const { email } = req.body;
-			const { mode } = req.query;
+			const { email, mode } = req.body;
 
 			if(typeof email !== 'string') {
 				return next(new HttpError(400, 'Invalid email'));
@@ -19,12 +18,11 @@ export default (app) => {
 				Recipient.verify(email),
 				Recipient.find({ email }),
 			])
-				.then(([verified, rcp]) => {
+				.then(([verified, rcpt]) => {
 					const result = { ...verified };
-					if(mode === 'signUp') {
-						result.available = (rcp === null
-							|| (rcp && rcp.isUnregistered() && rcp.isActive()));
-					}
+					result.available = (mode === 'signUp')
+						? rcpt === null || (rcpt && rcpt.isUnregistered() && rcpt.isActive())
+						: rcpt === null || (rcpt && rcpt.isActive());
 					res.send(result);
 				})
 				.catch((err) => {
@@ -32,6 +30,7 @@ export default (app) => {
 				});
 		},
 	);
+
 
 	app.post(
 		'/api/v1/recipients/search',
@@ -70,10 +69,10 @@ export default (app) => {
 		isAuthenticated,
 		(req, res, next) => {
 			const { email } = req.body;
-			const rcp = new Recipient({ email });
+			const rcpt = new Recipient({ email });
 
-			rcp.save()
-				.then(() => res.json(rcp))
+			rcpt.save()
+				.then(() => res.json(rcpt))
 				.catch((err) => {
 					if(err instanceof PgError) {
 						if(err.code === '23502') {

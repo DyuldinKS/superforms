@@ -39,19 +39,17 @@ class Recipient extends AbstractModel {
 
 	// ***************** INSTANCE METHODS ***************** //
 
-	// isUnregistered() {
-	// 	return this.type === 'unregistered';
-	// }
+	isUnregistered() {
+		return this.type === 'unregistered';
+	}
 
+	isActive() {
+		return this.active === true;
+	}
 
-	// isActive() {
-	// 	return this.status === 'active';
-	// }
-
-
-	// isBlocked() {
-	// 	return this.status === 'blocked';
-	// }
+	isBlocked() {
+		return this.active === false;
+	}
 
 
 	// testForRegistration() {
