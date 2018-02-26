@@ -2,19 +2,18 @@ import { Pool } from 'pg';
 import config from '../config';
 import { PgError } from '../libs/errors';
 
+
 const pool = new Pool(config.pg);
 
 
 function queryAll(queryString, values) {
-	// if(process.env.NODE_ENV !== 'production') {
-	// console.log(queryString, values);
-	// }
 	return pool.query(queryString, values)
 		.then(result => result.rows)
 		.catch((err) => {
 			throw new PgError(err);
 		});
 }
+
 
 function query(queryString, values) {
 	return queryAll(queryString, values)
