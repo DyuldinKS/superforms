@@ -12,10 +12,21 @@ class PgError extends Error {
 	constructor(err) {
 		if(err instanceof Error) {
 			super(err.message);
-			// this.stack += `\nExtends: ${err.stack}`;
+			// copy all properties excluding 'name'
 			Object.entries(err).forEach(([prop, value]) => {
-				if(prop !== 'name') this[prop] = value;
+				if(prop !== 'name') {
+					this[prop] = value;
+				}
 			});
+
+			Object.defineProperty(
+				this,
+				'stack',
+				{
+					value: err.stack,
+					enumerable: false,
+				},
+			);
 		} else {
 			super(err);
 		}

@@ -31,7 +31,6 @@ function errorHandler(err, req, res, next) {
 	}
 
 	req.log.error({ res, err });
-	req.log.debug({ status, message });
 }
 
 export default errorHandler;
