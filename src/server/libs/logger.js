@@ -4,8 +4,8 @@ import bunyan from 'bunyan';
 
 const NODE_ENV = process.env.NODE_ENV;
 
-const reqSerializer = {
-	dev: req => (
+const devSerializers = {
+	req: req => (
 		req && req.connection
 			? {
 				url: req.url,
@@ -16,7 +16,22 @@ const reqSerializer = {
 			: req
 	),
 
-	prod: (req) => {
+	res: res => (
+		res
+			? { statusCode: res.statusCode }
+			: res
+	),
+
+	err: (err) => ({
+		...err,
+		name: Object.getPrototypeOf(err).name,
+		stack: err.stack,
+	}),
+};
+
+
+const prodSerializers = {
+	req: (req) => {
 		if(!req || !req.connection) return req;
 		const censored = { ...req.body };
 		if('password' in req.body) {
@@ -31,17 +46,8 @@ const reqSerializer = {
 			remotePort: req.connection.remotePort,
 		};
 	},
-};
 
-
-const resSerializer = {
-	dev: res => (
-		res
-			? { statusCode: res.statusCode }
-			: res
-	),
-
-	prod: res => (
+	res: res => (
 		res
 			? {
 				statusCode: res.statusCode,
@@ -49,28 +55,13 @@ const resSerializer = {
 			}
 			: res
 	),
+
+	err: err => ({
+		...err,
+		name: Object.getPrototypeOf(err).name,
+	}),
 };
 
-
-const errSerializer = {
-	dev: (err) => {
-		const { name } = Object.getPrototypeOf(err);
-		return {
-			...err,
-			name,
-			stack: err.stack,
-		};
-	},
-
-	prod: (err) => {
-		const { name } = Object.getPrototypeOf(err);
-		return { ...err, name };
-	},
-
-};
-
-
-const mode = NODE_ENV === 'production' ? 'prod' : 'dev';
 
 const logger = bunyan.createLogger({
 	name: 'sf2',
@@ -80,11 +71,9 @@ const logger = bunyan.createLogger({
 			stream: process.stdout,
 		},
 	],
-	serializers: {
-		req: reqSerializer[mode],
-		res: resSerializer[mode],
-		err: errSerializer[mode],
-	},
+	serializers: NODE_ENV === 'production'
+		? prodSerializers
+		: devSerializers,
 });
 
 
