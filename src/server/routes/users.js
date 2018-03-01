@@ -4,44 +4,11 @@ import {
 } from '../middleware/sessions';
 import User from '../models/User';
 import Org from '../models/Org';
-import hbs from '../templates/pages';
-import store from 'Redux/';
-import * as routerModule from 'Redux/common/router';
-import { entity as entityModule } from 'Redux/common/entities';
-import renderApp from '../templates/renderApp';
 import mailer from '../libs/mailer';
 import { HttpError, SmtpError, PgError } from '../libs/errors';
 
 
 export default (app) => {
-	/*----------------------------------------------------------------------------
-	------------------------- Server Side Rendering ------------------------------
-	----------------------------------------------------------------------------*/
-
-	const { actions: { fetchOneSuccess, fetchOneFailure } } = entityModule;
-
-
-	app.get(
-		'/users/:id',
-		isAuthenticated,
-		(req, res, next) => {
-			store.dispatch(routerModule.actions.init(req.url, req.query));
-
-			const { id } = req.params;
-			const { user } = req.loaded;
-
-			if(user) {
-				store.dispatch(fetchOneSuccess('users', id, user));
-			} else {
-				const err = new HttpError(404, 'Пользователь не найден');
-				store.dispatch(fetchOneFailure('users', id, err));
-			}
-
-			res.send(renderApp(store));
-		},
-	);
-
-
 	/*----------------------------------------------------------------------------
 	---------------------------------- API ---------------------------------------
 	----------------------------------------------------------------------------*/
