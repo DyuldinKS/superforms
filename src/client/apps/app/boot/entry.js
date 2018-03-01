@@ -9,7 +9,7 @@ import App from '../appContainer';
 const container = document.getElementById('react-root');
 
 const render = (Component) => {
-  ReactDOM.render(
+  ReactDOM.hydrate(
     <AppContainer>
       <Provider store={store}>
         <Component />
