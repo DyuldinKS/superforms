@@ -1,0 +1,21 @@
+.users-list-header-cell-fullname,
+.users-list-item-cell-fullname {
+  width: 200px;
+  flex-grow: 1;
+}
+
+.users-list-header-cell-org,
+.users-list-item-cell-org {
+  width: 200px;
+  flex-grow: 1;
+}
+
+.users-list-header-cell-role,
+.users-list-item-cell-role {
+  width: 200px;
+}
+
+.users-list-header-cell-status,
+.users-list-item-cell-status {
+  width: 210px;
+}

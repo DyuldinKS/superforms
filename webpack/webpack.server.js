@@ -1,8 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
 const nodeExternals = require('webpack-node-externals');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const clientConfig = require('./webpack.client.js');
 
@@ -18,9 +16,6 @@ const config = {
 	entry: SRC_SERVER_PATH,
 	target: 'node',
 	node: { __dirname: false },
-	/* context must be the same as client config context
-		 to build equal css modules hashes */
-	context: __dirname,
 	devtool: 'source-map',
 	output: {
 		path: DIST_PATH,
@@ -44,31 +39,11 @@ const config = {
 			// build global css
 			{
 				test: /\.scss$/,
-				include: path.join(SRC_CLIENT_PATH, 'styles'),
+				include: path.join(SRC_CLIENT_PATH),
 				use: ExtractTextPlugin.extract({
 					fallback: 'style-loader',
 					use: ['css-loader', 'sass-loader'],
 				}),
-			},
-			// build css modules
-			{
-				test: /\.scss$/,
-				include: path.join(SRC_CLIENT_PATH, 'react'),
-				use: ExtractTextPlugin.extract({
-					use: [
-						{
-							loader: 'css-loader',
-							options: {
-								context: __dirname,
-								modules: true,
-								localIdentName: '[name]__[local]--[hash:base64:5]',
-							},
-						},
-						{
-							loader: 'sass-loader',
-						},
-					]
-				})
 			},
 			{
 				test: /\.json$/,
@@ -94,6 +69,5 @@ const config = {
 		}
 	),
 };
-
 
 module.exports = config;

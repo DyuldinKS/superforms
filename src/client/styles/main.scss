@@ -1,0 +1,12 @@
+@import
+  'abstracts/variables';
+
+@import
+  'vendors-extensions/bootstrap';
+
+@import
+  'base/base';
+
+@import
+  '../shared/ui/accordion/styles',
+  '../shared/ui/list/styles/index';

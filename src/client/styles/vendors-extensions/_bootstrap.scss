@@ -1,0 +1,23 @@
+// This file contains custom bootstrap
+// Re-declare some of Bootstrap’s default CSS
+
+// Variable Overrides
+$font-size-base:              1rem !default;
+
+$h2-font-size:                $font-size-base * 1.5;
+$h3-font-size:                $font-size-base * 1.25;
+$h4-font-size:                $font-size-base * 1.125;
+$h5-font-size:                $font-size-base;
+$h6-font-size:                $font-size-base;
+
+// Bootstrap and its default variables
+@import "node_modules/bootstrap/scss/bootstrap";
+
+// Add paddings to bootstrap .card-body
+.card-body {
+  padding: $card-spacer-y $card-spacer-x;
+}
+
+.container {
+  min-width: 980px;
+}

@@ -7,10 +7,10 @@ import orgs from './orgs';
 import hbs from '../templates/pages';
 import Org from '../models/Org';
 import { HttpError } from '../libs/errors';
-import store from 'Redux/';
-import * as routerModule from 'Redux/common/router';
-import * as sessionModule from 'Redux/common/session';
-import * as entitiesModule from 'Redux/common/entities';
+import store from '../../client/apps/app/boot/store';
+import * as routerModule from '../../client/shared/router/redux';
+import * as sessionModule from '../../client/apps/app/shared/redux/session';
+import * as entitiesModule from '../../client/shared/entities';
 import renderApp from '../templates/renderApp';
 
 

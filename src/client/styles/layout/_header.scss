@@ -1,0 +1,14 @@
+//-----------------------------------------------------------------------------
+// This file contains all styles related to the header of the site/application.
+//-----------------------------------------------------------------------------
+
+#app-header-wrapper {
+  background-color: $primary-color;
+}
+
+#app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 50px;
+}

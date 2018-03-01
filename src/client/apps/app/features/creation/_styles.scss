@@ -1,0 +1,32 @@
+.app-creation {
+  padding-top: 25px;
+
+  > h1 {
+    margin-bottom: 25px;
+  }
+}
+
+.app-creation-form {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.app-creation-form-entity {
+  width: 50%;
+  margin-right: 100px;
+}
+
+.app-creation-form-location {
+  width: 50%;
+}
+
+.app-creation-form-submit-outer {
+  display: flex;
+  flex-direction: column;
+  margin-top: 49px;
+}
+
+.app-creation-form-submit-error {
+
+}

@@ -1,0 +1,1 @@
+This folder contains different entries, autonomic app parts

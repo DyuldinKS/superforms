@@ -4,7 +4,7 @@ import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { Provider } from 'react-redux';
 import { AppContainer } from 'react-hot-loader';
-import App from 'React/';
+import App from '../../client/apps/app/appContainer';
 import hbs from '../templates/pages';
 
 

@@ -11,14 +11,8 @@ const PUBLIC_PATH = path.join(ROOT_PATH, 'dist/public');
 
 // Base config
 const base = {
-  /* context must be the same as server config context
-     to build equal css modules hashes */
-  // context: __dirname,
   entry: {
-    main: [
-      'babel-polyfill',
-      path.join(SRC_PATH, 'index.jsx'),
-    ],
+    main: ['babel-polyfill', path.join(SRC_PATH, 'apps/app/boot/entry.js')],
     vendor: [
       'react',
       'react-dom',
@@ -29,7 +23,6 @@ const base = {
       'prop-types',
       'classnames',
       'throttle-debounce',
-      'faker',
       'reactstrap',
     ],
   },
@@ -48,50 +41,27 @@ const base = {
       // styles
       {
         test: /\.scss$/,
-        include: path.join(SRC_PATH, 'styles'),
+        include: path.join(SRC_PATH),
         use: ExtractTextPlugin.extract({
           fallback: 'style-loader',
           use: ['css-loader', 'sass-loader'],
         }),
       },
-      {
-        test: /\.scss$/,
-        include: path.join(SRC_PATH, 'react'),
-        use: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: [
-            {
-              loader: 'css-loader',
-              options: {
-                context: __dirname,
-                modules: true,
-                localIdentName: '[name]__[local]--[hash:base64:5]',
-              },
-            },
-            {
-              loader: 'sass-loader',
-            },
-          ]
-        })
-      },
     ],
   },
   resolve: {
+    modules: [SRC_PATH, "node_modules"],
     extensions: ['.js', '.jsx'],
     alias: {
-      Lib: path.join(SRC_PATH, 'lib'),
-      React: path.join(SRC_PATH, 'react'),
-      Redux: path.join(SRC_PATH, 'redux'),
-      Styles: path.join(SRC_PATH, 'styles'),
       Locales: path.join(ROOT_PATH, 'src/server/locales'),
     },
   },
   plugins: [
     new webpack.optimize.CommonsChunkPlugin({
-      names: ['vendor', 'runtime'],
+      name: 'vendor',
     }),
-    new ExtractTextPlugin({
-      filename: '../styles/styles.css',
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'runtime',
     }),
   ],
 };
@@ -105,6 +75,9 @@ const dev = merge(base, {
   plugins: [
     new webpack.NamedModulesPlugin(),
     new webpack.HotModuleReplacementPlugin(),
+    new ExtractTextPlugin({
+      disable: true,
+    }),
   ],
 });
 
@@ -133,11 +106,14 @@ const prod = merge(base, {
     new UglifyJSPlugin({
       sourceMap: true,
     }),
-    // new webpack.DefinePlugin({
-    //   'process.env': {
-    //     NODE_ENV: JSON.stringify('production'),
-    //   },
-    // }),
+    new ExtractTextPlugin({
+      filename: '../styles/styles.css',
+    }),
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: JSON.stringify('production'),
+      },
+    }),
   ],
 });
 

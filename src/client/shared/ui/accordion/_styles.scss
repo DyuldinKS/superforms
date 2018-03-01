@@ -1,0 +1,26 @@
+.accordion-item {
+  &.expanded {
+    .accordion-item-button:after {
+      content: '▲';
+    }
+  }
+}
+
+.accordion-item-button {
+  &:after {
+    content: '▼';
+    margin-left: 10px;
+    font-size: .75rem;
+  }
+
+  &:hover,
+  &:active,
+  &:focus {
+    text-decoration: none;
+  }
+}
+
+.accordion-item-content {
+  padding-left: $btn-padding-x;
+  padding-right: $btn-padding-x;
+}
