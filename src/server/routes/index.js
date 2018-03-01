@@ -35,7 +35,7 @@ const router = (app) => {
 				if(!org) {
 					throw new HttpError(404, 'Organization of the user is not found');
 				}
-				const session = { userId: user.id, orgId: org.id };
+				const session = { userId: String(user.id), orgId: String(org.id) };
 
 				store.dispatch(routerModule.actions.init(req.url, req.query));
 				store.dispatch(sessionModule.actions.init(session));
