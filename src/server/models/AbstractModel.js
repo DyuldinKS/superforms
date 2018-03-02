@@ -1,3 +1,4 @@
+import db from '../db/index';
 import {
 	camelCasedProps,
 	snakeCasedProps,
@@ -10,6 +11,8 @@ import { HttpError } from '../libs/errors';
 
 
 class AbstractModel {
+
+
 	// ***************** INSTANCE METHODS ***************** //
 
 	constructor(instance) {
@@ -34,14 +37,17 @@ class AbstractModel {
 			} else {
 				unexpected[prop] = value;
 			}
-			if(typeof this.info !== 'object') this.info = unexpected;
+			if(typeof this.info !== 'object'
+				&& Object.keys(unexpected).length > 0) {
+				this.info = unexpected;
+			}
 		});
 
 		return this;
 	}
 
 
-	convertToPgSchema(props) {
+	convertPropsToPgSchema(props) {
 		const pgProps = {};
 		Object.entries(props).forEach(([prop, value]) => {
 			if(this.props.has(prop)) {
@@ -63,6 +69,21 @@ class AbstractModel {
 
 
 	save() { throw new Error(`The \'save\' method of ${this} must be implemented`); }
+
+
+	update(props) {
+		return Promise.resolve(this.convertPropsToPgSchema(props))
+			.then(pgProps => (
+				db.createQuery()
+					.update(this.tableName)
+					.set(pgProps)
+					.where({ id: this.id })
+					.returning()
+			))
+			.then(query => query.run());
+	}
+
+
 	toJSON() { return this; }
 }
 

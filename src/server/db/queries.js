@@ -43,7 +43,11 @@ class Query {
 
 	set(props) {
 		let queryPart = ' SET';
-		Object.entries(props).forEach(([prop, value]) => {
+		const entries = Object.entries(props);
+		if(entries.length === 0) {
+			throw new PgError('There are no fields to update');
+		}
+		entries.forEach(([prop, value]) => {
 			this.values.push(value);
 			queryPart += ` ${prop} = $${this.values.length},`;
 		});
@@ -100,7 +104,7 @@ class Query {
 
 	returning(columns) {
 		const selected = columns ? `${columns.join(',')}` : '*';
-		this.query += `RETURNING ${selected}`;
+		this.query += ` RETURNING ${selected}`;
 		return this;
 	}
 

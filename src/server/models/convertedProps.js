@@ -1,6 +1,6 @@
-import staticTables from '../db/staticTables.json';
+import db from '../db';
 
-const { states, rcptTypes, roles } = staticTables;
+const { rcptTypes, roles } = db;
 const pgProps = [
 	'status_id',
 	'type_id',
@@ -29,10 +29,10 @@ pgProps.forEach((pgProp) => {
 
 // for static ids properties convertion
 const staticValuesProps = {
-	statusId: {
-		propName: 'status',
-		convert: status => states.values[status],
-	},
+	// statusId: {
+	// 	propName: 'status',
+	// 	convert: status => states.values[status],
+	// },
 	typeId: {
 		propName: 'type',
 		convert: type => rcptTypes.values[type],
@@ -45,10 +45,10 @@ const staticValuesProps = {
 
 // for static values properties convertion
 const staticIdsProps = {
-	status: {
-		propName: 'statusId',
-		convert: status => states.ids[status],
-	},
+	// status: {
+	// 	propName: 'statusId',
+	// 	convert: status => states.ids[status],
+	// },
 	type: {
 		propName: 'typeId',
 		convert: type => rcptTypes.ids[type],

@@ -27,7 +27,10 @@ CREATE TABLE IF NOT EXISTS recipients (
 	email VARCHAR(255) NOT NULL UNIQUE,
 	type_id INTEGER NOT NULL REFERENCES recipient_types(id),
 	active BOOLEAN DEFAULT true,
-	updated TIMESTAMP DEFAULT now()
+	created TIMESTAMP DEFAULT now(),
+	updated TIMESTAMP,
+	deleted TIMESTAMP,
+	author_id INTEGER NOT NULL
 );
 
 
@@ -58,10 +61,9 @@ CREATE TABLE IF NOT EXISTS recipient_tags (
 
 
 CREATE TABLE IF NOT EXISTS organizations (
-	id INTEGER PRIMARY KEY REFERENCES recipients(id),
-	info JSONB NOT NULL,
-	author_id INTEGER NOT NULL,
-	created TIMESTAMP DEFAULT now()
+	id INTEGER PRIMARY KEY REFERENCES recipients(id)
+		DEFERRABLE INITIALLY DEFERRED,
+	info JSONB NOT NULL
 );
 
 
@@ -73,13 +75,13 @@ CREATE TABLE IF NOT EXISTS org_links (
 
 
 CREATE TABLE IF NOT EXISTS users (
-	id INTEGER PRIMARY KEY REFERENCES recipients(id),
-	org_id INTEGER NOT NULL REFERENCES organizations(id),
+	id INTEGER PRIMARY KEY REFERENCES recipients(id)
+		DEFERRABLE INITIALLY DEFERRED,
+	org_id INTEGER NOT NULL REFERENCES organizations(id)
+		DEFERRABLE INITIALLY DEFERRED,
 	info JSONB NOT NULL,
 	role_id INTEGER NOT NULL REFERENCES roles(id),
-	hash VARCHAR(255),
-	author_id INTEGER NOT NULL,
-	created TIMESTAMP DEFAULT now()
+	hash VARCHAR(255)
 );
 
 
@@ -90,7 +92,7 @@ CREATE TABLE IF NOT EXISTS user_tokens (
 );
 
 
-CREATE TABLE user_sessions (
+CREATE TABLE IF NOT EXISTS user_sessions (
 	sid varchar NOT NULL COLLATE "default",
 	sess JSONB NOT NULL,
 	expire TIMESTAMP(6) NOT NULL
@@ -131,26 +133,27 @@ CREATE TABLE IF NOT EXISTS form_recipient_lists (
 );
 
 
-CREATE TABLE IF NOT EXISTS status_log (
-	table_id INTEGER NOT NULL REFERENCES tables(id),
-	object_id INTEGER NOT NULL,
-	info JSONB NOT NULL,
-	author_id INTEGER NOT NULL REFERENCES users(id),
-	timestamp TIMESTAMP DEFAULT now()
+CREATE TABLE IF NOT EXISTS logs(
+	id SERIAL PRIMARY KEY,
+	operation CHAR(1) NOT NULL,
+	entity CHAR(4) NOT NULL,
+	record JSON NOT NULL,
+	time TIMESTAMP DEFAULT now(),
+	author_id INTEGER NOT NULL,
+
+	CONSTRAINT logs_author_id_fkey
+	FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE RESTRICT
+	DEFERRABLE INITIALLY DEFERRED
 );
 
 
-ALTER TABLE recipient_lists ADD CONSTRAINT recipient_lists
+ALTER TABLE recipients ADD CONSTRAINT recipients_author_id_fkey
+FOREIGN KEY (author_id) REFERENCES users(id)
+DEFERRABLE INITIALLY DEFERRED;
+
+
+ALTER TABLE recipient_lists ADD CONSTRAINT recipient_lists_author_id_fkey
 FOREIGN KEY (author_id) REFERENCES users(id);
-
-
-ALTER TABLE organizations ADD CONSTRAINT organizations_fk1
-FOREIGN KEY (author_id) REFERENCES users(id);
-
-
-ALTER TABLE users ADD CONSTRAINT users_fk0 
-FOREIGN KEY (author_id) REFERENCES users(id);
-
 
 
 -------------------------------- FOR TESTS -------------------------------------

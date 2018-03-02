@@ -1,8 +1,8 @@
 import queries from './queries';
-import staticTables from './staticTables.json';
+import consts from './consts';
 
 
 export default {
 	...queries,
-	...staticTables,
+	...consts,
 };

@@ -2,12 +2,11 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import config from '../config';
 import db from '../db/index';
+import AbstractModel from './AbstractModel';
 import Recipient from './Recipient';
-import staticTables from '../db/staticTables.json';
+import LogRecord from './LogRecord';
 import passwordGenerator from '../libs/passwordGenerator';
 import { HttpError, SmtpError, PgError } from '../libs/errors';
-
-const { states, rcptTypes, roles } = staticTables;
 
 
 class User extends Recipient {
@@ -62,6 +61,15 @@ class User extends Recipient {
 	}
 
 
+	static log(operation, record, authorId) {
+		return db.query(
+			`INSERT INTO logs(operation, entity, record, author_id)
+			VALUES('U', 'user', $1::json, $2:int);`,
+			[record, authorId],
+		);
+	}
+
+
 	// ***************** INSTANCE METHODS ***************** //
 
 	authenticate(password) {
@@ -103,20 +111,20 @@ class User extends Recipient {
 	resetPassword() {
 		this.password = passwordGenerator(8);
 		return bcrypt.hash(this.password, config.bcrypt.saltRound)
-			.then(hash => super.update({ hash }));
+			.then(hash => this.update({ hash }));
 	}
 
 
 	setPassword(pass) {
 		return bcrypt.hash(pass, config.bcrypt.saltRound)
-			.then(hash => super.update({ hash }))
-			.then(() => this.deleteToken(this.token))
+			.then(hash => this.update({ hash, authorId: this.authorId }))
+			// .then(() => this.deleteToken(this.token))
 			.then(() => this);
 	}
 
 	// @implements
 	save() {
-		const rcpt = new Recipient({ email: this.email });
+		const rcpt = new Recipient(this);
 		return rcpt.saveIfNotExists()
 			.then(() => {
 				if(!rcpt.active || rcpt.type !== 'unregistered') {
@@ -137,8 +145,13 @@ class User extends Recipient {
 	}
 
 
-	update(props) {
-		return super.update(props);
+	update(props, authorId) {
+		const pgProps = super.convertPropsToPgSchema(props);
+		return db.query(
+			'SELECT * FROM update_user($1::int, $2::json, $3::int)',
+			[this.id, pgProps, authorId],
+		)
+			.then(user => this.assign(user));
 	}
 
 
@@ -173,6 +186,8 @@ User.prototype.props = new Set([
 	'email',
 	'info',
 	'created',
+	'updated',
+	'deleted',
 	// ids
 	// 'roleId',
 	// 'statusId',

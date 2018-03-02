@@ -1,29 +1,13 @@
 import db from '../db/index';
 import Recipient from './Recipient';
-import staticTables from '../db/staticTables.json';
 import { HttpError, SmtpError, PgError } from '../libs/errors';
-
-const { states, rcptTypes } = staticTables;
 
 
 class Org extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
-	static selectOrgsAs(alias) {
-		return `SELECT ${alias}.id, ${alias}.info, rcpt.email,
-				links.chief_org_id AS "chiefOrgId"
-			FROM organizations ${alias}
-			JOIN recipients rcpt ON ${alias}.id = rcpt.id
-			LEFT JOIN org_links links
-			ON ${alias}.id = links.org_id AND links.distance = 1`;
-	}
-
-
 	static findById(id) {
-		return db.query(
-			`${Org.selectOrgsAs('orgs')} WHERE orgs.id = $1::int;`,
-			[id],
-		)
+		return db.query('SELECT * FROM get_org($1::int)', [id])
 			.then((found) => {
 				if(!found) return null;
 				return new Org(found);
@@ -32,7 +16,7 @@ class Org extends Recipient {
 
 	// @implements
 	save() {
-		const rcpt = new Recipient({ email: this.email });
+		const rcpt = new Recipient(this);
 		return rcpt.saveIfNotExists()
 			.then(() => {
 				if(!rcpt.active || rcpt.type !== 'unregistered') {
@@ -104,6 +88,16 @@ class Org extends Recipient {
 			[this.id, Org.buildFilter(options)],
 		);
 	}
+
+
+	update(props, authorId) {
+		const pgProps = super.convertPropsToPgSchema(props);
+		return db.query(
+			'SELECT * FROM update_org($1::int, $2::json, $3::int)',
+			[this.id, pgProps, authorId],
+		)
+			.then(user => this.assign(user));
+	}
 }
 
 
@@ -117,6 +111,8 @@ Org.prototype.props = new Set([
 	'email',
 	'info',
 	'created',
+	'updated',
+	'deleted',
 	// 'suborgsNum',
 	// 'employeesNum',
 	// ids

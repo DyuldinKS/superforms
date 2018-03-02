@@ -34,12 +34,5 @@ export default {
 	root: {
 		email: 'root@',
 		password: 'justDoIt',
-		org: {
-			email: 'root@org',
-			info: {
-				label: '1984',
-				slogan: 'Big Brother is watching you',
-			},
-		},
 	},
 };

@@ -8,7 +8,10 @@ CREATE TYPE org AS (
 	info JSONB,
 	active BOOLEAN,
 	"chiefOrgId" INTEGER,
-	created TIMESTAMP
+	created TIMESTAMP,
+	updated TIMESTAMP,
+	deleted TIMESTAMP,
+	"authorId" INTEGER
 );
 
 
@@ -20,13 +23,15 @@ CREATE OR REPLACE FUNCTION create_org(
 $$
 	WITH rcpt_u AS (
 		UPDATE recipients
-		SET type_id = get_rcpt_type_id('org')
+		SET type_id = get_rcpt_type_id('org'),
+			updated = now(),
+			author_id = _author_id
 		WHERE id = _rcpt_id
 		RETURNING *
 	),
 	org_i AS (
-		INSERT INTO organizations(id, info, author_id)
-		VALUES (_rcpt_id, _info, _author_id)
+		INSERT INTO organizations(id, info)
+		VALUES (_rcpt_id, _info)
 		RETURNING *
 	)
 	SELECT org_i.id,
@@ -34,7 +39,10 @@ $$
 		org_i.info,
 		rcpt_u.active,
 		null::int,
-		org_i.created
+		rcpt_u.created,
+		rcpt_u.updated,
+		rcpt_u.deleted,
+		rcpt_u.author_id
 	FROM org_i, rcpt_u;
 $$
 LANGUAGE SQL VOLATILE;
@@ -49,7 +57,7 @@ $$
 LANGUAGE SQL STABLE;
 
 
-CREATE OR REPLACE FUNCTION get_org_info(_id integer)
+CREATE OR REPLACE FUNCTION get_org(_id integer)
 	RETURNS SETOF org AS
 $$
 	SELECT org.id,
@@ -57,7 +65,10 @@ $$
 		org.info,
 		rcpt.active,
 		link.chief_org_id,
-		org.created
+		rcpt.created,
+		rcpt.updated,
+		rcpt.deleted,
+		rcpt.author_id
 	FROM organizations org
 	JOIN recipients rcpt ON org.id = rcpt.id
 	LEFT JOIN org_links link
@@ -99,6 +110,34 @@ $$
 	FROM _orgs_ids, _orgs_and_parents_ids;
 $$
 LANGUAGE SQL STABLE;
+
+
+CREATE OR REPLACE FUNCTION update_org(
+	_id integer,
+	_params json,
+	_author_id integer,
+	OUT _updated org
+) AS
+$$
+DECLARE
+	_new organizations;
+BEGIN
+	SELECT * FROM json_populate_record(null::organizations, _params) INTO _new;
+
+	IF _new.info IS NOT NULL THEN
+		UPDATE organizations org
+		SET info = _new.info
+		WHERE org.id = _id;
+	END IF;
+
+	PERFORM update_rcpt(_id, _params, _author_id);
+
+	SELECT * FROM get_org(_id) INTO _updated;
+
+	PERFORM log('U', 'org', json_strip_nulls(row_to_json(_new)), _author_id);
+END;
+$$
+LANGUAGE plpgsql;
 
 
 
@@ -164,19 +203,19 @@ CREATE OR REPLACE FUNCTION org_links_delete_orgs_subtree() RETURNS TRIGGER AS $o
 $org_links_bd$ LANGUAGE plpgsql;
 
 
-CREATE TRIGGER organizations_ai
+CREATE TRIGGER link_to_itself_organizations_ai
 	AFTER INSERT ON organizations
 	FOR EACH ROW
 	EXECUTE PROCEDURE org_links_insert_link_to_itself();
 
 
-CREATE TRIGGER org_links_ai
+CREATE TRIGGER insert_org_links_ai
 	AFTER INSERT ON org_links
 	FOR EACH ROW
 	EXECUTE PROCEDURE org_links_insert_links();
 
 
-CREATE TRIGGER org_links_ad
+CREATE TRIGGER delete_org_links_ad
 	AFTER DELETE ON org_links
 	FOR EACH ROW
 	EXECUTE PROCEDURE org_links_delete_orgs_subtree();

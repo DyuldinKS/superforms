@@ -20,14 +20,18 @@ $$
 LANGUAGE SQL STABLE;
 
 
+
 /*********************************  ENTITIES  *********************************/
 
 
 CREATE TYPE entity AS (
 	id INTEGER,
+	email VARCHAR(255),
 	info JSONB,
 	created TIMESTAMP,
-	email VARCHAR(255)
+	updated TIMESTAMP,
+	deleted TIMESTAMP,
+	author_id INTEGER
 );
 
 
@@ -40,16 +44,21 @@ $$
 		_min_depth integer := coalesce((_filter->>'minDepth')::int, 1);
 		_max_depth integer := (_filter->>'maxDepth')::int;
 		_active boolean := (_filter->>'active')::boolean;
+		_deleted boolean := (_filter->>'deleted')::boolean;
 	BEGIN
 		RETURN QUERY
-			SELECT org.id, org.info, org.created, rcpt.email
+			SELECT org.id, rcpt.email, org.info, rcpt.created,
+				rcpt.updated, rcpt.deleted, rcpt.author_id
 			FROM organizations org
 			JOIN recipients rcpt ON rcpt.id = org.id
 			JOIN org_links links ON links.chief_org_id = _org_id
 				AND links.org_id = org.id
 			WHERE links.distance >= _min_depth
 				AND (_max_depth IS NULL OR links.distance <= _max_depth)
-				AND (_active IS NULL OR rcpt.active = _active);
+				AND (_active IS NULL OR rcpt.active = _active)
+				AND (_deleted IS NULL
+					OR (_deleted IS false AND rcpt.deleted IS NULL)
+					OR (_deleted IS true AND rcpt.deleted IS NOT NULL));
 	END;
 $$
 LANGUAGE plpgsql STABLE;
@@ -64,20 +73,24 @@ $$
 		_active boolean := (_filter->>'active')::boolean;
 		_role_id integer := (_filter->>'roleId')::int;
 		_min_depth integer := (_filter->>'minDepth')::int;
+		_deleted boolean := (_filter->>'deleted')::boolean;
 	BEGIN
 		IF _min_depth IS NULL THEN
 			_filter := coalesce(_filter, '{}'::jsonb) || '{ "minDepth": 0 }'::jsonb;
 		END IF;
-		RAISE NOTICE '%', _filter;
 		RETURN QUERY
-			SELECT usr.id, usr.info, usr.created, rcpt.email
+			SELECT usr.id, rcpt.email, usr.info, rcpt.created,
+				rcpt.updated, rcpt.deleted, rcpt.author_id
 			FROM users usr
 			JOIN recipients rcpt ON rcpt.id = usr.id
 			WHERE usr.org_id IN (
 				SELECT id FROM get_subordinate_orgs(_org_id, _filter)
 			)
 				AND (_active IS NULL OR rcpt.active = _active)
-				AND (_role_id IS NULL OR usr.role_id = _role_id);
+				AND (_role_id IS NULL OR usr.role_id = _role_id)
+				AND (_deleted IS NULL
+					OR (_deleted IS false AND rcpt.deleted IS NULL)
+					OR (_deleted IS true AND rcpt.deleted IS NOT NULL));
 	END;
 $$
 LANGUAGE plpgsql STABLE;
@@ -147,8 +160,8 @@ CREATE OR REPLACE FUNCTION build_entities_object(
 $$
 DECLARE
 	_func_name varchar(255) := CASE _table
-		WHEN 'users' THEN 'get_user_info'
-		WHEN 'orgs' THEN 'get_org_info'
+		WHEN 'users' THEN 'get_user'
+		WHEN 'orgs' THEN 'get_org'
 	END;
 BEGIN
 	EXECUTE format(
@@ -189,3 +202,17 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql STABLE;
+
+
+CREATE OR REPLACE FUNCTION log(
+	_operation char(1),
+	_entity char(4),
+	_record json,
+	_author_id integer
+) RETURNS logs AS
+$$
+	INSERT INTO logs(operation, entity, record, author_id)
+	VALUES(_operation, _entity, _record, _author_id)
+	RETURNING *;
+$$
+LANGUAGE SQL;

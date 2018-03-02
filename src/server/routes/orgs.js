@@ -13,9 +13,10 @@ export default (app) => {
 			});
 
 			if(!org.email) return next(new HttpError(400, 'Missing email'));
+			const { chiefOrgId } = org;
 
 			return org.save()
-				.then(() => org.setChiefOrg(org.chiefOrgId))
+				.then(() => org.setChiefOrg(chiefOrgId))
 				// .then(() => mailer.sendRegistrationTo(org))
 				.then(() => res.json(org))
 				.catch((err) => {
@@ -88,9 +89,10 @@ export default (app) => {
 	app.patch(
 		'/api/v1/orgs/:id',
 		(req, res, next) => {
-			const { org } = req.loaded;
+			const { org, self } = req.loaded;
+			const params = req.body;
 
-			org.update(req.body)
+			org.update(params, self.id)
 				.then(() => res.json(org))
 				.catch(next);
 		},

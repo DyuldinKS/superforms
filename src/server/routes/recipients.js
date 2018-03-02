@@ -92,8 +92,10 @@ export default (app) => {
 		'/api/v1/recipients/:id',
 		isAuthenticated,
 		(req, res, next) => {
-			const { rcpt } = req.loaded;
-			rcpt.update(req.body)
+			const { rcpt, self } = req.loaded;
+			const params = req.body;
+
+			rcpt.update(params, self.id)
 				.then(() => res.json(rcpt))
 				.catch(next);
 		},

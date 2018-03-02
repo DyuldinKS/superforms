@@ -1,6 +1,6 @@
 import * as emailVerify from 'email-verify';
-import AbstractModel from './AbstractModel';
 import db from '../db/index';
+import AbstractModel from './AbstractModel';
 // import config from '../config';
 // import staticTables from '../db/staticTables.json';
 
@@ -65,8 +65,10 @@ class Recipient extends AbstractModel {
 
 	save() {
 		return db.query(
-			'INSERT INTO recipients(email) VALUES($1) RETURNING *;',
-			[this.email],
+			`INSERT INTO recipients(email, authorId)
+			VALUES($1::text, $2::int)
+			RETURNING *;`,
+			[this.email, this.authorId],
 		)
 			.then(saved => this.assign(saved));
 	}
@@ -74,21 +76,20 @@ class Recipient extends AbstractModel {
 
 	saveIfNotExists() {
 		return db.query(
-			'SELECT * FROM get_or_create_rcpt($1)',
-			[this.email],
+			'SELECT * FROM get_or_create_rcpt($1, $2)',
+			[this.email, this.authorId],
 		)
 			.then(rcpt => this.assign(rcpt));
 	}
 
 
-	update(props) {
-		return db.createQuery()
-			.update(this.tableName)
-			.set(super.convertToPgSchema(props))
-			.where({ id: this.id })
-			.returning()
-			.run()
-			.then(updated => this.assign(updated[0]));
+	update(props, authorId) {
+		const pgProps = this.convertPropsToPgSchema(props);
+		return db.query(
+			'SELECT * FROM update_rcpt($1::int, $2::json, $3::int)',
+			[this.id, pgProps, authorId],
+		)
+			.then(rcpt => this.assign(rcpt));
 	}
 
 
@@ -112,6 +113,7 @@ Recipient.prototype.props = new Set([
 	'email',
 	'updated',
 	// ids
+	'authorId',
 	// 'typeId',
 	// 'statusId',
 	// related objects

@@ -112,9 +112,10 @@ export default (app) => {
 	app.patch(
 		'/api/v1/users/:id',
 		(req, res, next) => {
-			const { user } = req.loaded;
+			const { user, self } = req.loaded;
+			const params = req.body;
 
-			user.update(req.body)
+			user.update(params, self.id)
 				.then(() => res.json(user))
 				.catch(next);
 		},
