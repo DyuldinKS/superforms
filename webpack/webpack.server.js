@@ -57,17 +57,13 @@ const config = {
 			},
 		],
 	},
-	resolve: Object.assign(
-		{},
-		clientConfig.resolve,
-		{
-			alias: Object.assign(
-				{},
-				clientConfig.resolve.alias,
-				{ Webpack: path.join(ROOT_PATH, 'webpack') },
-			),
+	resolve: {
+		...clientConfig.resolve,
+		alias: {
+			...clientConfig.resolve.alias,
+			 Webpack: path.join(ROOT_PATH, 'webpack'),
 		}
-	),
+	},
 };
 
 module.exports = config;
