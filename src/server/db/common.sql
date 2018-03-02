@@ -26,7 +26,7 @@ LANGUAGE SQL STABLE;
 CREATE TYPE entity AS (
 	id INTEGER,
 	info JSONB,
-	created TIMESTAMP WITH TIME ZONE,
+	created TIMESTAMP,
 	email VARCHAR(255)
 );
 
@@ -132,7 +132,7 @@ $$
 				) AS subordinate_orgs
 				WHERE document @@ to_tsquery('russian', _search_text)
 				ORDER BY ts_rank(document, to_tsquery('russian', _search_text)) DESC, id;
-				
+
 		END CASE;
 	END;
 $$

@@ -1,4 +1,4 @@
-CREATE INDEX users_info_idx ON users 
+CREATE INDEX users_info_idx ON users
 USING gin(to_tsvector('russian', info));
 
 
@@ -9,7 +9,7 @@ CREATE TYPE usr AS (
 	role VARCHAR(255),
 	active BOOLEAN,
 	"orgId" INTEGER,
-	created TIMESTAMP WITH TIME ZONE
+	created TIMESTAMP
 );
 
 
@@ -36,7 +36,7 @@ $$
 		rcpt_u.email,
 		usr_i.info,
 		_role,
-		rcpt_u.active, 
+		rcpt_u.active,
 		_org_id,
 		usr_i.created
 	FROM usr_i, rcpt_u;

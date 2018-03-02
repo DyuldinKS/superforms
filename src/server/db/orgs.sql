@@ -1,4 +1,4 @@
-CREATE INDEX orgs_info_idx ON organizations 
+CREATE INDEX orgs_info_idx ON organizations
 USING gin(to_tsvector('russian', info));
 
 
@@ -8,7 +8,7 @@ CREATE TYPE org AS (
 	info JSONB,
 	active BOOLEAN,
 	"chiefOrgId" INTEGER,
-	created TIMESTAMP WITH TIME ZONE
+	created TIMESTAMP
 );
 
 
@@ -107,7 +107,7 @@ LANGUAGE SQL STABLE;
 
 CREATE OR REPLACE FUNCTION org_links_insert_link_to_itself() RETURNS TRIGGER AS $$
 	BEGIN
-		INSERT INTO org_links (org_id, chief_org_id, distance) 
+		INSERT INTO org_links (org_id, chief_org_id, distance)
 			VALUES (NEW.id, NEW.id, 0);
 		RETURN NULL;
 	END
@@ -122,7 +122,7 @@ CREATE OR REPLACE FUNCTION org_links_insert_links() RETURNS TRIGGER AS $$
 		IF (NEW.distance = 1) THEN
 			RAISE NOTICE 'NEW with distance = 1: % | % | %', NEW.org_id, NEW.chief_org_id, NEW.distance;
 			FOR row IN
-				SELECT down.org_id, up.chief_org_id, 
+				SELECT down.org_id, up.chief_org_id,
 					down.distance + up.distance + 1 AS distance
 				FROM org_links up, org_links down
 				WHERE up.org_id = NEW.chief_org_id
@@ -139,13 +139,13 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION org_links_delete_orgs_subtree() RETURNS TRIGGER AS $org_links_bd$
-	DECLARE 
+	DECLARE
 		row RECORD;
 	BEGIN
 		RAISE NOTICE 'OLD: % | % | %', OLD.org_id, OLD.chief_org_id, OLD.distance;
-		IF (OLD.distance = 1) THEN 
+		IF (OLD.distance = 1) THEN
 			RAISE NOTICE 'OLD filtered: % | % | %', OLD.org_id, OLD.chief_org_id, OLD.distance;
-			FOR row IN 
+			FOR row IN
 				SELECT down.org_id, up.chief_org_id, down.distance + up.distance AS distance
 				FROM org_links down
 					JOIN org_links up
@@ -155,7 +155,7 @@ CREATE OR REPLACE FUNCTION org_links_delete_orgs_subtree() RETURNS TRIGGER AS $o
 						AND up.distance + down.distance > 1
 			LOOP
 				RAISE NOTICE 'deleted row: % | % | %', row.org_id, row.chief_org_id, row.distance;
-				DELETE FROM org_links 
+				DELETE FROM org_links
 				WHERE org_id = row.org_id AND chief_org_id = row.chief_org_id;
 			END LOOP;
 		END IF;

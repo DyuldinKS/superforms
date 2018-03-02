@@ -3,7 +3,7 @@ CREATE TYPE rcpt AS (
 	email VARCHAR(255),
 	type VARCHAR(255),
 	active BOOLEAN,
-	updated TIMESTAMP WITH TIME ZONE
+	updated TIMESTAMP
 );
 
 
