@@ -1,5 +1,5 @@
 // import global styles
-import 'Styles/main.scss';
+import '../../../client/styles/main.scss';
 
 import mainPage from './main.hbs';
 import passRecoveryPage from './passRecovery.hbs';
