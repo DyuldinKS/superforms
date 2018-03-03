@@ -81,7 +81,7 @@ if(NODE_ENV === 'production') {
 	logger.addStream({
 		type: 'rotating-file',
 		level: 'info',
-		path: path.join(__dirname, 'logs/info.log'),
+		path: path.join(__dirname, '../logs/info.log'),
 		period: '1d',
 		count: 10,
 	});

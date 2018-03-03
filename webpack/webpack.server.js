@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 const nodeExternals = require('webpack-node-externals');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MakeDirPlugin = require('make-dir-webpack-plugin');
 const clientConfig = require('./webpack.client.js');
 
 const ROOT_PATH = path.join(__dirname, '../');
@@ -9,6 +10,7 @@ const SRC_PATH = path.join(ROOT_PATH, 'src');
 const SRC_SERVER_PATH = path.join(ROOT_PATH, 'src/server');
 const SRC_CLIENT_PATH = path.join(ROOT_PATH, 'src/client');
 const DIST_PATH = path.join(ROOT_PATH, 'dist');
+
 
 // The configuration for the server-side rendering
 const config = {
@@ -27,6 +29,9 @@ const config = {
 		new webpack.optimize.ModuleConcatenationPlugin(),
 		new ExtractTextPlugin({
 			filename: 'public/styles/styles.css',
+		}),
+		new MakeDirPlugin({
+			dirs: [{ path: path.join(ROOT_PATH, 'logs') }],
 		}),
 	],
 	module: {
@@ -65,5 +70,6 @@ const config = {
 		}
 	},
 };
+
 
 module.exports = config;
