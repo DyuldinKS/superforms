@@ -28,20 +28,20 @@ function createRootWithOrg() {
 		},
 	};
 
+	const types = consts.rcptTypes.ids;
 	return bcrypt.hash(password, config.bcrypt.saltRound)
 		.then(hash => db.queryAll(`BEGIN;
-	
-			INSERT INTO recipients(email, type_id, author_id)
-			VALUES('${email}', ${consts.rcptTypes.ids.user}, 1);
 
 			INSERT INTO recipients(email, type_id, author_id)
-			VALUES('${org.email}', ${consts.rcptTypes.ids.org}, 1);
+			VALUES('${email}', ${types.user}, 1);
 
-			INSERT INTO organizations(id, info)
-			VALUES(2, '${JSON.stringify(org.info)}'::jsonb);
+			INSERT INTO recipients(email, type_id, author_id)
+			VALUES('${org.email}', ${types.org}, 1);
 
-			INSERT INTO users(id, org_id, info, role_id, hash)
-			VALUES(1, 2, '{}'::jsonb, ${consts.roles.ids.root}, '${hash}');
+			SELECT create_org(2, '${JSON.stringify(org.info)}'::jsonb, 1);
+
+			SELECT create_user(1, 2, '{}'::jsonb, 'root', null, 1);
+			SELECT update_user(1, '{ "hash": "${hash}" }'::json, 1);
 
 			COMMIT;`));
 }

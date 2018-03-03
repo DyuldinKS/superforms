@@ -105,7 +105,6 @@ CREATE OR REPLACE FUNCTION log_rcpt_tr()
 	RETURNS TRIGGER AS
 $$
 BEGIN
-	RAISE NOTICE 'NEW: %', row_to_json(NEW.*)
 	PERFORM log('I', 'rcpt', NEW.id, row_to_json(NEW.*), NEW.author_id);
 	RETURN NEW;
 END;

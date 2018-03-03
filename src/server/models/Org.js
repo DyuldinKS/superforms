@@ -35,10 +35,9 @@ class Org extends Recipient {
 	}
 
 
-	setChiefOrg(chiefOrgId) {
+	setParentOrg(chiefOrgId) {
 		return db.query(
-			`INSERT INTO org_links(org_id, chief_org_id)
-			VALUES($1, $2);`,
+			'INSERT INTO org_links(org_id, parent_id) VALUES($1, $2);',
 			[this.id, chiefOrgId],
 		)
 			.then(() => this.assign({ chiefOrgId }));

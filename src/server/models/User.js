@@ -123,7 +123,7 @@ class User extends Recipient {
 	}
 
 	// @implements
-	save() {
+	save(authorId) {
 		const rcpt = new Recipient(this);
 		return rcpt.saveIfNotExists()
 			.then(() => {
@@ -131,13 +131,14 @@ class User extends Recipient {
 					throw new HttpError(403, 'This email is not available');
 				}
 				return db.query(
-					'SELECT * FROM create_user($1, $2, $3, $4, $5)',
+					'SELECT * FROM create_user($1, $2, $3, $4, $5, $6)',
 					[
 						rcpt.id,
 						this.orgId,
 						this.info,
 						this.role,
-						this.authorId,
+						null,
+						authorId,
 					],
 				);
 			})

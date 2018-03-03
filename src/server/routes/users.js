@@ -59,15 +59,13 @@ export default (app) => {
 		'/api/v1/users',
 		isAuthenticated,
 		(req, res, next) => {
-			const user = new User({
-				...req.body,
-				authorId: req.loaded.self.id,
-			});
+			const { self } = req.loaded;
+			const user = new User({ ...req.body });
 
 			if(!user.email) return next(new HttpError(400, 'Missing email'));
 			if(!user.role) return next(new HttpError(400, 'Missing user role'));
 
-			return user.save()
+			return user.save(self.id)
 				.then(() => user.recoverPass())
 				.then(() => mailer.sendRegistrationEmail(user))
 				.then(() => res.json(user))

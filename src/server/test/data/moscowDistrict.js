@@ -17,7 +17,7 @@ const getRoot = () => (
 
 const createOrg = orgData => (
 	new Org(orgData).save()
-		.then(org => org.setChiefOrg(orgData.chiefOrgId))
+		.then(org => org.setParentOrg(orgData.chiefOrgId))
 );
 
 

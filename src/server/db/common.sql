@@ -51,7 +51,7 @@ $$
 				rcpt.updated, rcpt.deleted, rcpt.author_id
 			FROM organizations org
 			JOIN recipients rcpt ON rcpt.id = org.id
-			JOIN org_links links ON links.chief_org_id = _org_id
+			JOIN org_links links ON links.parent_id = _org_id
 				AND links.org_id = org.id
 			WHERE links.distance >= _min_depth
 				AND (_max_depth IS NULL OR links.distance <= _max_depth)

@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS organizations (
 
 CREATE TABLE IF NOT EXISTS org_links (
 	org_id INTEGER NOT NULL REFERENCES organizations(id),
-	chief_org_id INTEGER NOT NULL REFERENCES organizations(id),
+	parent_id INTEGER NOT NULL REFERENCES organizations(id),
 	distance INTEGER NOT NULL DEFAULT 1
 );
 

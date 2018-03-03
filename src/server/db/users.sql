@@ -16,56 +16,8 @@ CREATE TYPE usr AS (
 );
 
 
-CREATE OR REPLACE FUNCTION create_user(
-	_rcpt_id integer,
-	_org_id integer,
-	_info jsonb,
-	_role varchar(255),
-	_author_id integer
-) RETURNS usr AS
-$$
-	WITH rcpt_u AS (
-		UPDATE recipients
-		SET type_id = get_rcpt_type_id('user'),
-			updated = now(),
-			author_id = _author_id
-		WHERE id = _rcpt_id
-		RETURNING *
-	),
-	user_i AS (
-		INSERT INTO users(id, org_id, info, role_id)
-		VALUES (_rcpt_id, _org_id, _info, get_role_id(_role))
-		RETURNING *
-	),
-	log_i AS (
-		SELECT log('I', 'user', _rcpt_id, row_to_json(user_i), _author_id)
-		FROM user_i
-	)
-	SELECT user_i.id,
-		rcpt_u.email,
-		user_i.info,
-		_role,
-		rcpt_u.active,
-		_org_id,
-		rcpt_u.created,
-		rcpt_u.updated,
-		rcpt_u.deleted,
-		rcpt_u.author_id
-	FROM user_i, rcpt_u;
-$$
-LANGUAGE SQL VOLATILE;
-
-
-CREATE OR REPLACE FUNCTION get_user_org_id(_user_id integer)
-	RETURNS integer AS
-$$
-	SELECT org_id FROM users WHERE id = _user_id;
-$$
-LANGUAGE SQL STABLE;
-
-
 CREATE OR REPLACE FUNCTION get_user(_id integer)
-	RETURNS SETOF usr AS
+	RETURNS usr AS
 $$
 	SELECT usr.id,
 		rcpt.email,
@@ -80,6 +32,45 @@ $$
 	FROM users usr
 	JOIN recipients rcpt ON usr.id = _id
 		AND usr.id = rcpt.id;
+$$
+LANGUAGE SQL STABLE;
+
+
+CREATE OR REPLACE FUNCTION create_user(
+	_rcpt_id integer,
+	_org_id integer,
+	_info jsonb,
+	_role varchar(255),
+	_hash varchar(255),
+	_author_id integer,
+	OUT _user usr
+) AS
+$$
+DECLARE
+	_inserted users;
+BEGIN
+	INSERT INTO users(id, org_id, info, role_id, hash)
+	VALUES (_rcpt_id, _org_id, _info, get_role_id(_role), _hash)
+	RETURNING * INTO _inserted;
+
+	PERFORM update_rcpt(
+		_rcpt_id,
+		json_build_object('type_id', get_rcpt_type_id('user')),
+		_author_id
+	);
+
+	SELECT * FROM get_user(_rcpt_id) INTO _user;
+
+	PERFORM log('I', 'user', _rcpt_id, row_to_json(_inserted), _author_id);
+END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION get_user_org_id(_user_id integer)
+	RETURNS integer AS
+$$
+	SELECT org_id FROM users WHERE id = _user_id;
 $$
 LANGUAGE SQL STABLE;
 
