@@ -54,37 +54,47 @@ $$
 LANGUAGE SQL VOLATILE;
 
 
-CREATE OR REPLACE FUNCTION set_rcpt_update_time_tr()
-	RETURNS TRIGGER AS
+CREATE OR REPLACE FUNCTION get_rcpt(_id integer)
+	RETURNS rcpt AS
 $$
-BEGIN
-	NEW.updated := now();
-  RETURN NEW;
-END;
+	SELECT id, email, get_rcpt_type_name(type_id), active,
+		created, updated, deleted, author_id
+	FROM recipients WHERE id = _id;
 $$
-LANGUAGE plpgsql;
+LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION update_rcpt(
 	_id integer,
 	_params json,
-	_author_id integer
-) RETURNS recipients AS
+	_author_id integer,
+	OUT _updated rcpt
+) AS
 $$
-	WITH new AS (
-		SELECT * FROM json_populate_record(null::recipients, _params)
-	)
+DECLARE
+	_new recipients;
+	_changes jsonb;
+	_time timestamp;
+BEGIN
+	SELECT * FROM json_populate_record(null::recipients, _params) INTO _new;
+
+	_new.updated = now();
+	_new.author_id = _author_id;
 	UPDATE recipients rcpt
-	SET email = coalesce(new.email, rcpt.email),
-		active = coalesce(new.active, rcpt.active),
-		updated = now(),
-		deleted = coalesce(new.deleted, rcpt.deleted),
-		author_id = _author_id
-	FROM new
-	WHERE rcpt.id = _id
-	RETURNING rcpt.*
+	SET email = coalesce(_new.email, rcpt.email),
+		active = coalesce(_new.active, rcpt.active),
+		updated = _new.updated,
+		deleted = coalesce(_new.deleted, rcpt.deleted),
+		author_id = _new.author_id
+	WHERE rcpt.id = _id;
+
+	SELECT * FROM get_rcpt(_id) INTO _updated;
+
+	_changes := json_strip_nulls(row_to_json(_new));
+	PERFORM log('U', 'rcpt', _id, _changes::json, _author_id);
+END;
 $$
-LANGUAGE SQL;
+LANGUAGE plpgsql;
 
 
 
@@ -94,34 +104,16 @@ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION log_rcpt_tr()
 	RETURNS TRIGGER AS
 $$
-DECLARE
-	_entity CHAR(4) := 'rcpt';
 BEGIN
-	RAISE NOTICE 'NEW: %', row_to_json(NEW.*);
-	CASE TG_OP
-		WHEN 'INSERT' THEN
-			PERFORM log('I', _entity, NEW.id, row_to_json(NEW.*), NEW.author_id);
-			RETURN NEW;
-		WHEN 'UPDATE' THEN
-			PERFORM log('U', _entity, NEW.id, row_to_json(NEW.*), NEW.author_id);
-			RETURN NEW;
-		WHEN 'DELETE' THEN
-			PERFORM log('D', _entity, OLD.id, row_to_json(OLD.*), OLD.author_id);
-			RETURN OLD;
-	END CASE;
-  RETURN NULL;
+	RAISE NOTICE 'NEW: %', row_to_json(NEW.*)
+	PERFORM log('I', 'rcpt', NEW.id, row_to_json(NEW.*), NEW.author_id);
+	RETURN NEW;
 END;
 $$
 LANGUAGE plpgsql;
 
 
-CREATE TRIGGER update_time_recipients_bu
-BEFORE UPDATE ON recipients
-FOR EACH ROW
-EXECUTE PROCEDURE set_rcpt_update_time_tr();
-
-
-CREATE TRIGGER log_recipients_aiud
-AFTER INSERT OR UPDATE OR DELETE ON recipients
+CREATE TRIGGER log_recipients_ai
+AFTER INSERT ON recipients
 FOR EACH ROW
 EXECUTE PROCEDURE log_rcpt_tr();
