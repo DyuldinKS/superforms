@@ -121,6 +121,7 @@ CREATE OR REPLACE FUNCTION update_org(
 $$
 DECLARE
 	_new organizations;
+	_changes json;
 BEGIN
 	SELECT * FROM json_populate_record(null::organizations, _params) INTO _new;
 
@@ -134,7 +135,8 @@ BEGIN
 
 	SELECT * FROM get_org(_id) INTO _updated;
 
-	PERFORM log('U', 'org', json_strip_nulls(row_to_json(_new)), _author_id);
+	_changes := json_strip_nulls(row_to_json(_new));
+	PERFORM log('U', 'org', _id, _changes, _author_id);
 END;
 $$
 LANGUAGE plpgsql;

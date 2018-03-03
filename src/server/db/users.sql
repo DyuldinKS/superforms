@@ -38,7 +38,7 @@ $$
 		RETURNING *
 	),
 	log_i AS (
-		SELECT log('I', 'user', row_to_json(user_i), _author_id)
+		SELECT log('I', 'user', _rcpt_id, row_to_json(user_i), _author_id)
 		FROM user_i
 	)
 	SELECT user_i.id,
@@ -122,6 +122,7 @@ CREATE OR REPLACE FUNCTION update_user(
 $$
 DECLARE
 	_new users;
+	_changes json;
 BEGIN
 	SELECT * FROM json_populate_record(null::users, _params) INTO _new;
 
@@ -135,7 +136,8 @@ BEGIN
 
 	SELECT * FROM get_user(_id) INTO _updated;
 
-	PERFORM log('U', 'user', json_strip_nulls(row_to_json(_new)), _author_id);
+	_changes := json_strip_nulls(row_to_json(_new));
+	PERFORM log('U', 'user', _id, _changes, _author_id);
 END;
 $$
 LANGUAGE plpgsql;

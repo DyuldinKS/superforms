@@ -100,16 +100,13 @@ BEGIN
 	RAISE NOTICE 'NEW: %', row_to_json(NEW.*);
 	CASE TG_OP
 		WHEN 'INSERT' THEN
-			INSERT INTO logs(operation, entity, record, author_id)
-			VALUES('I', _entity, row_to_json(NEW.*), NEW.author_id);
+			PERFORM log('I', _entity, NEW.id, row_to_json(NEW.*), NEW.author_id);
 			RETURN NEW;
 		WHEN 'UPDATE' THEN
-			INSERT INTO logs(operation, entity, record, author_id)
-			VALUES('U', _entity, row_to_json(NEW.*), NEW.author_id);
+			PERFORM log('U', _entity, NEW.id, row_to_json(NEW.*), NEW.author_id);
 			RETURN NEW;
 		WHEN 'DELETE' THEN
-			INSERT INTO logs(operation, entity, record, authorId)
-			VALUES('D', _entity, row_to_json(OLD.*), OLD.author_id);
+			PERFORM log('D', _entity, OLD.id, row_to_json(OLD.*), OLD.author_id);
 			RETURN OLD;
 	END CASE;
   RETURN NULL;

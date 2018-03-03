@@ -137,7 +137,8 @@ CREATE TABLE IF NOT EXISTS logs(
 	id SERIAL PRIMARY KEY,
 	operation CHAR(1) NOT NULL,
 	entity CHAR(4) NOT NULL,
-	record JSON NOT NULL,
+	entity_id INTEGER NOT NULL,
+	changes JSON NOT NULL,
 	time TIMESTAMP DEFAULT now(),
 	author_id INTEGER NOT NULL,
 

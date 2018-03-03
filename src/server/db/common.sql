@@ -207,12 +207,13 @@ LANGUAGE plpgsql STABLE;
 CREATE OR REPLACE FUNCTION log(
 	_operation char(1),
 	_entity char(4),
-	_record json,
+	_entity_id integer,
+	_changes json,
 	_author_id integer
 ) RETURNS logs AS
 $$
-	INSERT INTO logs(operation, entity, record, author_id)
-	VALUES(_operation, _entity, _record, _author_id)
+	INSERT INTO logs(operation, entity, entity_id, changes, author_id)
+	VALUES(_operation, _entity, _entity_id, _changes, _author_id)
 	RETURNING *;
 $$
 LANGUAGE SQL;
