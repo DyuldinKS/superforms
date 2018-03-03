@@ -206,13 +206,13 @@ CREATE TRIGGER link_to_itself_organizations_ai
 	EXECUTE PROCEDURE org_links_insert_link_to_itself();
 
 
-CREATE TRIGGER insert_org_links_ai
+CREATE TRIGGER org_links_ai
 	AFTER INSERT ON org_links
 	FOR EACH ROW
 	EXECUTE PROCEDURE org_links_insert_links();
 
 
-CREATE TRIGGER delete_org_links_ad
+CREATE TRIGGER org_links_ad
 	AFTER DELETE ON org_links
 	FOR EACH ROW
 	EXECUTE PROCEDURE org_links_delete_orgs_subtree();
