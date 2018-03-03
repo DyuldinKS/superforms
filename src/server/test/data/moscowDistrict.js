@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import { promisify } from 'util';
 import Org from '../../models/Org';
 import User from '../../models/User';
@@ -43,7 +44,7 @@ const createEducationDepartment = () => {
 		authorId: root.id,
 	})
 		.then((org) => { edDep = org; })
-		.then(() => fsReadFile('educationDepartmentUsers.json'))
+		.then(() => fsReadFile(path.join(__dirname, 'educationDepartmentUsers.json')))
 		.then(JSON.parse)
 		.then(users => createUsers(edDep, users))
 		.then(() => edDep)
@@ -69,7 +70,7 @@ const createIMC = chiefOrg => (
 
 
 const createSchoolsAndKindergartens = imc => (
-	fsReadFile('mscDistrictOrgs.json')
+	fsReadFile(path.join(__dirname, 'mscDistrictOrgs.json'))
 		.then(JSON.parse)
 		.then(({ schools, kindergartens }) => {
 			const chain = Promise.resolve();
