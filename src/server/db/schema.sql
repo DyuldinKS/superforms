@@ -16,16 +16,13 @@ CREATE TABLE IF NOT EXISTS tables (
 );
 
 
-CREATE TABLE IF NOT EXISTS recipient_types (
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(255) UNIQUE NOT NULL
-);
+CREATE TYPE rcpt_type AS enum('rcpt', 'user', 'org');
 
 
 CREATE TABLE IF NOT EXISTS recipients (
 	id SERIAL PRIMARY KEY,
 	email VARCHAR(255) NOT NULL UNIQUE,
-	type_id INTEGER NOT NULL REFERENCES recipient_types(id),
+	type rcpt_type,
 	active BOOLEAN DEFAULT true,
 	created TIMESTAMP DEFAULT now(),
 	updated TIMESTAMP,

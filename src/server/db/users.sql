@@ -53,11 +53,7 @@ BEGIN
 	VALUES (_rcpt_id, _org_id, _info, get_role_id(_role), _hash)
 	RETURNING * INTO _inserted;
 
-	PERFORM update_rcpt(
-		_rcpt_id,
-		json_build_object('type_id', get_rcpt_type_id('user')),
-		_author_id
-	);
+	PERFORM update_rcpt(_rcpt_id, json_build_object('type', 'user'), _author_id);
 
 	SELECT * FROM get_user(_rcpt_id) INTO _user;
 

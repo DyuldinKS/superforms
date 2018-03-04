@@ -68,10 +68,11 @@ export default (app) => {
 		'/api/v1/recipients',
 		isAuthenticated,
 		(req, res, next) => {
+			const { self } = req.loaded;
 			const { email } = req.body;
 			const rcpt = new Recipient({ email });
 
-			rcpt.save()
+			rcpt.save(self.id)
 				.then(() => res.json(rcpt))
 				.catch((err) => {
 					if(err instanceof PgError) {

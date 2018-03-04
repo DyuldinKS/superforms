@@ -11,13 +11,13 @@ let root;
 
 
 const getRoot = () => (
-	db.query('SELECT * FROM users WHERE id = (SELECT MIN(id) FROM users);')
+	db.query('SELECT * FROM users WHERE id = (SELECT min(id) FROM users);')
 		.then(data => new User(data))
 );
 
 
 const createOrg = orgData => (
-	new Org(orgData).save()
+	new Org(orgData).save(root.id)
 		.then(org => org.setParentOrg(orgData.chiefOrgId))
 );
 
@@ -26,8 +26,8 @@ const createUsers = (org, users) => (
 	Promise.all(users.map(data => new User({
 		...data,
 		orgId: org.id,
-		authorId: root.id,
-	}).save()))
+	})
+		.save(root.id)))
 );
 
 
@@ -41,7 +41,6 @@ const createEducationDepartment = () => {
 			fullName: '?',
 		},
 		chiefOrgId: root.orgId,
-		authorId: root.id,
 	})
 		.then((org) => { edDep = org; })
 		.then(() => fsReadFile(path.join(__dirname, 'educationDepartmentUsers.json')))
@@ -55,7 +54,7 @@ const createEducationDepartment = () => {
 };
 
 
-const createIMC = chiefOrg => (
+const createIMC = parentOrg => (
 	createOrg({
 		email: 'info@imc-mosk.ru',
 		info: {
@@ -63,8 +62,7 @@ const createIMC = chiefOrg => (
 			shortName: 'ГБУ ДППО ЦПКС ИМЦ Московского района Санкт-Петербурга',
 			fullName: 'Государственное бюджетное учреждение дополнительного профессионального педагогического образования центр повышения квалификации специалистов «Информационно-методический центр» Московского района Санкт-Петербурга',
 		},
-		authorId: root.id,
-		chiefOrgId: chiefOrg.id,
+		chiefOrgId: parentOrg.id,
 	})
 );
 

@@ -63,21 +63,19 @@ class Recipient extends AbstractModel {
 	// }
 
 
-	save() {
+	save(authorId) {
 		return db.query(
-			`INSERT INTO recipients(email, authorId)
-			VALUES($1::text, $2::int)
-			RETURNING *;`,
-			[this.email, this.authorId],
+			'SELECT * FROM create_rcpt($1, $2)',
+			[this.email, authorId],
 		)
 			.then(saved => this.assign(saved));
 	}
 
 
-	saveIfNotExists() {
+	saveIfNotExists(authorId) {
 		return db.query(
 			'SELECT * FROM get_or_create_rcpt($1, $2)',
-			[this.email, this.authorId],
+			[this.email, authorId],
 		)
 			.then(rcpt => this.assign(rcpt));
 	}

@@ -1,13 +1,3 @@
-const rcptTypes = {
-	tableName: 'recipient_types',
-	records: {
-		1: 'unregistered',
-		2: 'user',
-		3: 'org',
-	},
-};
-
-
 const roles = {
 	tableName: 'roles',
 	records: {
@@ -36,7 +26,7 @@ function deepFreeze(obj) {
 }
 
 
-const consts = Object.entries({ rcptTypes, roles })
+const consts = Object.entries({ roles })
 	.reduce(
 		(conv, [label, { tableName, records }]) => {
 			const ids = Object.entries(records)

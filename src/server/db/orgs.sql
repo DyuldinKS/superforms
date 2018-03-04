@@ -50,11 +50,7 @@ BEGIN
 	VALUES (_rcpt_id, _info)
 	RETURNING * INTO _inserted;
 
-	PERFORM update_rcpt(
-		_rcpt_id,
-		json_build_object('type_id', get_rcpt_type_id('org')),
-		_author_id
-	);
+	PERFORM update_rcpt(_rcpt_id, json_build_object('type', 'org'), _author_id);
 
 	SELECT * FROM get_org(_rcpt_id) INTO _org;
 

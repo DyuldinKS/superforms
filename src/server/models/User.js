@@ -125,9 +125,9 @@ class User extends Recipient {
 	// @implements
 	save(authorId) {
 		const rcpt = new Recipient(this);
-		return rcpt.saveIfNotExists()
+		return rcpt.saveIfNotExists(authorId)
 			.then(() => {
-				if(!rcpt.active || rcpt.type !== 'unregistered') {
+				if(!rcpt.active || rcpt.type !== 'rcpt') {
 					throw new HttpError(403, 'This email is not available');
 				}
 				return db.query(

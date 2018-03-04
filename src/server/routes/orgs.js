@@ -7,6 +7,7 @@ export default (app) => {
 	app.post(
 		'/api/v1/orgs',
 		(req, res, next) => {
+			const { self } = req.loaded;
 			const org = new Org({
 				...req.body,
 				authorId: req.loaded.self.id,
@@ -15,8 +16,8 @@ export default (app) => {
 			if(!org.email) return next(new HttpError(400, 'Missing email'));
 			const { chiefOrgId } = org;
 
-			return org.save()
-				.then(() => org.setChiefOrg(chiefOrgId))
+			return org.save(self.id)
+				.then(() => org.setParentOrg(chiefOrgId))
 				// .then(() => mailer.sendRegistrationTo(org))
 				.then(() => res.json(org))
 				.catch((err) => {

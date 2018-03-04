@@ -28,15 +28,11 @@ function createRootWithOrg() {
 		},
 	};
 
-	const types = consts.rcptTypes.ids;
 	return bcrypt.hash(password, config.bcrypt.saltRound)
 		.then(hash => db.queryAll(`BEGIN;
 
-			INSERT INTO recipients(email, type_id, author_id)
-			VALUES('${email}', ${types.user}, 1);
-
-			INSERT INTO recipients(email, type_id, author_id)
-			VALUES('${org.email}', ${types.org}, 1);
+			SELECT create_rcpt('${email}', 1);
+			SELECT create_rcpt('${org.email}', 1);
 
 			SELECT create_org(2, '${JSON.stringify(org.info)}'::jsonb, 1);
 
