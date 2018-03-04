@@ -1,18 +1,12 @@
 CREATE TABLE IF NOT EXISTS states (
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(255) UNIQUE NOT NULL
+	id serial PRIMARY KEY,
+	name varchar(255) UNIQUE NOT NULL
 );
 
 
 CREATE TABLE IF NOT EXISTS roles (
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(255) UNIQUE NOT NULL
-);
-
-
-CREATE TABLE IF NOT EXISTS tables (
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(255) UNIQUE NOT NULL 
+	id serial PRIMARY KEY,
+	name varchar(255) UNIQUE NOT NULL
 );
 
 
@@ -20,124 +14,124 @@ CREATE TYPE rcpt_type AS enum('rcpt', 'user', 'org');
 
 
 CREATE TABLE IF NOT EXISTS recipients (
-	id SERIAL PRIMARY KEY,
-	email VARCHAR(255) NOT NULL UNIQUE,
+	id serial PRIMARY KEY,
+	email varchar(255) NOT NULL UNIQUE,
 	type rcpt_type,
-	active BOOLEAN DEFAULT true,
-	created TIMESTAMP DEFAULT now(),
-	updated TIMESTAMP,
-	deleted TIMESTAMP,
-	author_id INTEGER NOT NULL
+	active boolean DEFAULT true,
+	created timestamp DEFAULT now(),
+	updated timestamp,
+	deleted timestamp,
+	author_id integer NOT NULL
 );
 
 
 CREATE TABLE IF NOT EXISTS recipient_lists (
-	id SERIAL PRIMARY KEY,
-	author_id INTEGER NOT NULL,
-	status_id INTEGER NOT NULL REFERENCES states(id),
-	created TIMESTAMP DEFAULT now()
+	id serial PRIMARY KEY,
+	author_id integer NOT NULL,
+	status_id integer NOT NULL REFERENCES states(id),
+	created timestamp DEFAULT now()
 );
 
 
 CREATE TABLE IF NOT EXISTS recipient_in_lists (
-	recipient_id INTEGER NOT NULL REFERENCES recipients(id),
-	list_id INTEGER NOT NULL REFERENCES recipient_lists(id)
+	recipient_id integer NOT NULL REFERENCES recipients(id),
+	list_id integer NOT NULL REFERENCES recipient_lists(id)
 );
 
 
 CREATE TABLE IF NOT EXISTS tags (
-	id SERIAL PRIMARY KEY,
-	tag VARCHAR(255) UNIQUE NOT NULL
+	id serial PRIMARY KEY,
+	tag varchar(255) UNIQUE NOT NULL
 );
 
 
 CREATE TABLE IF NOT EXISTS recipient_tags (
-	recipient_id INTEGER NOT NULL REFERENCES recipients(id),
-	tag_id INTEGER NOT NULL REFERENCES tags(id)
+	recipient_id integer NOT NULL REFERENCES recipients(id),
+	tag_id integer NOT NULL REFERENCES tags(id)
 );
 
 
 CREATE TABLE IF NOT EXISTS organizations (
-	id INTEGER PRIMARY KEY REFERENCES recipients(id)
+	id integer PRIMARY KEY REFERENCES recipients(id)
 		DEFERRABLE INITIALLY DEFERRED,
-	info JSONB NOT NULL
+	info jsonb NOT NULL
 );
 
 
 CREATE TABLE IF NOT EXISTS org_links (
-	org_id INTEGER NOT NULL REFERENCES organizations(id),
-	parent_id INTEGER NOT NULL REFERENCES organizations(id),
-	distance INTEGER NOT NULL DEFAULT 1
+	org_id integer NOT NULL REFERENCES organizations(id),
+	parent_id integer NOT NULL REFERENCES organizations(id),
+	distance integer NOT NULL DEFAULT 1
 );
 
 
 CREATE TABLE IF NOT EXISTS users (
-	id INTEGER PRIMARY KEY REFERENCES recipients(id)
+	id integer PRIMARY KEY REFERENCES recipients(id)
 		DEFERRABLE INITIALLY DEFERRED,
-	org_id INTEGER NOT NULL REFERENCES organizations(id)
+	org_id integer NOT NULL REFERENCES organizations(id)
 		DEFERRABLE INITIALLY DEFERRED,
-	info JSONB NOT NULL,
-	role_id INTEGER NOT NULL REFERENCES roles(id),
-	hash VARCHAR(255)
+	info jsonb NOT NULL,
+	role_id integer NOT NULL REFERENCES roles(id),
+	hash varchar(255)
 );
 
 
 CREATE TABLE IF NOT EXISTS user_tokens (
-	user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-	token VARCHAR(255) UNIQUE NOT NULL,
-	created TIMESTAMP DEFAULT now()
+	user_id integer UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	token varchar(255) UNIQUE NOT NULL,
+	created timestamp DEFAULT now()
 );
 
 
 CREATE TABLE IF NOT EXISTS user_sessions (
 	sid varchar NOT NULL COLLATE "default",
-	sess JSONB NOT NULL,
-	expire TIMESTAMP(6) NOT NULL
+	sess jsonb NOT NULL,
+	expire timestamp(6) NOT NULL
 ) WITH (OIDS=FALSE);
 
 
 CREATE TABLE IF NOT EXISTS forms (
-	id SERIAL PRIMARY KEY,
-	scheme JSONB NOT NULL,
-	options JSONB,
-	author_id INTEGER NOT NULL REFERENCES users(id),
-	status_id INTEGER NOT NULL REFERENCES states(id),
-	modified TIMESTAMP
+	id serial PRIMARY KEY,
+	scheme jsonb NOT NULL,
+	options jsonb,
+	author_id integer NOT NULL REFERENCES users(id),
+	status_id integer NOT NULL REFERENCES states(id),
+	modified timestamp
 );
 
 
 CREATE TABLE IF NOT EXISTS responses (
-	id SERIAL PRIMARY KEY,
-	form_id INTEGER NOT NULL REFERENCES forms(id),
-	list JSONB NOT NULL,
-	author_id INTEGER NOT NULL REFERENCES users(id),
-	recipient_id INTEGER NOT NULL REFERENCES recipients(id),
-	status_id INTEGER NOT NULL,
-	modified TIMESTAMP
+	id serial PRIMARY KEY,
+	form_id integer NOT NULL REFERENCES forms(id),
+	list jsonb NOT NULL,
+	author_id integer NOT NULL REFERENCES users(id),
+	recipient_id integer NOT NULL REFERENCES recipients(id),
+	status_id integer NOT NULL,
+	modified timestamp
 );
 
 
 CREATE TABLE IF NOT EXISTS recipient_lists_tags (
-	list_id INTEGER NOT NULL REFERENCES recipient_lists(id),
-	tag_id INTEGER NOT NULL REFERENCES tags(id)
+	list_id integer NOT NULL REFERENCES recipient_lists(id),
+	tag_id integer NOT NULL REFERENCES tags(id)
 );
 
 
 CREATE TABLE IF NOT EXISTS form_recipient_lists (
-	form_id INTEGER NOT NULL REFERENCES forms(id),
-	list_id INTEGER NOT NULL REFERENCES recipient_lists(id),
-	rights INTEGER NOT NULL
+	form_id integer NOT NULL REFERENCES forms(id),
+	list_id integer NOT NULL REFERENCES recipient_lists(id),
+	rights integer NOT NULL
 );
 
 
 CREATE TABLE IF NOT EXISTS logs(
-	id SERIAL PRIMARY KEY,
-	operation CHAR(1) NOT NULL,
-	entity CHAR(4) NOT NULL,
-	entity_id INTEGER NOT NULL,
-	changes JSON NOT NULL,
-	time TIMESTAMP DEFAULT now(),
-	author_id INTEGER NOT NULL,
+	id serial PRIMARY KEY,
+	operation char(1) NOT NULL,
+	entity char(4) NOT NULL,
+	entity_id integer NOT NULL,
+	changes json NOT NULL,
+	time timestamp DEFAULT now(),
+	author_id integer NOT NULL,
 
 	CONSTRAINT logs_author_id_fkey
 	FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE RESTRICT

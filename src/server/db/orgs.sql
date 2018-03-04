@@ -3,15 +3,15 @@ USING gin(to_tsvector('russian', info));
 
 
 CREATE TYPE org AS (
-	id INTEGER,
-	email VARCHAR(255),
-	info JSONB,
-	active BOOLEAN,
-	"chiefOrgId" INTEGER,
-	created TIMESTAMP,
-	updated TIMESTAMP,
-	deleted TIMESTAMP,
-	"authorId" INTEGER
+	id integer,
+	email varchar(255),
+	info jsonb,
+	active boolean,
+	"chiefOrgId" integer,
+	created timestamp,
+	updated timestamp,
+	deleted timestamp,
+	"authorId" integer
 );
 
 

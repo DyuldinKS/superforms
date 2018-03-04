@@ -3,16 +3,16 @@ USING gin(to_tsvector('russian', info));
 
 
 CREATE TYPE usr AS (
-	id INTEGER,
-	email VARCHAR(255),
-	info JSONB,
-	role VARCHAR(255),
-	active BOOLEAN,
-	"orgId" INTEGER,
-	created TIMESTAMP,
-	updated TIMESTAMP,
-	deleted TIMESTAMP,
-	"authorId" INTEGER
+	id integer,
+	email varchar(255),
+	info jsonb,
+	role varchar(255),
+	active boolean,
+	"orgId" integer,
+	created timestamp,
+	updated timestamp,
+	deleted timestamp,
+	"authorId" integer
 );
 
 
