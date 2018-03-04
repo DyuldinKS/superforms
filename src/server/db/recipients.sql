@@ -28,6 +28,16 @@ $$
 LANGUAGE SQL STABLE;
 
 
+CREATE OR REPLACE FUNCTION get_rcpt(_id integer)
+	RETURNS rcpt AS
+$$
+	SELECT id, email, get_rcpt_type_name(type_id), active,
+		created, updated, deleted, author_id
+	FROM recipients WHERE id = _id;
+$$
+LANGUAGE SQL STABLE;
+
+
 CREATE OR REPLACE FUNCTION get_or_create_rcpt(
 	_email varchar(255),
 	_author_id integer
@@ -52,16 +62,6 @@ $$
 	) as rcpt;
 $$
 LANGUAGE SQL VOLATILE;
-
-
-CREATE OR REPLACE FUNCTION get_rcpt(_id integer)
-	RETURNS rcpt AS
-$$
-	SELECT id, email, get_rcpt_type_name(type_id), active,
-		created, updated, deleted, author_id
-	FROM recipients WHERE id = _id;
-$$
-LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION update_rcpt(

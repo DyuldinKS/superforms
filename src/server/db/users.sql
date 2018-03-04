@@ -116,19 +116,21 @@ DECLARE
 	_changes json;
 BEGIN
 	SELECT * FROM json_populate_record(null::users, _params) INTO _new;
-
+	-- update user
 	UPDATE users usr
 	SET info = coalesce(_new.info, usr.info),
 		role_id = coalesce(_new.role_id, usr.role_id),
 		hash = coalesce(_new.hash, usr.hash)
 	WHERE usr.id = _id;
-
+	-- update relative recipient
 	PERFORM update_rcpt(_id, _params, _author_id);
 
 	SELECT * FROM get_user(_id) INTO _updated;
-
+	-- log user _changes
 	_changes := json_strip_nulls(row_to_json(_new));
-	PERFORM log('U', 'user', _id, _changes, _author_id);
+	IF _changes::text != '{}' THEN
+		PERFORM log('U', 'user', _id, _changes, _author_id);
+	END IF;
 END;
 $$
 LANGUAGE plpgsql;

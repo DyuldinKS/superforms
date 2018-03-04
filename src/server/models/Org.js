@@ -87,22 +87,14 @@ class Org extends Recipient {
 			[this.id, Org.buildFilter(options)],
 		);
 	}
-
-
-	update(props, authorId) {
-		const pgProps = super.convertPropsToPgSchema(props);
-		return db.query(
-			'SELECT * FROM update_org($1::int, $2::json, $3::int)',
-			[this.id, pgProps, authorId],
-		)
-			.then(user => this.assign(user));
-	}
 }
 
 
 // ***************** PROTOTYPE PROPERTIES ***************** //
 
 Org.prototype.tableName = 'organizations';
+
+Org.prototype.entityName = 'org';
 
 Org.prototype.props = new Set([
 	'id',

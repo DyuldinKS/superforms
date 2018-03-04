@@ -83,16 +83,6 @@ class Recipient extends AbstractModel {
 	}
 
 
-	update(props, authorId) {
-		const pgProps = this.convertPropsToPgSchema(props);
-		return db.query(
-			'SELECT * FROM update_rcpt($1::int, $2::json, $3::int)',
-			[this.id, pgProps, authorId],
-		)
-			.then(rcpt => this.assign(rcpt));
-	}
-
-
 	toJSON() {
 		const { info } = this;
 		const unpacked = typeof info === 'object'
@@ -107,6 +97,8 @@ class Recipient extends AbstractModel {
 
 // static property
 Recipient.prototype.tableName = 'recipients';
+
+Recipient.prototype.entityName = 'rcpt';
 
 Recipient.prototype.props = new Set([
 	'id',

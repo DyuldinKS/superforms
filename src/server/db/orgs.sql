@@ -119,19 +119,21 @@ DECLARE
 	_changes json;
 BEGIN
 	SELECT * FROM json_populate_record(null::organizations, _params) INTO _new;
-
+	-- udpate org
 	IF _new.info IS NOT NULL THEN
 		UPDATE organizations org
 		SET info = _new.info
 		WHERE org.id = _id;
 	END IF;
-
+	-- update relative recipient
 	PERFORM update_rcpt(_id, _params, _author_id);
 
 	SELECT * FROM get_org(_id) INTO _updated;
-
+	-- log org changes
 	_changes := json_strip_nulls(row_to_json(_new));
-	PERFORM log('U', 'org', _id, _changes, _author_id);
+	IF _changes::text != '{}' THEN
+		PERFORM log('U', 'org', _id, _changes, _author_id);
+	END IF;
 END;
 $$
 LANGUAGE plpgsql;

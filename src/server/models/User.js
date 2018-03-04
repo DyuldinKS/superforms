@@ -146,16 +146,6 @@ class User extends Recipient {
 	}
 
 
-	update(props, authorId) {
-		const pgProps = super.convertPropsToPgSchema(props);
-		return db.query(
-			'SELECT * FROM update_user($1::int, $2::json, $3::int)',
-			[this.id, pgProps, authorId],
-		)
-			.then(user => this.assign(user));
-	}
-
-
 	getDisplayName() {
 		const { name, patronymic } = this;
 		if(name) {
@@ -181,6 +171,8 @@ class User extends Recipient {
 // ***************** PROTOTYPE PROPERTIES ***************** //
 
 User.prototype.tableName = 'users';
+
+User.prototype.entityName = 'user';
 
 User.prototype.props = new Set([
 	'id',
