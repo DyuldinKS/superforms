@@ -20,9 +20,8 @@ done
 
 shift $(($OPTIND - 1))
 
-readonly CWD=$(pwd)
 readonly DB_NAME=${1:-sf2}
-readonly INPUT_PATH="$CWD/src/server/db/"
+readonly INPUT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly INPUT_FILES=(
 	'schema.sql'
 	'recipients.sql'
@@ -36,7 +35,7 @@ function init_db {
 	for INIT_FILE_NAME in "$@"
 	do
 		echo \'$INIT_FILE_NAME\' is loading
-		psql $DB_NAME < $INPUT_PATH$INIT_FILE_NAME
+		psql $DB_NAME < $INPUT_PATH/$INIT_FILE_NAME
 	done
 	echo \'$DB_NAME\' database has successfully initialized
 }
