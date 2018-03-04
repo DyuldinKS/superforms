@@ -46,19 +46,19 @@ CREATE OR REPLACE FUNCTION create_user(
 	OUT _user usr
 ) AS
 $$
-DECLARE
-	_inserted users;
-BEGIN
-	INSERT INTO users(id, org_id, info, role_id, hash)
-	VALUES (_rcpt_id, _org_id, _info, get_role_id(_role), _hash)
-	RETURNING * INTO _inserted;
+	DECLARE
+		_inserted users;
+	BEGIN
+		INSERT INTO users(id, org_id, info, role_id, hash)
+		VALUES (_rcpt_id, _org_id, _info, get_role_id(_role), _hash)
+		RETURNING * INTO _inserted;
 
-	PERFORM update_rcpt(_rcpt_id, json_build_object('type', 'user'), _author_id);
+		PERFORM update_rcpt(_rcpt_id, json_build_object('type', 'user'), _author_id);
 
-	SELECT * FROM get_user(_rcpt_id) INTO _user;
+		SELECT * FROM get_user(_rcpt_id) INTO _user;
 
-	PERFORM log('I', 'user', _rcpt_id, row_to_json(_inserted), _author_id);
-END;
+		PERFORM log('I', 'user', _rcpt_id, row_to_json(_inserted), _author_id);
+	END;
 $$
 LANGUAGE plpgsql;
 
@@ -74,7 +74,7 @@ LANGUAGE SQL STABLE;
 CREATE OR REPLACE FUNCTION find_users_of_subordinate_orgs(
 	_org_id integer,
 	_filter jsonb DEFAULT NULL
-) RETURNS TABLE(entities json, list jsonb) AS
+) RETURNS TABLE(entities json, list json) AS
 $$
 	WITH
 		_filtered_users AS (

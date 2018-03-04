@@ -43,19 +43,19 @@ CREATE OR REPLACE FUNCTION create_org(
 	OUT _org org
 ) AS
 $$
-DECLARE
-	_inserted organizations;
-BEGIN
-	INSERT INTO organizations(id, info)
-	VALUES (_rcpt_id, _info)
-	RETURNING * INTO _inserted;
+	DECLARE
+		_inserted organizations;
+	BEGIN
+		INSERT INTO organizations(id, info)
+		VALUES (_rcpt_id, _info)
+		RETURNING * INTO _inserted;
 
-	PERFORM update_rcpt(_rcpt_id, json_build_object('type', 'org'), _author_id);
+		PERFORM update_rcpt(_rcpt_id, json_build_object('type', 'org'), _author_id);
 
-	SELECT * FROM get_org(_rcpt_id) INTO _org;
+		SELECT * FROM get_org(_rcpt_id) INTO _org;
 
-	PERFORM log('I', 'org', _rcpt_id, row_to_json(_inserted), _author_id);
-END;
+		PERFORM log('I', 'org', _rcpt_id, row_to_json(_inserted), _author_id);
+	END;
 $$
 LANGUAGE plpgsql;
 
@@ -73,7 +73,7 @@ LANGUAGE SQL STABLE;
 CREATE OR REPLACE FUNCTION find_subordinate_orgs_with_parents(
 	_org_id integer,
 	_filter jsonb DEFAULT NULL
-) RETURNS TABLE(entities json, list jsonb) AS
+) RETURNS TABLE(entities json, list json) AS
 $$
 	WITH
 		_filtered_orgs AS (

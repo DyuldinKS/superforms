@@ -155,53 +155,48 @@ LANGUAGE plpgsql STABLE;
 CREATE OR REPLACE FUNCTION build_entities_object(
 	_table varchar(255),
 	_ids integer[],
-	OUT entities jsonb
-) RETURNS jsonb AS
+	OUT entities json
+) AS
 $$
-DECLARE
-	_func_name varchar(255) := CASE _table
-		WHEN 'users' THEN 'get_user'
-		WHEN 'orgs' THEN 'get_org'
+	DECLARE
+		_func_name varchar(255) := CASE _table
+			WHEN 'users' THEN 'get_user'
+			WHEN 'orgs' THEN 'get_org'
+		END;
+	BEGIN
+		EXECUTE format(
+			'SELECT coalesce(
+				(
+					SELECT json_object_agg(
+						entity_id,
+						info || (row_to_json(entity_record)::jsonb - ''info'')
+					)
+					FROM unnest($1) entity_id,
+						LATERAL %s(entity_id) entity_record
+				),
+			''{}''
+			);',
+			_func_name
+		)
+		USING _ids
+		INTO entities;
 	END;
-BEGIN
-	EXECUTE format(
-		'SELECT coalesce(
-			(
-				SELECT json_object_agg(
-					entity_id,
-					info || (row_to_json(entity_record)::jsonb - ''info'')
-				)
-				FROM unnest($1) entity_id,
-					LATERAL %s(entity_id) entity_record
-			),
-		''{}''
-		);',
-		_func_name
-	)
-	USING _ids
-	INTO entities;
-END;
 $$
 LANGUAGE plpgsql STABLE;
 
 
-CREATE OR REPLACE FUNCTION build_list_object(
-	_ids integer[],
-	OUT list jsonb
-) RETURNS jsonb AS
+CREATE OR REPLACE FUNCTION build_list_object(_ids integer[])
+	RETURNS json AS
 $$
-BEGIN
 	SELECT json_build_object(
 		'entries',
 		(SELECT coalesce(array_to_json(_ids), '[]')),
 		-- full length of filtered organizations list
 		'count',
 		(SELECT coalesce(array_length(_ids, 1), 0))
-	)
-	INTO list;
-END;
+	);
 $$
-LANGUAGE plpgsql STABLE;
+LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION log(
