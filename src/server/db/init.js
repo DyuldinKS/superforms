@@ -47,9 +47,14 @@ function initdb() {
 	// init tables with constant values
 	const tables = Object.values(consts);
 	Promise.all(tables.map(fillTable))
-		.then(() => console.log('All constant values were written to database'))
+		.then(() => console.log('All constant values were written to database.\n'))
 		.then(createRootWithOrg)
-		.then(() => console.log('The root-user was successfully created'))
+		.then(() => {
+			console.log('The root-user was successfully created.');
+			const { email, password } = config.root;
+			console.log(`login: ${email}\npassword: ${password}\n`);
+			console.log('Don\'t forget to change the email and password after logging in.');
+		})
 		.catch(console.error);
 }
 
