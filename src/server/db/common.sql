@@ -71,7 +71,7 @@ CREATE OR REPLACE FUNCTION get_subordinate_users(
 $$
 	DECLARE
 		_active boolean := (_filter->>'active')::boolean;
-		_role_id integer := (_filter->>'roleId')::int;
+		_role_id integer := get_role_id(_filter->>'role');
 		_min_depth integer := (_filter->>'minDepth')::int;
 		_deleted boolean := (_filter->>'deleted')::boolean;
 	BEGIN

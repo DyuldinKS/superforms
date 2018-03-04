@@ -63,8 +63,17 @@ class Org extends Recipient {
 
 	static buildFilter(options) {
 		const { search } = options;
-		const filter = ['active', 'minDepth', 'maxDepth'].reduce(
-			(f, prop) => Object.assign(f, { [prop]: options[prop] }),
+		const filter = [
+			'role',
+			'active',
+			'deleted',
+			'minDepth',
+			'maxDepth',
+		].reduce(
+			(f, prop) => {
+				if(prop in options) f[prop] = options[prop];
+				return f;
+			},
 			{},
 		);
 		Object.assign(filter, Org.buildSearchTemplate(search));
