@@ -51,11 +51,6 @@ const config = {
 				}),
 			},
 			{
-				test: /\.json$/,
-				loader: 'json-loader',
-				exclude: /node_modules/,
-			},
-			{
 				test: /\.hbs$/,
 				loader: 'handlebars-loader',
 				exclude: /node_modules/,
