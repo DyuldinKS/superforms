@@ -81,6 +81,7 @@
     "connect-pg-simple": "^4.2.1",
     "convert-layout": "^0.5.1",
     "cookie-parser": "^1.4.3",
+    "email-smtp-verificator": "^1.0.0",
     "email-verify": "^0.1.1",
     "event-emitter": "^0.3.5",
     "express": "^4.16.2",

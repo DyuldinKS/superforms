@@ -15,11 +15,11 @@ export default (app) => {
 			}
 
 			Promise.all([
-				Recipient.verify(email),
+				Recipient.verifyEmail(email),
 				Recipient.find({ email }),
 			])
-				.then(([verified, rcpt]) => {
-					const result = { ...verified };
+				.then(([verification, rcpt]) => {
+					const result = { ...verification };
 					result.available = (mode === 'signUp')
 						? rcpt === null || (rcpt && rcpt.isUnregistered() && rcpt.isActive())
 						: rcpt === null || (rcpt && rcpt.isActive());

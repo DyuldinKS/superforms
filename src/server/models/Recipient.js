@@ -1,12 +1,7 @@
-import * as emailVerify from 'email-verify';
+import emailSMTPVerificator from 'email-smtp-verificator';
+import config from '../config';
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
-// import config from '../config';
-// import staticTables from '../db/staticTables.json';
-
-// const { states, rcptTypes } = staticTables;
-// import AbstractModel from './abstractModel';
-// import mailer from '../libs/mailer';
 
 
 class Recipient extends AbstractModel {
@@ -28,19 +23,16 @@ class Recipient extends AbstractModel {
 	}
 
 
-	static verify(email) {
-		return new Promise((resolve, reject) => {
-			emailVerify.verify(email, (err, info) => (
-				err ? reject(err) : resolve({ email, exists: info.success })
-			));
-		});
-	}
+	static verifyEmail = emailSMTPVerificator({
+		timeout: 12000,
+		sender: config.nodemailer.smtp.auth.user,
+	})
 
 
 	// ***************** INSTANCE METHODS ***************** //
 
 	isUnregistered() {
-		return this.type === 'unregistered';
+		return this.type === 'rcpt';
 	}
 
 	isActive() {
