@@ -13,6 +13,7 @@ const PUBLIC_PATH = path.join(ROOT_PATH, 'dist/public');
 const base = {
   entry: {
     main: ['babel-polyfill', path.join(SRC_PATH, 'apps/app/boot/entry.js')],
+    auth: ['babel-polyfill', path.join(SRC_PATH, 'apps/auth/boot/entry.jsx')],
     vendor: [
       'react',
       'react-dom',
@@ -85,6 +86,12 @@ dev.entry.main = [
   'webpack-hot-middleware/client',
   'react-hot-loader/patch',
   ...dev.entry.main,
+];
+
+dev.entry.auth = [
+  'webpack-hot-middleware/client',
+  'react-hot-loader/patch',
+  ...dev.entry.auth,
 ];
 
 dev.module.rules[0].options = {
