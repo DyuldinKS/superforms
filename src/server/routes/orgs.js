@@ -8,10 +8,7 @@ export default (app) => {
 		'/api/v1/orgs',
 		(req, res, next) => {
 			const { self } = req.loaded;
-			const org = new Org({
-				...req.body,
-				authorId: req.loaded.self.id,
-			});
+			const org = new Org({ ...req.body });
 
 			if(!org.email) return next(new HttpError(400, 'Missing email'));
 			const { chiefOrgId } = org;
