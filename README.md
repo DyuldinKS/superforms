@@ -47,8 +47,8 @@ URL  | Page description
 ## API
 ## Authentication
 ### Sign in
-**URL** : `/api/v1/session`
-**Method**:  `POST`
+**URL** : `/api/v1/session`\
+**Method**:  `POST`\
 **Request body**:
 ```ts
 {
@@ -60,17 +60,17 @@ URL  | Page description
 
 ---
 ### Sign out
-**URL** : `/api/v1/session`
-**Method**:  `DELETE`
-**Request body**: `{}`
+**URL** : `/api/v1/session`\
+**Method**:  `DELETE`\
+**Request body**: `{}`\
 **Response**: 200
 
 ---
 
 ### Reset password
 *Send to the specified email link to resetting password.*
-**URL** : `/api/v1/user/password`
-**Method**:  `PUT`
+**URL** : `/api/v1/user/password`\
+**Method**:  `PUT`\
 **Request body**:
 ```ts
 {
@@ -83,13 +83,13 @@ URL  | Page description
 ---
 ### Get new password
 *Generate new password and send it to the email.*
-**URL** : `/api/v1/user/password`
+**URL** : `/api/v1/user/password`\
 **Query params**:
 ```ts
 token: string // required
 ```
-**Method**:  `GET`
-**Response**: `200 | 404`
+**Method**:  `GET`\
+**Response**: `200 | 404`\
 
 ---
 ## Recipients
@@ -106,8 +106,8 @@ interface Recipient (
 ```
 ---
 ### Email verification
-**URL**: `/api/v1/recipients/verification`
-**Method**: `POST`
+**URL**: `/api/v1/recipients/verification`\
+**Method**: `POST`\
 **Request Body**: 
 ```ts
 {
@@ -126,34 +126,34 @@ interface Recipient (
 ```
 ---
 ### Create
-**URL**: `/api/v1/recipients`
-**Method**: `POST`
+**URL**: `/api/v1/recipients`\
+**Method**: `POST`\
 **Request Body**:
 ```ts
 { email: string }
 ```
-**Response body**: `rcpt: Recipient`
+**Response body**: `rcpt: Recipient`\
 
 ---
 ### Get by id
-**URL**: `/api/v1/recipients/:id`
-**Method**: `GET`
-**Response body**: `rcpt: Recipient`
+**URL**: `/api/v1/recipients/:id`\
+**Method**: `GET`\
+**Response body**: `rcpt: Recipient`\
 
 ---
 ### Get by email
-**URL**: `/api/v1/recipients/search`
-**Method**: `POST`
+**URL**: `/api/v1/recipients/search`\
+**Method**: `POST`\
 **Request Body**:
 ```ts
 { email: string }
 ```
-**Response body**: `rcpt: Recipient`
+**Response body**: `rcpt: Recipient`\
 
 ---
 ### Update
-**URL**: `/api/v1/recipients/:id`
-**Method**: `PATCH`
+**URL**: `/api/v1/recipients/:id`\
+**Method**: `PATCH`\
 **Request Body**:
 ```ts
 {
@@ -161,7 +161,7 @@ interface Recipient (
 	active: boolean
 }
 ```
-**Response body**: `rcpt: Recipient`
+**Response body**: `rcpt: Recipient`\
 
 ---
 ## Organizations
@@ -179,7 +179,7 @@ interface Org {
 ```
 ### Create
 **Method**:  POST
-**URL** : `/api/v1/orgs`
+**URL** : `/api/v1/orgs`\
 **Request body**:
 ```ts
 {
@@ -187,18 +187,18 @@ interface Org {
 	...info // { label, shortName, fullName, ... }
 }
 ```
-**Response**: `org: Org`
+**Response**: `org: Org`\
 
 ---
 ### Get
-**URL**: `/api/v1/orgs/:id`  
-**Method**: `GET`  
-**Response body**: `org: Org`
+**URL**: `/api/v1/orgs/:id`\
+**Method**: `GET`\
+**Response body**: `org: Org`\
 
 ---
 ### Update
-**URL**: `/api/v1/orgs/:id`
-**Method**: `PATCH`
+**URL**: `/api/v1/orgs/:id`\
+**Method**: `PATCH`\
 **Request Body**:
 ```ts
 {
@@ -208,12 +208,12 @@ interface Org {
 	...info
 }
 ```
-**Response body**: `org: Org`
+**Response body**: `org: Org`\
 
 ---
 ### Get subordinate organizations
-**URL**: `/api/v1/orgs/:id/orgs`  
-**Method**: `GET` 
+**URL**: `/api/v1/orgs/:id/orgs`\
+**Method**: `GET`\
 **Query params**:
 ```ts
 active: boolean
@@ -232,8 +232,8 @@ maxDepth: number // default null - no limit
 ```
 ---
 ### Get users of subordinate organizations
-**URL**: `/api/v1/orgs/:id/users`  
-**Method**: `GET` 
+**URL**: `/api/v1/orgs/:id/users`\
+**Method**: `GET`\
 **Query params**:
 ```ts
 active: boolean // relative to users
@@ -253,8 +253,8 @@ maxDepth: number // default null - no limit
 ```
 ---
 ### Get forms of the organization
-**URL**: `/api/v1/orgs/:id/forms`  
-**Method**: `GET` 
+**URL**: `/api/v1/orgs/:id/forms`\
+**Method**: `GET`\
 **Query params**:
 ```ts
 search: string
@@ -288,8 +288,8 @@ interface User {
 }
 ```
 ### Create
-**Method**:  POST
-**URL** : `/api/v1/users`
+**Method**:  `POST`\
+**URL** : `/api/v1/users`\
 **Request body**:
 ```ts
 {
@@ -299,18 +299,18 @@ interface User {
 	...info // { firstName, lastName, Patronomyc, ... }
 }
 ```
-**Response**: `usr: User`
+**Response**: `usr: User`\
 
 ---
 ### Get
-**URL**: `/api/v1/users/:id`  
-**Method**: `GET`  
-**Response body**: `usr: User`
+**URL**: `/api/v1/users/:id`\
+**Method**: `GET`\
+**Response body**: `usr: User`\
 
 ---
 ### Update
-**URL**: `/api/v1/users/:id`
-**Method**: `PATCH`
+**URL**: `/api/v1/users/:id`\
+**Method**: `PATCH`\
 **Request Body**:
 ```ts
 {
@@ -320,7 +320,7 @@ interface User {
 	...info
 }
 ```
-**Response body**: `usr: User`
+**Response body**: `usr: User`\
 
 ---
 ## Forms
@@ -361,24 +361,24 @@ interface Form {
 };
 ```
 ### Create
-**Method**:  POST
-**URL** : `/api/v1/forms`
+**Method**:  `POST`\
+**URL** : `/api/v1/forms`\
 **Request body**:
 ```ts
 { scheme: Scheme }
 ```
-**Response**: `form: Form`
+**Response**: `form: Form`\
 
 ---
 ### Get
-**URL**: `/api/v1/forms/:id`  
-**Method**: `GET`  
-**Response body**: `form: Form`
+**URL**: `/api/v1/forms/:id`\
+**Method**: `GET`\
+**Response body**: `form: Form`\
 
 ---
 ### Update
-**URL**: `/api/v1/forms/:id`
-**Method**: `PATCH`
+**URL**: `/api/v1/forms/:id`\
+**Method**: `PATCH`\
 **Request Body**:
 ```ts
 {
@@ -386,12 +386,12 @@ interface Form {
 	scheme: Scheme
 }
 ```
-**Response body**: `form: Form`
+**Response body**: `form: Form`\
 
 ---
 ### Send
-**URL**: `/api/v1/forms/:id`
-**Method**: `PATCH`
+**URL**: `/api/v1/forms/:id`\
+**Method**: `PATCH`\
 **Request Body**:
 ```ts
 {
@@ -399,16 +399,16 @@ interface Form {
 	settings: Settings
 }
 ```
-**Response body**: `form: Form`
+**Response body**: `form: Form`\
 
 ---
 ### Delete
-**URL**: `/api/v1/forms/:id`
-**Method**: `PATCH`
+**URL**: `/api/v1/forms/:id`\
+**Method**: `PATCH`\
 **Request Body**:
 ```ts
 { action: 'delete' } // soft deletion
 ```
-**Response body**: `form: Form`
+**Response body**: `form: Form`\
 
 ---
