@@ -52,8 +52,8 @@ URL  | Page description
 **Request body**:
 ```ts
 {
-	email: string
-	password: string
+  email: string
+  password: string
 }
 ```
 **Response**: 200 | 404
@@ -74,8 +74,8 @@ URL  | Page description
 **Request body**:
 ```ts
 {
-	email: string
-	reset: boolean // required
+  email: string
+  reset: boolean // required
 }
 ```
 **Response**: 200 | 404
@@ -89,19 +89,19 @@ URL  | Page description
 token: string // required
 ```
 **Method**:  `GET`\
-**Response**: `200 | 404`\
+**Response**: `200 | 404`
 
 ---
 ## Recipients
 ```ts
 interface Recipient (
-	id: number
-	email: string
-	type: enum {'rcpt', 'user', 'org'}
-	active: boolean
-	created: Date
-	updated: Date
-	authorId: number // user who made the last update
+  id: number
+  email: string
+  type: enum {'rcpt', 'user', 'org'}
+  active: boolean
+  created: Date
+  updated: Date
+  authorId: number // user who made the last update
 )
 ```
 ---
@@ -111,17 +111,17 @@ interface Recipient (
 **Request Body**: 
 ```ts
 {
-	email: string
-	// is available for new user/org or for mailing
-	mode: enum { 'signUp', 'mailing' } // required
+  email: string
+  // is available for new user/org or for mailing
+  mode: enum { 'signUp', 'mailing' } // required
 }
 ```
 **Response body**:
 ```ts
 {
-	email: string
-	verified: boolean // does email exist?
-	available: boolean // is available for new user/org signup or mailing
+  email: string
+  verified: boolean // does email exist?
+  available: boolean // is available for new user/org signup or mailing
 }
 ```
 ---
@@ -132,13 +132,13 @@ interface Recipient (
 ```ts
 { email: string }
 ```
-**Response body**: `rcpt: Recipient`\
+**Response body**: `rcpt: Recipient`
 
 ---
 ### Get by id
 **URL**: `/api/v1/recipients/:id`\
 **Method**: `GET`\
-**Response body**: `rcpt: Recipient`\
+**Response body**: `rcpt: Recipient`
 
 ---
 ### Get by email
@@ -148,7 +148,7 @@ interface Recipient (
 ```ts
 { email: string }
 ```
-**Response body**: `rcpt: Recipient`\
+**Response body**: `rcpt: Recipient`
 
 ---
 ### Update
@@ -157,24 +157,24 @@ interface Recipient (
 **Request Body**:
 ```ts
 {
-	email: string
-	active: boolean
+  email: string
+  active: boolean
 }
 ```
-**Response body**: `rcpt: Recipient`\
+**Response body**: `rcpt: Recipient`
 
 ---
 ## Organizations
 ```ts
 interface Org {
-	id: number
-	email: string
-	active: boolean
-	parentId: number
-	created: Date
-	updated: Date
-	authorId: number
-	...info // { label, shortName, fullName, ... }
+  id: number
+  email: string
+  active: boolean
+  parentId: number
+  created: Date
+  updated: Date
+  authorId: number
+  ...info // { label, shortName, fullName, ... }
 }
 ```
 ### Create
@@ -183,17 +183,17 @@ interface Org {
 **Request body**:
 ```ts
 {
-	email: string
-	...info // { label, shortName, fullName, ... }
+  email: string
+  ...info // { label, shortName, fullName, ... }
 }
 ```
-**Response**: `org: Org`\
+**Response**: `org: Org`
 
 ---
 ### Get
 **URL**: `/api/v1/orgs/:id`\
 **Method**: `GET`\
-**Response body**: `org: Org`\
+**Response body**: `org: Org`
 
 ---
 ### Update
@@ -202,13 +202,13 @@ interface Org {
 **Request Body**:
 ```ts
 {
-	email: string
-	active: boolean
-	parentId: integer // deferred
-	...info
+  email: string
+  active: boolean
+  parentId: integer // deferred
+  ...info
 }
 ```
-**Response body**: `org: Org`\
+**Response body**: `org: Org`
 
 ---
 ### Get subordinate organizations
@@ -224,10 +224,11 @@ maxDepth: number // default null - no limit
 **Response body**:
 ```ts
 {  
-	list: {
-		entries: number[] // list of ids
-		count: number
-	entities: { [id: number]: Org }
+  list: {
+    entries: number[] // list of ids
+    count: number
+  }
+  entities: { [id: number]: Org }
 }
 ```
 ---
@@ -244,11 +245,12 @@ maxDepth: number // default null - no limit
 ```
 **Response body**:
 ```ts
-{  
-	list: {
-		entries: number[] // list of ids
-		count: number
-	entities: { [id: number]: User } 
+{
+  list: {
+    entries: number[] // list of ids
+    count: number
+  }
+  entities: { [id: number]: User }
 }
 ```
 ---
@@ -265,10 +267,10 @@ maxDate: Date // default now()
 **Response body**:
 ```ts
 {  
-	list: {
-		entries: number[] // list of ids
-		count: number
-	entities: { [id: number]: Form } 
+  list: {
+    entries: number[] // list of ids
+    count: number
+  entities: { [id: number]: Form } 
 }
 ```
 ---
@@ -276,15 +278,15 @@ maxDate: Date // default now()
 ## Users
 ```ts
 interface User {
-	id: number
-	email: string
-	role: enum { 'root', 'admin', 'user', 'respondent' }
-	active: boolean
-	orgId: number
-	created: Date
-	updated: Date
-	authorId: number
-	...info // { firstName, lastName, Patronomyc, ... }
+  id: number
+  email: string
+  role: enum { 'root', 'admin', 'user', 'respondent' }
+  active: boolean
+  orgId: number
+  created: Date
+  updated: Date
+  authorId: number
+  ...info // { firstName, lastName, Patronomyc, ... }
 }
 ```
 ### Create
@@ -293,19 +295,19 @@ interface User {
 **Request body**:
 ```ts
 {
-	email: string
-	role enum
-	orgId: number
-	...info // { firstName, lastName, Patronomyc, ... }
+  email: string
+  role enum
+  orgId: number
+  ...info // { firstName, lastName, Patronomyc, ... }
 }
 ```
-**Response**: `usr: User`\
+**Response**: `usr: User`
 
 ---
 ### Get
 **URL**: `/api/v1/users/:id`\
 **Method**: `GET`\
-**Response body**: `usr: User`\
+**Response body**: `usr: User`
 
 ---
 ### Update
@@ -314,50 +316,50 @@ interface User {
 **Request Body**:
 ```ts
 {
-	email: string
-	active: boolean
-	role: string // deferred
-	...info
+  email: string
+  active: boolean
+  role: string // deferred
+  ...info
 }
 ```
-**Response body**: `usr: User`\
+**Response body**: `usr: User`
 
 ---
 ## Forms
 ```ts
 interface Item {
-	title: string
-	type: enum {
-		'delimeter',
-		'string', 'paragraph',
-		'integer', 'float', 'financial',
-		'select',
-		'date', 'time', 'datetime'
-	}
-	required: boolean
+  title: string
+  type: enum {
+    'delimeter',
+    'string', 'paragraph',
+    'integer', 'float', 'financial',
+    'select',
+    'date', 'time', 'datetime'
+  }
+  required: boolean
 };
 
 interface Scheme {
-	title: string
-	items: Item[]
+  title: string
+  items: Item[]
 };
 
 interface Settings {
-	shareable: boolean
-	recipients: number[] // ids list
-	expire: Date
+  shareable: boolean
+  recipients: number[] // ids list
+  expire: Date
 };
 
 interface Form {
-	id: number
-	scheme: Scheme
-	settings: Settings
-	orgId: number
-	userId: number // owner
-	created: Date
-	updated: Date
-	deleted: Date
-	authorId: number // user who made the last update
+  id: number
+  scheme: Scheme
+  settings: Settings
+  orgId: number
+  userId: number // owner
+  created: Date
+  updated: Date
+  deleted: Date
+  authorId: number // user who made the last update
 };
 ```
 ### Create
@@ -367,13 +369,13 @@ interface Form {
 ```ts
 { scheme: Scheme }
 ```
-**Response**: `form: Form`\
+**Response**: `form: Form`
 
 ---
 ### Get
 **URL**: `/api/v1/forms/:id`\
 **Method**: `GET`\
-**Response body**: `form: Form`\
+**Response body**: `form: Form`
 
 ---
 ### Update
@@ -382,11 +384,11 @@ interface Form {
 **Request Body**:
 ```ts
 {
-	action: 'update'
-	scheme: Scheme
+  action: 'update'
+  scheme: Scheme
 }
 ```
-**Response body**: `form: Form`\
+**Response body**: `form: Form`
 
 ---
 ### Send
@@ -395,11 +397,11 @@ interface Form {
 **Request Body**:
 ```ts
 {
-	action: 'send'
-	settings: Settings
+  action: 'send'
+  settings: Settings
 }
 ```
-**Response body**: `form: Form`\
+**Response body**: `form: Form`
 
 ---
 ### Delete
@@ -409,6 +411,6 @@ interface Form {
 ```ts
 { action: 'delete' } // soft deletion
 ```
-**Response body**: `form: Form`\
+**Response body**: `form: Form`
 
 ---
