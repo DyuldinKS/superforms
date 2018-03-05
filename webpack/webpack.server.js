@@ -27,9 +27,6 @@ const config = {
 	externals: [nodeExternals()],
 	plugins: [
 		new webpack.optimize.ModuleConcatenationPlugin(),
-		new ExtractTextPlugin({
-			filename: 'public/styles/styles.css',
-		}),
 		new MakeDirPlugin({
 			dirs: [{ path: path.join(ROOT_PATH, 'logs') }],
 		}),
@@ -40,15 +37,6 @@ const config = {
 				test: /\.jsx?$/,
 				include: SRC_PATH,
 				loader: 'babel-loader',
-			},
-			// build global css
-			{
-				test: /\.scss$/,
-				include: path.join(SRC_CLIENT_PATH),
-				use: ExtractTextPlugin.extract({
-					fallback: 'style-loader',
-					use: ['css-loader', 'sass-loader'],
-				}),
 			},
 			{
 				test: /\.hbs$/,
