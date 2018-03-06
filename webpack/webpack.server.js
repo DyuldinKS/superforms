@@ -35,7 +35,7 @@ const config = {
 		rules: [
 			{
 				test: /\.jsx?$/,
-				include: SRC_PATH,
+				include: [SRC_PATH, __dirname],
 				loader: 'babel-loader',
 			},
 			{
