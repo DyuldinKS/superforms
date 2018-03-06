@@ -61,8 +61,8 @@ const config = {
 		...clientConfig.resolve,
 		alias: {
 			...clientConfig.resolve.alias,
-			 Webpack: path.join(ROOT_PATH, 'webpack'),
-		}
+			Webpack: path.join(ROOT_PATH, 'webpack'),
+		},
 	},
 };
 
