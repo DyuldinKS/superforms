@@ -1,7 +1,4 @@
-import {
-	isAuthenticated,
-	isNotAuthenticated,
-} from '../middleware/sessions';
+import { isNotAuthenticated } from '../middleware/sessions';
 import User from '../models/User';
 import Org from '../models/Org';
 import mailer from '../libs/mailer';
@@ -22,42 +19,39 @@ export default (app) => {
 		User.findByEmail(email)
 			.then((user) => {
 				if(!user) throw new HttpError(404, 'Not Found');
-				return user.resetPassword();
+				return user.restorePassword();
 			})
-			.then(user => mailer.sendPasswordResetEmail(user))
+			.then(user => mailer.sendPasswordRestoreEmail(user))
 			.then(() => res.status(200).send())
 			.catch(next);
 	});
 
 
-	// (!) DEFERRED
+	// send email with new password
+	app.get(
+		'/user/password',
+		isNotAuthenticated,
+		(req, res, next) => {
+			const { token } = req.query;
+			if(!token) {
+				return next(new HttpError(404, 'Not Found'));
+			}
 
-	// set password
-	// app.patch(
-	// 	'/api/v1/user/password',
-	// 	isNotAuthenticated,
-	// 	(req, res, next) => {
-	// 		const { email, password, token } = req.body;
-	// 		if(!token) {
-	// 			return next(new HttpError(404, 'Not Found'));
-	// 		}
-
-	// 		User.findByToken(token)
-	// 			.then((user) => {
-	// 				if(!user) throw new HttpError(404, 'Not Found');
-	// 				if(user.email !== email) throw new HttpError(403);
-	// 				return user.setPassword(password);
-	// 			})
-	// 			.then(() => res.status(200).send())
-	// 			.catch(next);
-	// 	},
-	// );
+			User.findByToken(token)
+				.then((user) => {
+					if(!user) throw new HttpError(404, 'Not Found');
+					return user.resetPassword();
+				})
+				.then(user => mailer.sendPasswordResetEmail(user))
+				.then(() => res.status(200).send())
+				.catch(next);
+		},
+	);
 
 
 	// create user
 	app.post(
 		'/api/v1/users',
-		isAuthenticated,
 		(req, res, next) => {
 			const { self } = req.loaded;
 			const user = new User({ ...req.body });
@@ -89,7 +83,6 @@ export default (app) => {
 	// get user
 	app.get(
 		'/api/v1/users/:id',
-		isAuthenticated,
 		(req, res, next) => {
 			const { user } = req.loaded;
 

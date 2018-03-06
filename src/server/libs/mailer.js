@@ -55,12 +55,28 @@ const sendRegistrationEmail = (user) => {
 };
 
 
+const sendPasswordRestoreEmail = (user) => {
+	const { email, token } = user;
+
+	return send({
+		to: email,
+		subject: 'Восстановление пароля в ИС «РАСККО»',
+		html: hbs.passwordRestore({
+			login: email,
+			name: user.getDisplayName(),
+			mainURL: domain,
+			resetLink: `${domain}/user/password?token=${token}`,
+		}),
+	});
+};
+
+
 const sendPasswordResetEmail = (user) => {
 	const { email, password } = user;
 
 	return send({
 		to: email,
-		subject: 'Смена пароля в ИС «РАСККО»',
+		subject: 'Сброс пароля в ИС «РАСККО»',
 		html: hbs.passwordReset({
 			password,
 			login: email,
@@ -76,4 +92,5 @@ export default {
 	sendAll,
 	sendRegistrationEmail,
 	sendPasswordResetEmail,
+	sendPasswordRestoreEmail,
 };
