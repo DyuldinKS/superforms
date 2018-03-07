@@ -40,7 +40,7 @@ export default (app) => {
 			User.findByToken(token)
 				.then((user) => {
 					if(!user) throw new HttpError(404, 'Not Found');
-					return user.resetPassword();
+					return user.resetPassword(user.id);
 				})
 				.then(user => mailer.sendPasswordResetEmail(user))
 				.then(() => res.status(200).send())
@@ -60,7 +60,7 @@ export default (app) => {
 			if(!user.role) return next(new HttpError(400, 'Missing user role'));
 
 			return user.save(self.id)
-				.then(() => user.resetPassword())
+				.then(() => user.resetPassword(self.id))
 				.then(() => mailer.sendRegistrationEmail(user))
 				.then(() => res.json(user))
 				.catch((err) => {

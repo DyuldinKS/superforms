@@ -107,10 +107,10 @@ class User extends Recipient {
 	}
 
 
-	resetPassword() {
+	resetPassword(authorId) {
 		this.password = passwordGenerator(8);
 		return bcrypt.hash(this.password, config.bcrypt.saltRound)
-			.then(hash => this.update({ hash }))
+			.then(hash => this.update({ hash }, authorId))
 			.then(() => this.deleteToken())
 			.then(() => this);
 	}
