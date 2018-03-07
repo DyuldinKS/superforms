@@ -60,7 +60,7 @@ export default (app) => {
 			if(!user.role) return next(new HttpError(400, 'Missing user role'));
 
 			return user.save(self.id)
-				.then(() => user.recoverPass())
+				.then(() => user.resetPassword())
 				.then(() => mailer.sendRegistrationEmail(user))
 				.then(() => res.json(user))
 				.catch((err) => {
