@@ -3,7 +3,13 @@ import User from '../models/User';
 import hbs from '../templates/pages';
 import mailer from '../libs/mailer';
 import { HttpError } from '../libs/errors';
+import { renderApp } from '../templates/renderApp';
+import AuthApp from '../../client/apps/auth/authContainer';
 
+const assets = {
+	scripts: ['runtime', 'common', 'auth'],
+	styles: ['auth'],
+};
 
 export default (app) => {
 	// signin development stub
@@ -32,9 +38,9 @@ export default (app) => {
 		],
 		isNotAuthenticated,
 		(req, res, next) => {
-			const scripts = ['runtime.js', 'vendor.js', 'auth.js'];
-
-			res.send(hbs.authPage({ scripts }));
+			res.send(renderApp(AuthApp, assets, {
+				location: req.path,
+			}));
 		},
 	);
 
