@@ -7,6 +7,7 @@ import {
   Input,
   Label,
 } from 'reactstrap';
+import { UserAPI } from 'api/';
 
 const propTypes = {
   loading: PropTypes.bool,
@@ -27,18 +28,21 @@ class ResetPassword extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleSubmit(event) {
+  async handleSubmit(event) {
     event.preventDefault();
+    const data = new FormData(event.target);
+    const email = data.get('email');
 
-    this.props.onRequest();
-
-    window.setTimeout(
-      () => this.props.onAlert(
-        'danger',
-        'На данный момент эта функция не работает',
-      ),
-      500,
-    );
+    try {
+      this.props.onRequest();
+      const response = await UserAPI.orderPasswordRecovery(email);
+      this.props.onAlert(
+        'success',
+        `Письмо для восстановления пароля отправлено на вашу почту: ${email}`,
+      );
+    } catch (error) {
+      this.props.onAlert('danger', error.message);
+    }
   }
 
   render() {

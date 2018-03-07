@@ -22,6 +22,15 @@ class UserAPI {
     return data;
   }
 
+  static async orderPasswordRecovery(email) {
+    const data = await fetch(`/api/v1/user/password`, {
+      method: 'PUT',
+      body: { email, reset: true },
+    });
+
+    return data;
+  }
+
   static async setRole(id, role) {
     const data = await fetch(`/api/v1/users/${id}`, {
       method: 'PATCH',
