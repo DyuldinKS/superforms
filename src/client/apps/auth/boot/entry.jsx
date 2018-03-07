@@ -6,10 +6,17 @@ import App from '../authContainer';
 
 const container = document.getElementById('react-root');
 
+let initialState = {};
+
+if (typeof window !== 'undefined' && window.PRELOADED_STATE) {
+  initialState = window.PRELOADED_STATE;
+  delete window.PRELOADED_STATE;
+}
+
 const render = (Component) => {
-  ReactDOM.render(
+  ReactDOM.hydrate(
     <AppContainer>
-      <Component />
+      <Component {...initialState} />
     </AppContainer>,
     container,
   );

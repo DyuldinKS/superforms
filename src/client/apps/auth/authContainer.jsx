@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import {
   Button,
   Card,
@@ -14,6 +15,14 @@ const RECOVER_PATH = '/recovery';
 const SIGN_IN_TITLE = 'Вход - SuperForms';
 const RECOVER_TITLE = 'Восстановление доступа - SuperForms';
 
+const propTypes = {
+  location: PropTypes.string,
+};
+
+const defaultProps = {
+  location: SIGN_IN_PATH,
+};
+
 class AuthContainer extends Component {
   constructor(props) {
     super(props);
@@ -21,7 +30,7 @@ class AuthContainer extends Component {
     this.state = {
       error: null,
       loading: false,
-      location: SIGN_IN_PATH,
+      location: this.props.location,
     };
 
     this.onRedirect = this.onRedirect.bind(this);
@@ -84,10 +93,6 @@ class AuthContainer extends Component {
       ? ResetPassword
       : SignIn;
 
-    document.title = this.isRecoverView()
-      ? RECOVER_TITLE
-      : SIGN_IN_TITLE;
-
     return (
       <div className="auth-wrapper">
         <h1>
@@ -133,5 +138,8 @@ class AuthContainer extends Component {
     );
   }
 }
+
+AuthContainer.propTypes = propTypes;
+AuthContainer.defaultProps = defaultProps;
 
 export default AuthContainer;
