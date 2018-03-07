@@ -28,7 +28,7 @@ class AuthContainer extends Component {
     super(props);
 
     this.state = {
-      error: null,
+      alert: null,
       loading: false,
       location: this.props.location,
     };
@@ -40,12 +40,11 @@ class AuthContainer extends Component {
     this.goToSignIn = () => this.handleRedirect(SIGN_IN_PATH);
 
     this.handleLoading = this.handleLoading.bind(this);
-    this.handleError = this.handleError.bind(this);
+    this.handleAlert = this.handleAlert.bind(this);
   }
 
   componentDidMount() {
     window.addEventListener('popstate', this.handlePopState);
-    this.handlePopState();
   }
 
   componentWillUnmount() {
@@ -56,7 +55,7 @@ class AuthContainer extends Component {
     this.setState(state => ({
       ...state,
       location: path,
-      error: null,
+      alert: null,
     }));
   }
 
@@ -66,20 +65,18 @@ class AuthContainer extends Component {
   }
 
   handleLoading() {
-    console.log('request');
-
     this.setState(state => ({
       ...state,
       loading: true,
-      error: null,
+      alert: null,
     }));
   }
 
-  handleError(error) {
+  handleAlert(type, message) {
     this.setState(state => ({
       ...state,
       loading: false,
-      error,
+      alert: { type, message },
     }));
   }
 
@@ -88,7 +85,7 @@ class AuthContainer extends Component {
   }
 
   render() {
-    const { error, loading } = this.state;
+    const { alert, loading } = this.state;
     const View = this.isRecoverView()
       ? ResetPassword
       : SignIn;
@@ -104,8 +101,8 @@ class AuthContainer extends Component {
         </h1>
 
         {
-          error
-            ? <Alert color="danger">{error}</Alert>
+          alert
+            ? <Alert color={alert.type}>{alert.message}</Alert>
             : null
         }
 
@@ -114,7 +111,7 @@ class AuthContainer extends Component {
             <View
               loading={loading}
               onRequest={this.handleLoading}
-              onFailure={this.handleError}
+              onAlert={this.handleAlert}
             />
 
             <Button

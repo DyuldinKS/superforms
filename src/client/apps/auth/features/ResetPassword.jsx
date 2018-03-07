@@ -10,13 +10,13 @@ import {
 
 const propTypes = {
   loading: PropTypes.bool,
-  onFailure: PropTypes.func,
+  onAlert: PropTypes.func,
   onRequest: PropTypes.func,
 };
 
 const defaultProps = {
   loading: false,
-  onFailure: () => {},
+  onAlert: () => {},
   onRequest: () => {},
 };
 
@@ -33,7 +33,10 @@ class ResetPassword extends Component {
     this.props.onRequest();
 
     window.setTimeout(
-      () => this.props.onFailure('На данный момент эта функция не работает'),
+      () => this.props.onAlert(
+        'danger',
+        'На данный момент эта функция не работает',
+      ),
       500,
     );
   }

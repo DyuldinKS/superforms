@@ -11,14 +11,14 @@ import { SessionAPI } from 'api/';
 
 const propTypes = {
   loading: PropTypes.bool,
-  onFailure: PropTypes.func,
+  onAlert: PropTypes.func,
   onRequest: PropTypes.func,
 };
 
 const defaultProps = {
   loading: false,
   onRequest: () => {},
-  onFailure: () => {},
+  onAlert: () => {},
 };
 
 class SignIn extends Component {
@@ -39,7 +39,7 @@ class SignIn extends Component {
       const response = await SessionAPI.signIn(email, password);
       window.location.href = '/';
     } catch (error) {
-      this.props.onFailure(error.message);
+      this.props.onAlert('danger', error.message);
     }
   }
 
