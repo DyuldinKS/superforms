@@ -16,14 +16,14 @@ export default {
 		saveUninitialized: false,
 	},
 	nodemailer: {
-		from: 'Your Name <your-email@domain.com>',
+		from: 'РАСККО <no-reply.rassko@yandex.ru>',
 		smtp: {
-			host: 'smtp.domain.com',
+			host: 'smtp.yandex.ru',
 			port: 465,
 			secure: true,
 			auth: {
-				user: 'your-email@domain.com',
-				pass: 'yourPass',
+				user: 'no-reply.rassko@yandex.ru',
+				pass: 'justDoIt',
 			},
 			tls: { rejectUnauthorized: false },
 		},
