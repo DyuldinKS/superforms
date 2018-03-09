@@ -6,9 +6,9 @@ const { domain, nodemailer: { smtp } } = config;
 
 const send = (message) => {
 	console.log(message);
-	// const transporter = nodemailer.createTransport(smtp);
-	// const { from } = config.nodemailer;
-	// return transporter.sendMail({ ...message, from });
+	const transporter = nodemailer.createTransport(smtp);
+	const { from } = config.nodemailer;
+	return transporter.sendMail({ ...message, from });
 };
 
 const sendAll = (messages) => {
