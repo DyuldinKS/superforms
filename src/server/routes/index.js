@@ -12,16 +12,10 @@ import store from '../../client/apps/app/boot/store';
 import * as routerModule from '../../client/shared/router/redux';
 import * as sessionModule from '../../client/apps/app/shared/redux/session';
 import * as entitiesModule from '../../client/shared/entities';
-import { renderAppWithRedux } from '../templates/renderApp';
-import App from '../../client/apps/app/appContainer';
+import ssr from '../templates/renderApp';
 
-const assets = {
-	scripts: ['runtime', 'common', 'app'],
-	styles: ['app'],
-};
 
 const router = (app) => {
-	// app.use(/, console.log);
 	app.use(
 		[
 			/\/(api\/v\d{1,2}\/)?orgs.*/,
@@ -62,7 +56,7 @@ const router = (app) => {
 						},
 					}));
 
-					res.send(renderAppWithRedux(App, assets, store));
+					res.send(ssr.app(store));
 				})
 				.catch(next);
 		},
