@@ -3,7 +3,7 @@ import User from '../models/User';
 import hbs from '../templates/pages';
 import mailer from '../libs/mailer';
 import { HttpError } from '../libs/errors';
-import ssr from '../templates/renderApp';
+import ssr from '../templates/ssr';
 
 
 export default (app) => {

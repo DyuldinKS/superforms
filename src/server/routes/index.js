@@ -12,7 +12,7 @@ import store from '../../client/apps/app/boot/store';
 import * as routerModule from '../../client/shared/router/redux';
 import * as sessionModule from '../../client/apps/app/shared/redux/session';
 import * as entitiesModule from '../../client/shared/entities';
-import ssr from '../templates/renderApp';
+import ssr from '../templates/ssr';
 
 
 const router = (app) => {
