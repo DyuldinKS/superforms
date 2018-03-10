@@ -9,9 +9,6 @@ import Auth from '../../client/apps/auth/authContainer';
 import hbs from '../templates/pages';
 
 
-const REQUIRED_SCRIPTS = ['runtime', 'vendor', 'main'];
-
-
 function findAssets(assetsDir, names, ext) {
 	let assets = {};
 
