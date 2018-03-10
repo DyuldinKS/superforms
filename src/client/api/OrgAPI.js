@@ -3,11 +3,14 @@ import { fetch } from './utils/defaultRequest';
 
 class OrgAPI {
   static async create(chiefOrgId, payload) {
+    const { email, ...info } = payload;
+
     const data = await fetch('/api/v1/orgs', {
       method: 'POST',
       body: {
         chiefOrgId,
-        ...payload,
+        email,
+        info,
       },
     });
 
@@ -48,7 +51,7 @@ class OrgAPI {
   static async updateInfo(id, payload) {
     const data = await fetch(`/api/v1/orgs/${id}`, {
       method: 'PATCH',
-      body: payload,
+      body: { info: payload },
     });
 
     return data;

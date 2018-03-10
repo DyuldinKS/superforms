@@ -4,7 +4,7 @@ import passRecoveryPage from './passRecovery.hbs';
 import errorPage from './error.hbs';
 
 export default {
-	mainPage,
-	passRecoveryPage,
-	errorPage,
+  mainPage,
+  passRecoveryPage,
+  errorPage,
 };

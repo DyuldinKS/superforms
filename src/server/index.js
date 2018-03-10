@@ -11,7 +11,7 @@ import 'babel-polyfill'; // For async and generator functions support
 import webpackClientConfig from 'Webpack/webpack.client'; // alias for webpack directory
 import db from './db';
 import config from './config';
-import deserializeUser from './middleware/deserializeUser';
+import { deserializeUser } from './middleware/users';
 import router from './routes';
 import log from './libs/logger';
 import logger from './middleware/logger';

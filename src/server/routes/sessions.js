@@ -3,15 +3,10 @@ import User from '../models/User';
 import hbs from '../templates/pages';
 import mailer from '../libs/mailer';
 import { HttpError } from '../libs/errors';
+import ssr from '../templates/ssr';
 
 
 export default (app) => {
-	// get signin page
-	app.get('/signin', (req, res, next) => {
-		res.send('There will be sign in page.');
-	});
-
-
 	// signin development stub
 	app.get(
 		'/signin/:email',
@@ -38,10 +33,7 @@ export default (app) => {
 		],
 		isNotAuthenticated,
 		(req, res, next) => {
-			const page = req.url.includes('signin')
-				? 'There will be signin page!'
-				: 'There will be pass recovery page!';
-			res.status(200).send(page);
+			res.send(ssr.auth({ location: req.path }));
 		},
 	);
 
@@ -93,5 +85,16 @@ export default (app) => {
 			});
 		}
 		res.status(200).send();
+	});
+
+	app.get('/signout', (req, res, next) => {
+		if(req.session.user) {
+			req.session.destroy((err) => {
+				if(err) return next(new HttpError(500));
+				return res.status(200).send();
+			});
+		}
+
+		res.redirect('/signin');
 	});
 };

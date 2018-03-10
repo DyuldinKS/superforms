@@ -32,7 +32,7 @@ class AbstractModel {
 			}
 		});
 
-		if(areUnexpectedProps && modelProps.has('info')
+		if(areUnexpectedProps && modelProps.has('info') === false
 			&& 'info' in result === false) {
 			result.info = unexpected;
 		}

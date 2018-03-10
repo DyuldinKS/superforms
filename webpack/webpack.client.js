@@ -9,22 +9,22 @@ const ROOT_PATH = path.join(__dirname, '../');
 const SRC_PATH = path.join(ROOT_PATH, 'src/client');
 const PUBLIC_PATH = path.join(ROOT_PATH, 'dist/public');
 
+const entries = ['app', 'auth'];
+
+function handleEntries(entries) {
+  return entries.reduce((acc, key) => ({
+    ...acc,
+    [key]: [
+      'babel-polyfill',
+      path.join(SRC_PATH, `apps/${key}/boot/entry.jsx`),
+    ],
+  }), {});
+}
+
 // Base config
 const base = {
   entry: {
-    main: ['babel-polyfill', path.join(SRC_PATH, 'apps/app/boot/entry.js')],
-    vendor: [
-      'react',
-      'react-dom',
-      'react-redux',
-      'redux',
-      'redux-thunk',
-      'babel-polyfill',
-      'prop-types',
-      'classnames',
-      'throttle-debounce',
-      'reactstrap',
-    ],
+    ...handleEntries(entries),
   },
   output: {
     path: path.join(PUBLIC_PATH, 'scripts'),
@@ -58,7 +58,7 @@ const base = {
   },
   plugins: [
     new webpack.optimize.CommonsChunkPlugin({
-      name: 'vendor',
+      name: 'common',
     }),
     new webpack.optimize.CommonsChunkPlugin({
       name: 'runtime',
@@ -81,11 +81,13 @@ const dev = merge(base, {
   ],
 });
 
-dev.entry.main = [
-  'webpack-hot-middleware/client',
-  'react-hot-loader/patch',
-  ...dev.entry.main,
-];
+entries.forEach(key => {
+  dev.entry[key] = [
+    'webpack-hot-middleware/client',
+    'react-hot-loader/patch',
+    ...dev.entry[key],
+  ];
+});
 
 dev.module.rules[0].options = {
   plugins: ['react-hot-loader/babel'],
@@ -97,7 +99,7 @@ const prod = merge(base, {
     filename: '[name].[chunkhash].js',
     publicPath: './scripts/',
   },
-  devtool: 'source-map',
+  // devtool: 'source-map',
   plugins: [
     new CleanWebpackPlugin(['scripts', 'styles'], {
       root: PUBLIC_PATH,
@@ -107,7 +109,7 @@ const prod = merge(base, {
       sourceMap: true,
     }),
     new ExtractTextPlugin({
-      filename: '../styles/styles.css',
+      filename: '../styles/[name].[chunkhash].css',
     }),
     new webpack.DefinePlugin({
       'process.env': {
@@ -120,7 +122,5 @@ const prod = merge(base, {
 const config = process.env.NODE_ENV === 'production'
   ? prod
   : dev;
-
-// console.log(config);
 
 module.exports = config;

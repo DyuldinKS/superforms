@@ -1,8 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { Button } from 'reactstrap';
 import { Link } from 'shared/router/components';
 import * as usersModule from 'apps/app/shared/redux/users';
+import { SessionAPI } from 'api/';
 
 const propTypes = {
   userId: PropTypes.string.isRequired,
@@ -14,6 +16,16 @@ const defaultProps = {
   firstName: 'Не указано',
   lastName: 'Не указано',
 };
+
+async function handleSignOut() {
+  try {
+    const response = await SessionAPI.signOut();
+  } catch (error) {
+    console.error(error.message);
+  }
+
+  window.location.href = '/signin';
+}
 
 function HeaderAccount(props) {
   const {
@@ -31,7 +43,7 @@ function HeaderAccount(props) {
         {`${firstName} ${lastName}`}
       </Link>
 
-      <a href="javascript:;">Выйти</a>
+      <Button color="link" onClick={handleSignOut}>Выйти</Button>
     </div>
   );
 }

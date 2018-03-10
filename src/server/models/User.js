@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import crypto from 'crypto';
+import uuidv4 from 'uuid/v4';
 import config from '../config';
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
@@ -50,7 +50,7 @@ class User extends Recipient {
 			`SELECT rcpt.id, rcpt.email, ut.token
 			FROM user_tokens ut
 			JOIN recipients rcpt ON rcpt.id = ut.user_id
-			WHERE token = $2
+			WHERE token = $1
 				AND now() - ut.created < interval '1 day';`,
 			[token],
 		)
@@ -93,34 +93,28 @@ class User extends Recipient {
 	}
 
 
-	deleteToken(token) {
+	deleteToken() {
 		return db.query(
-			'DELETE FROM user_tokens WHERE user_id = $1 AND token = $2;',
-			[this.id, token],
+			'DELETE FROM user_tokens WHERE token = $1;',
+			[this.token],
 		);
 	}
 
 
-	recoverPass() {
-		this.token = crypto.randomBytes(20).toString('hex');
-		return this.setToken(this.token)
-			.then(() => this);
+	restorePassword() {
+		return this.setToken(uuidv4())
+			.then(res => this.assign(res));
 	}
 
 
-	resetPassword() {
+	resetPassword(authorId) {
 		this.password = passwordGenerator(8);
 		return bcrypt.hash(this.password, config.bcrypt.saltRound)
-			.then(hash => this.update({ hash }));
-	}
-
-
-	setPassword(pass) {
-		return bcrypt.hash(pass, config.bcrypt.saltRound)
-			.then(hash => this.update({ hash, authorId: this.authorId }))
-			// .then(() => this.deleteToken(this.token))
+			.then(hash => this.update({ hash }, authorId))
+			.then(() => this.deleteToken())
 			.then(() => this);
 	}
+
 
 	// @implements
 	save(authorId) {
@@ -147,11 +141,11 @@ class User extends Recipient {
 
 
 	getDisplayName() {
-		const { name, patronymic } = this;
-		if(name) {
+		const { firstName, patronymic } = this.info;
+		if(firstName) {
 			return patronymic
-				? `${name} ${patronymic}`
-				: `${name}`;
+				? `${firstName} ${patronymic}`
+				: `${firstName}`;
 		}
 		return '';
 	}
