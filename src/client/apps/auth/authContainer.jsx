@@ -16,10 +16,12 @@ const SIGN_IN_TITLE = 'Вход - SuperForms';
 const RECOVER_TITLE = 'Восстановление доступа - SuperForms';
 
 const propTypes = {
+  alert: PropTypes.object,
   location: PropTypes.string,
 };
 
 const defaultProps = {
+  alert: null,
   location: SIGN_IN_PATH,
 };
 
@@ -28,12 +30,13 @@ class AuthContainer extends Component {
     super(props);
 
     this.state = {
-      alert: null,
+      alert: this.props.alert,
       loading: false,
       location: this.props.location,
     };
 
     this.onRedirect = this.onRedirect.bind(this);
+    this.handlePageTitleChange = this.handlePageTitleChange.bind(this);
     this.handleRedirect = this.handleRedirect.bind(this);
     this.handlePopState = () => this.onRedirect(window.location.pathname);
     this.goToRestorePassword = () => this.handleRedirect(RECOVER_PATH);
@@ -45,6 +48,11 @@ class AuthContainer extends Component {
 
   componentDidMount() {
     window.addEventListener('popstate', this.handlePopState);
+    this.handlePageTitleChange();
+  }
+
+  componentDidUpdate() {
+    this.handlePageTitleChange();
   }
 
   componentWillUnmount() {
@@ -62,6 +70,25 @@ class AuthContainer extends Component {
   handleRedirect(path) {
     window.history.pushState({}, '', path);
     this.onRedirect(path);
+  }
+
+  handlePageTitleChange() {
+    const { location } = this.state;
+
+    let title = 'SuperForms';
+
+    switch (location) {
+      case SIGN_IN_PATH:
+        title = SIGN_IN_TITLE;
+        break;
+      case RECOVER_PATH:
+        title = RECOVER_TITLE;
+        break;
+      default:
+        break;
+    }
+
+    document.title = title;
   }
 
   handleLoading() {
