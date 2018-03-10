@@ -3,6 +3,7 @@ import User from '../models/User';
 import Org from '../models/Org';
 import mailer from '../libs/mailer';
 import { HttpError, SmtpError, PgError } from '../libs/errors';
+import ssr from '../templates/ssr';
 
 
 export default (app) => {
@@ -42,8 +43,17 @@ export default (app) => {
 					if(!user) throw new HttpError(404, 'Not Found');
 					return user.resetPassword(user.id);
 				})
-				.then(user => mailer.sendPasswordResetEmail(user))
-				.then(() => res.status(200).send())
+				.then((user) => {
+					mailer.sendPasswordResetEmail(user);
+					return user;
+				})
+				.then(user => res.send(ssr.auth({
+					location: '/signin',
+					alert: {
+						type: 'success',
+						message: `Новый пароль для доступа в систему выслан вам на почту: ${user.email}`,
+					},
+				})))
 				.catch(next);
 		},
 	);
