@@ -96,7 +96,7 @@ OrgProfilePage.defaultProps = defaultProps;
 function mapStateToProps(state, ownProps) {
   const orgId = ownProps.match.params.id;
   const org = orgsModule.selectors.getOrg(state, orgId);
-  const parent = orgsModule.selectors.getOrg(state, org.entity.chiefOrgId);
+  const parent = orgsModule.selectors.getOrg(state, org.entity.parentId);
 
   return {
     id: orgId,

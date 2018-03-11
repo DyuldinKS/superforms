@@ -2,13 +2,13 @@ import getURLFromParts from 'shared/router/utils/getURLFromParts';
 import { fetch } from './utils/defaultRequest';
 
 class OrgAPI {
-  static async create(chiefOrgId, payload) {
+  static async create(parentId, payload) {
     const { email, ...info } = payload;
 
     const data = await fetch('/api/v1/orgs', {
       method: 'POST',
       body: {
-        chiefOrgId,
+        parentId,
         email,
         info,
       },

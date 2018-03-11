@@ -16,7 +16,7 @@ import { connectNewUser } from '../shared/components/connect';
 
 const propTypes = {
   // from Redux
-  chiefOrgName: PropTypes.string.isRequired,
+  parentOrgName: PropTypes.string.isRequired,
   createUser: PropTypes.func.isRequired,
 };
 
@@ -37,7 +37,7 @@ class CreateUserRoute extends BaseComponent {
   }
 
   render() {
-    const { chiefOrgName } = this.props;
+    const { parentOrgName } = this.props;
     const { error, uploading } = this.state;
 
     return (
@@ -98,7 +98,7 @@ class CreateUserRoute extends BaseComponent {
                 <Input
                   name="org"
                   disabled
-                  value={chiefOrgName}
+                  value={parentOrgName}
                 />
               </FormGroup>
 

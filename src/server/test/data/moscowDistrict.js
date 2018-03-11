@@ -18,7 +18,7 @@ const getRoot = () => (
 
 const createOrg = orgData => (
 	new Org(orgData).save(root.id)
-		.then(org => org.setParentOrg(orgData.chiefOrgId))
+		.then(org => org.setParentOrg(orgData.parentId))
 );
 
 
@@ -40,7 +40,7 @@ const createEducationDepartment = () => {
 			shortName: '?',
 			fullName: '?',
 		},
-		chiefOrgId: root.orgId,
+		parentId: root.orgId,
 	})
 		.then((org) => { edDep = org; })
 		.then(() => fsReadFile(path.join(__dirname, 'educationDepartmentUsers.json')))
@@ -62,7 +62,7 @@ const createIMC = parentOrg => (
 			shortName: 'ГБУ ДППО ЦПКС ИМЦ Московского района Санкт-Петербурга',
 			fullName: 'Государственное бюджетное учреждение дополнительного профессионального педагогического образования центр повышения квалификации специалистов «Информационно-методический центр» Московского района Санкт-Петербурга',
 		},
-		chiefOrgId: parentOrg.id,
+		parentId: parentOrg.id,
 	})
 );
 
@@ -84,7 +84,7 @@ const createSchoolsAndKindergartens = imc => (
 						label: shortName,
 					},
 					authorId: root.id,
-					chiefOrgId: imc.id,
+					parentId: imc.id,
 				}));
 			});
 			return chain;

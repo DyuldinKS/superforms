@@ -15,7 +15,7 @@ import { connectNewOrg } from '../shared/components/connect';
 
 const propTypes = {
   // from Redux
-  chiefOrgName: PropTypes.string.isRequired,
+  parentOrgName: PropTypes.string.isRequired,
   createOrg: PropTypes.func.isRequired,
 };
 
@@ -36,7 +36,7 @@ class CreateOrgRoute extends BaseComponent {
   }
 
   render() {
-    const { chiefOrgName } = this.props;
+    const { parentOrgName } = this.props;
     const { error, uploading } = this.state;
 
     return (
@@ -89,7 +89,7 @@ class CreateOrgRoute extends BaseComponent {
                 <Input
                   name="org"
                   disabled
-                  value={chiefOrgName}
+                  value={parentOrgName}
                 />
               </FormGroup>
 

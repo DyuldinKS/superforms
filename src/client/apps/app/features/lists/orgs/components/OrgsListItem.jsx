@@ -9,13 +9,13 @@ const propTypes = {
   id: PropTypes.string.isRequired,
   // from Redux
   name: PropTypes.string,
-  chiefOrgName: PropTypes.string,
+  parentOrgName: PropTypes.string,
   status: PropTypes.string,
 };
 
 const defaultProps = {
   name: '',
-  chiefOrgName: '',
+  parentOrgName: '',
   status: '',
 };
 
@@ -23,7 +23,7 @@ function OrgsListItem(props) {
   const {
     id,
     name,
-    chiefOrgName,
+    parentOrgName,
     status,
   } = props;
 
@@ -37,7 +37,7 @@ function OrgsListItem(props) {
         </Link>
       </div>
       <div className="orgs-list-item-cell-chief">
-        {chiefOrgName}
+        {parentOrgName}
       </div>
       <div className="orgs-list-item-cell-status">
         {status}
@@ -52,13 +52,13 @@ OrgsListItem.defaultProps = defaultProps;
 function mapStateToProps(state, ownProps) {
   const orgId = ownProps.id;
   const org = orgsModule.selectors.getOrgEntity(state, orgId);
-  const { chiefOrgId } = org;
-  const { label: chiefOrgName } = orgsModule.selectors.getOrgEntity(state, chiefOrgId);
+  const { parentId } = org;
+  const { label: parentOrgName } = orgsModule.selectors.getOrgEntity(state, parentId);
 
   return {
     name: org.label,
     status: locales.getStatus(org.status),
-    chiefOrgName,
+    parentOrgName,
   };
 }
 

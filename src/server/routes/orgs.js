@@ -11,10 +11,10 @@ export default (app) => {
 			const org = new Org({ ...req.body });
 
 			if(!org.email) return next(new HttpError(400, 'Missing email'));
-			const { chiefOrgId } = org;
+			const { parentId } = org;
 
 			return org.save(self.id)
-				.then(() => org.setParentOrg(chiefOrgId))
+				.then(() => org.setParentOrg(parentId))
 				// .then(() => mailer.sendRegistrationTo(org))
 				.then(() => res.json(org))
 				.catch((err) => {
@@ -40,11 +40,11 @@ export default (app) => {
 			const { org } = req.loaded;
 			const orgs = { [org.id]: org };
 
-			if(!org.chiefOrgId) {
+			if(!org.parentId) {
 				return res.json({ orgs });
 			}
 
-			Org.findById(org.chiefOrgId)
+			Org.findById(org.parentId)
 				.then((chiefOrg) => {
 					Object.assign(orgs, { [chiefOrg.id]: chiefOrg });
 					res.json({ orgs });

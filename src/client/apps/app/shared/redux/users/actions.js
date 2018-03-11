@@ -7,48 +7,48 @@ import entityName from './constants';
 import * as types from './actionTypes';
 
 // Create
-export function createRequest(chiefOrgId, payload) {
+export function createRequest(parentId, payload) {
   return {
     type: types.CREATE_REQUEST,
-    meta: { entityName, chiefOrgId },
+    meta: { entityName, parentId },
     payload,
   };
 }
 
-export function createSuccess(chiefOrgId, payload) {
+export function createSuccess(parentId, payload) {
   return {
     type: types.CREATE_SUCCESS,
-    meta: { entityName, chiefOrgId },
+    meta: { entityName, parentId },
     payload,
   };
 }
 
-export function createFailure(chiefOrgId, error) {
+export function createFailure(parentId, error) {
   return {
     type: types.CREATE_FAILURE,
-    meta: { entityName, chiefOrgId },
+    meta: { entityName, parentId },
     error: true,
     payload: error,
   };
 }
 
-export function create(chiefOrgId, payload) {
+export function create(parentId, payload) {
   return async (dispatch) => {
-    dispatch(createRequest(chiefOrgId, payload));
+    dispatch(createRequest(parentId, payload));
 
     try {
-      const data = await UserAPI.create(chiefOrgId, payload);
+      const data = await UserAPI.create(parentId, payload);
       const createdId = data.id;
 
       dispatch(batchActions(
-        createSuccess(chiefOrgId, data),
+        createSuccess(parentId, data),
         entity.fetchOneSuccess(entityName, createdId, data),
         router.replace(`/users/${createdId}`),
       ));
 
       return {};
     } catch (error) {
-      return dispatch(createFailure(chiefOrgId, error));
+      return dispatch(createFailure(parentId, error));
     }
   };
 }

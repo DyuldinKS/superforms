@@ -3,31 +3,31 @@ import * as orgsModule from 'apps/app/shared/redux/orgs';
 import * as usersModule from 'apps/app/shared/redux/users';
 
 function mapStateToProps(state, ownProps) {
-  const chiefOrgId = ownProps.match.params.orgId;
+  const parentOrgId = ownProps.match.params.orgId;
   const {
-    label: chiefOrgName,
-  } = orgsModule.selectors.getOrgEntity(state, chiefOrgId);
+    label: parentOrgName,
+  } = orgsModule.selectors.getOrgEntity(state, parentOrgId);
 
   return {
-    chiefOrgName,
+    parentOrgName,
   };
 }
 
 function mapDispatchToPropsForUser(dispatch, ownProps) {
-  const chiefOrgId = ownProps.match.params.orgId;
+  const parentOrgId = ownProps.match.params.orgId;
 
   return {
     createUser: payload =>
-      dispatch(usersModule.actions.create(chiefOrgId, payload)),
+      dispatch(usersModule.actions.create(parentOrgId, payload)),
   };
 }
 
 function mapDispatchToPropsForOrg(dispatch, ownProps) {
-  const chiefOrgId = ownProps.match.params.orgId;
+  const parentOrgId = ownProps.match.params.orgId;
 
   return {
     createOrg: payload =>
-      dispatch(orgsModule.actions.create(chiefOrgId, payload)),
+      dispatch(orgsModule.actions.create(parentOrgId, payload)),
   };
 }
 

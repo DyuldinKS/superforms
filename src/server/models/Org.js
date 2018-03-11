@@ -35,12 +35,12 @@ class Org extends Recipient {
 	}
 
 
-	setParentOrg(chiefOrgId) {
+	setParentOrg(parentId) {
 		return db.query(
 			'INSERT INTO org_links(org_id, parent_id) VALUES($1, $2);',
-			[this.id, chiefOrgId],
+			[this.id, parentId],
 		)
-			.then(() => this.assign({ chiefOrgId }));
+			.then(() => this.assign({ parentId }));
 	}
 
 
@@ -116,7 +116,7 @@ Org.prototype.props = new Set([
 	// 'suborgsNum',
 	// 'employeesNum',
 	// ids
-	'chiefOrgId',
+	'parentId',
 	'statusId',
 	'authorId',
 	// related objects

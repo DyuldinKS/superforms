@@ -7,7 +7,7 @@ CREATE TYPE org AS (
 	email varchar(255),
 	info jsonb,
 	active boolean,
-	"chiefOrgId" integer,
+	"parentId" integer,
 	created timestamp,
 	updated timestamp,
 	deleted timestamp,
