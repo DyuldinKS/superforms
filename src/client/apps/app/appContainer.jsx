@@ -17,21 +17,21 @@ function App() {
 
       <Switch>
         <Route
-          path="/orgs/:orgId/users/new"
+          path="/org/:orgId/users/new"
           exact
           component={CreateUserRoute}
         />
         <Route
-          path="/orgs/:orgId/orgs/new"
+          path="/org/:orgId/orgs/new"
           exact
           component={CreateOrgRoute}
         />
         <Route
-          path="/users/:id"
+          path="/user/:id"
           component={UserProfileRoute}
         />
         <Route
-          path="/orgs/:id"
+          path="/org/:id"
           component={OrgProfileRoute}
         />
       </Switch>

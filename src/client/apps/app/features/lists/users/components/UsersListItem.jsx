@@ -35,7 +35,7 @@ function UsersListItem(props) {
     <React.Fragment>
       <div className="users-list-item-cell-fullname">
         <Link
-          to={`/users/${id}`}
+          to={`/user/${id}`}
         >
           {fullName}
         </Link>
