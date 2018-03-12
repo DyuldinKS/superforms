@@ -8,7 +8,7 @@ import PropTypes from 'prop-types';
 import {
   Nav,
   NavItem,
-  NavLink,
+  Button,
 } from 'reactstrap';
 import { AccordionItem } from 'shared/ui/accordion';
 import * as orgsModule from 'apps/app/shared/redux/orgs';
@@ -36,12 +36,6 @@ const defaultProps = {
 class OrgSettings extends Component {
   constructor(props) {
     super(props);
-
-    this.defaultState = {
-      expanded: null,
-    };
-
-    this.state = this.defaultState;
 
     this.handleInfoChange = this.handleInfoChange.bind(this);
     this.handleEmailChange = this.handleEmailChange.bind(this);
@@ -76,18 +70,17 @@ class OrgSettings extends Component {
       fullName,
       label,
     } = this.props;
-    const { expanded } = this.state;
 
     return (
       <div>
         <Nav vertical>
           <NavItem>
-            <NavLink
-              href="javascript:;"
+            <Button
+              color="link"
               onClick={this.handleActiveChange}
             >
               {this.renderChangeActiveToggle()}
-            </NavLink>
+            </Button>
           </NavItem>
 
           <AccordionItem

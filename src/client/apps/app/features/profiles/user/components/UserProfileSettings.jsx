@@ -8,7 +8,6 @@ import PropTypes from 'prop-types';
 import {
   Nav,
   NavItem,
-  NavLink,
   Button,
 } from 'reactstrap';
 import { AccordionItem } from 'shared/ui/accordion';
@@ -42,12 +41,6 @@ const defaultProps = {
 class UserSettings extends Component {
   constructor(props) {
     super(props);
-
-    this.defaultState = {
-      expanded: null,
-    };
-
-    this.state = this.defaultState;
 
     this.handleInfoChange = this.handleInfoChange.bind(this);
     this.handleEmailChange = this.handleEmailChange.bind(this);
@@ -90,7 +83,6 @@ class UserSettings extends Component {
       lastName,
       patronymic,
     } = this.props;
-    const { expanded } = this.state;
 
     return (
       <div>
