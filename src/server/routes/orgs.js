@@ -20,18 +20,6 @@ export default (app) => {
 				.then(() => org.setParentOrg(parentId))
 				// .then(() => mailer.sendRegistrationTo(org))
 				.then(() => res.json(org))
-				.catch((err) => {
-					if(err instanceof PgError) {
-						if(err.code === '23502'
-							&& err.message.includes('null value in column "id"')) {
-							throw new HttpError(202, 'This email is not available');
-						}
-					}
-					// if(err instanceof SmtpError) {
-					// 	throw new HttpError(202, 'SMTP-server not available');
-					// }
-					throw err;
-				})
 				.catch(next);
 		},
 	);
