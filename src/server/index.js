@@ -19,6 +19,7 @@ import errorHandler from './middleware/errorHandler';
 
 
 const app = express();
+app.disable('x-powered-by');
 
 if(process.env.NODE_ENV === 'development') {
 	const compiler = webpack(webpackClientConfig);
