@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import locales from 'apps/app/shared/utils/locales';
+import { getActive } from 'apps/app/shared/utils/locales';
 
 const propTypes = {
   org: PropTypes.object.isRequired,
@@ -18,7 +18,7 @@ function ProfileHeader(props) {
       <p>{parentOrg.label}</p>
       <dl>
         <dt>Статус:</dt>
-        <dd>{locales.getStatus(org.status)}</dd>
+        <dd>{getActive(org.active)}</dd>
       </dl>
     </div>
   );

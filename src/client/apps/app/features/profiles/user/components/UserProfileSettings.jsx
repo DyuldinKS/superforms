@@ -23,7 +23,7 @@ const propTypes = {
   lastName: PropTypes.string.isRequired,
   patronymic: PropTypes.string,
   role: PropTypes.string.isRequired,
-  status: PropTypes.string.isRequired,
+  active: PropTypes.bool.isRequired,
   email: PropTypes.string.isRequired,
   changeInfo: PropTypes.func,
   changeEmail: PropTypes.func,
@@ -52,17 +52,12 @@ class UserSettings extends Component {
     this.handleInfoChange = this.handleInfoChange.bind(this);
     this.handleEmailChange = this.handleEmailChange.bind(this);
     this.handleRoleChange = this.handleRoleChange.bind(this);
-    this.handleStatusChange = this.handleStatusChange.bind(this);
+    this.handleActiveChange = this.handleActiveChange.bind(this);
   }
 
-  handleStatusChange() {
-    const { status, changeStatus, id } = this.props;
-
-    if (status === 'blocked') {
-      changeStatus(id, 'active');
-    } else {
-      changeStatus(id, 'blocked');
-    }
+  handleActiveChange() {
+    const { active, changeStatus, id } = this.props;
+    changeStatus(id, !active);
   }
 
   handleInfoChange(form) {
@@ -80,9 +75,9 @@ class UserSettings extends Component {
     changeRole(id, form.role);
   }
 
-  renderChangeStatusToggle() {
-    const { status } = this.props;
-    return status === 'active' ?
+  renderChangeActiveToggle() {
+    const { active } = this.props;
+    return active ?
       'Заблокировать доступ в систему' :
       'Открыть доступ в систему';
   }
@@ -103,9 +98,9 @@ class UserSettings extends Component {
           <NavItem>
             <Button
               color="link"
-              onClick={this.handleStatusChange}
+              onClick={this.handleActiveChange}
             >
-              {this.renderChangeStatusToggle()}
+              {this.renderChangeActiveToggle()}
             </Button>
           </NavItem>
 
@@ -150,8 +145,8 @@ function mapStateToProps(state, ownProps) {
   const userId = ownProps.match.params.id;
   const user = usersModule.selectors.getUser(state, userId);
   const {
+    active,
     role,
-    status,
     email,
     firstName,
     lastName,
@@ -160,8 +155,8 @@ function mapStateToProps(state, ownProps) {
 
   return {
     id: userId,
+    active,
     role,
-    status,
     email,
     firstName,
     lastName,

@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Form, FormGroup, Label, Input } from 'reactstrap';
 import locales from 'Locales/entities';
+import { getActive, getRole } from 'apps/app/shared/utils/locales';
 
 const propTypes = {
   values: PropTypes.object,
@@ -30,7 +31,7 @@ function UsersListFilters(props) {
             <option value="any">Любая</option>
             {
               Object.keys(locales.role).map(key => (
-                <option value={key} key={key}>{locales.role[key]}</option>
+                <option value={key} key={key}>{getRole(key)}</option>
               ))
             }
           </Input>
@@ -41,15 +42,12 @@ function UsersListFilters(props) {
           <Input
             type="select"
             size="sm"
-            onChange={event => onChange('status', event.target.value)}
-            value={values.status}
+            onChange={event => onChange('active', event.target.value)}
+            value={values.active}
           >
             <option value="any">Любой</option>
-            {
-              Object.keys(locales.status).map(key => (
-                <option value={key} key={key}>{locales.status[key]}</option>
-              ))
-            }
+            <option value={true} key="true">{getActive(true)}</option>
+            <option value={false} key="false">{getActive(false)}</option>
           </Input>
         </FormGroup>
       </Form>

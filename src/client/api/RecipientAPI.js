@@ -10,10 +10,10 @@ class RecipientAPI {
     return data;
   }
 
-  static async setStatus(id, status) {
+  static async setActive(id, active) {
     const data = await fetch(`/api/v1/recipients/${id}`, {
       method: 'PATCH',
-      body: { status },
+      body: { active },
     });
 
     return data;

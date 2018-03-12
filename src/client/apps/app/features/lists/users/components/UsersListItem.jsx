@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { Link } from 'shared/router/components';
 import * as usersModule from 'apps/app/shared/redux/users';
 import * as orgsModule from 'apps/app/shared/redux/orgs';
-import locales from 'apps/app/shared/utils/locales';
+import { getActive, getRole } from 'apps/app/shared/utils/locales';
 
 const propTypes = {
   id: PropTypes.string.isRequired,
@@ -12,14 +12,14 @@ const propTypes = {
   fullName: PropTypes.string,
   orgName: PropTypes.string,
   role: PropTypes.string,
-  status: PropTypes.string,
+  active: PropTypes.bool,
 };
 
 const defaultProps = {
   fullName: '',
   orgName: '',
   role: '',
-  status: '',
+  active: '',
 };
 
 function UsersListItem(props) {
@@ -28,7 +28,7 @@ function UsersListItem(props) {
     fullName,
     orgName,
     role,
-    status,
+    active,
   } = props;
 
   return (
@@ -46,8 +46,8 @@ function UsersListItem(props) {
       <div className="users-list-item-cell-role">
         {role}
       </div>
-      <div className="users-list-item-cell-status">
-        {status}
+      <div className="users-list-item-cell-active">
+        {active}
       </div>
     </React.Fragment>
   );
@@ -64,8 +64,8 @@ function mapStateToProps(state, ownProps) {
 
   return {
     fullName: usersModule.selectors.getFullName(state, userId),
-    role: locales.getRole(user.role),
-    status: locales.getStatus(user.status),
+    role: getRole(user.role),
+    active: getActive(user.active),
     orgName,
   };
 }

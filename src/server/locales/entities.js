@@ -1,12 +1,7 @@
 export default {
-	status: {
-		created: 'Создан',
-		updated: 'Обновлен',
-		deleted: 'Удален',
-		waiting: 'Ожидает подтверждения регистрации',
-		active: 'Активен',
-		blocked: 'Заблокирован',
-		notAvailable: 'Не доступен',
+	active: {
+		true: 'Активен',
+		false: 'Неактивен',
 	},
 	role: {
 		root: 'Главный администратор',

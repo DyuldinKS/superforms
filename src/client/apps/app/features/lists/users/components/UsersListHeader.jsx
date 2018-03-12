@@ -18,7 +18,7 @@ function UsersListHeader() {
       <div className="users-list-header-cell-role">
         Роль
       </div>
-      <div className="users-list-header-cell-status">
+      <div className="users-list-header-cell-active">
         Статус
       </div>
     </EntriesListHeader>

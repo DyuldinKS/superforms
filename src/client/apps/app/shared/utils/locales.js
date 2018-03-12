@@ -1,14 +1,9 @@
 import locales from 'Locales/entities';
 
-function getStatus(status) {
-  return locales.status[status];
+export function getActive(isActive) {
+  return locales.active[String(isActive)];
 }
 
-function getRole(role) {
+export function getRole(role) {
   return locales.role[role];
 }
-
-export default {
-  getStatus,
-  getRole,
-};

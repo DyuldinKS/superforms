@@ -54,11 +54,11 @@ export function create(parentId, payload) {
 }
 
 // Change status
-export function changeStatusRequest(id, status) {
+export function changeStatusRequest(id, active) {
   return {
     type: types.CHANGE_STATUS_REQUEST,
     meta: { entityName, id },
-    payload: { status },
+    payload: { active },
   };
 }
 
@@ -79,12 +79,12 @@ export function changeStatusFailure(id, error) {
   };
 }
 
-export function changeStatus(id, status) {
+export function changeStatus(id, active) {
   return async (dispatch) => {
-    dispatch(changeStatusRequest(id, status));
+    dispatch(changeStatusRequest(id, active));
 
     try {
-      const data = await RecipientAPI.setStatus(id, status);
+      const data = await RecipientAPI.setActive(id, active);
       dispatch(changeStatusSuccess(id, data));
     } catch (error) {
       dispatch(changeStatusFailure(id, error));

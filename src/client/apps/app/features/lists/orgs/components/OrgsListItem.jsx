@@ -3,20 +3,20 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Link } from 'shared/router/components';
 import * as orgsModule from 'apps/app/shared/redux/orgs';
-import locales from 'apps/app/shared/utils/locales';
+import { getActive } from 'apps/app/shared/utils/locales';
 
 const propTypes = {
   id: PropTypes.string.isRequired,
   // from Redux
   name: PropTypes.string,
   parentOrgName: PropTypes.string,
-  status: PropTypes.string,
+  active: PropTypes.bool,
 };
 
 const defaultProps = {
   name: '',
   parentOrgName: '',
-  status: '',
+  active: '',
 };
 
 function OrgsListItem(props) {
@@ -24,7 +24,7 @@ function OrgsListItem(props) {
     id,
     name,
     parentOrgName,
-    status,
+    active,
   } = props;
 
   return (
@@ -39,8 +39,8 @@ function OrgsListItem(props) {
       <div className="orgs-list-item-cell-chief">
         {parentOrgName}
       </div>
-      <div className="orgs-list-item-cell-status">
-        {status}
+      <div className="orgs-list-item-cell-active">
+        {active}
       </div>
     </React.Fragment>
   );
@@ -57,7 +57,7 @@ function mapStateToProps(state, ownProps) {
 
   return {
     name: org.label,
-    status: locales.getStatus(org.status),
+    active: getActive(org.active),
     parentOrgName,
   };
 }

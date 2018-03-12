@@ -5,7 +5,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import locales from 'apps/app/shared/utils/locales';
+import { getActive, getRole } from 'apps/app/shared/utils/locales';
 
 function getFullName(user) {
   const {
@@ -33,10 +33,10 @@ function ProfileHeader(props) {
       <p>{org.label}</p>
       <dl>
         <dt>Статус:</dt>
-        <dd>{locales.getStatus(user.status)}</dd>
+        <dd>{getActive(user.active)}</dd>
 
         <dt>Роль:</dt>
-        <dd>{locales.getRole(user.role)}</dd>
+        <dd>{getRole(user.role)}</dd>
       </dl>
     </div>
   );

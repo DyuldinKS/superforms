@@ -15,7 +15,7 @@ function OrgsListHeader() {
       <div className="orgs-list-header-cell-chief">
         Надведомство
       </div>
-      <div className="orgs-list-header-cell-status">
+      <div className="orgs-list-header-cell-active">
         Статус
       </div>
     </EntriesListHeader>

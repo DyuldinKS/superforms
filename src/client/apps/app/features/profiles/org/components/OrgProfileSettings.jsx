@@ -20,7 +20,7 @@ const propTypes = {
   id: PropTypes.string.isRequired,
   fullName: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
-  status: PropTypes.string.isRequired,
+  active: PropTypes.bool.isRequired,
   email: PropTypes.string.isRequired,
   changeInfo: PropTypes.func,
   changeEmail: PropTypes.func,
@@ -45,17 +45,12 @@ class OrgSettings extends Component {
 
     this.handleInfoChange = this.handleInfoChange.bind(this);
     this.handleEmailChange = this.handleEmailChange.bind(this);
-    this.handleStatusChange = this.handleStatusChange.bind(this);
+    this.handleActiveChange = this.handleActiveChange.bind(this);
   }
 
-  handleStatusChange() {
-    const { status, changeStatus, id } = this.props;
-
-    if (status === 'blocked') {
-      changeStatus(id, 'active');
-    } else {
-      changeStatus(id, 'blocked');
-    }
+  handleActiveChange() {
+    const { active, changeStatus, id } = this.props;
+    changeStatus(id, !active);
   }
 
   handleInfoChange(form) {
@@ -68,9 +63,9 @@ class OrgSettings extends Component {
     changeEmail(id, form.email);
   }
 
-  renderChangeStatusToggle() {
-    const { status } = this.props;
-    return status === 'active' ?
+  renderChangeActiveToggle() {
+    const { active } = this.props;
+    return active ?
       'Заблокировать доступ в систему' :
       'Открыть доступ в систему';
   }
@@ -89,9 +84,9 @@ class OrgSettings extends Component {
           <NavItem>
             <NavLink
               href="javascript:;"
-              onClick={this.handleStatusChange}
+              onClick={this.handleActiveChange}
             >
-              {this.renderChangeStatusToggle()}
+              {this.renderChangeActiveToggle()}
             </NavLink>
           </NavItem>
 
@@ -126,7 +121,7 @@ function mapStateToProps(state, ownProps) {
   const orgId = ownProps.match.params.id;
   const org = orgsModule.selectors.getOrg(state, orgId);
   const {
-    status,
+    active,
     email,
     fullName,
     label,
@@ -134,7 +129,7 @@ function mapStateToProps(state, ownProps) {
 
   return {
     id: orgId,
-    status,
+    active,
     email,
     fullName,
     label,
