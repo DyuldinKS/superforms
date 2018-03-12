@@ -1,11 +1,14 @@
+import { isActive } from '../middleware/users';
+import loadInstance from '../middleware/loadInstance';
 import Org from '../models/Org';
 import { HttpError, SmtpError, PgError } from '../libs/errors';
 
 
 export default (app) => {
-	// create rog
+	// create organization
 	app.post(
-		'/api/v1/orgs',
+		'/api/v1/org',
+		isActive,
 		(req, res, next) => {
 			const { self } = req.loaded;
 			const org = new Org({ ...req.body });
@@ -31,6 +34,16 @@ export default (app) => {
 				})
 				.catch(next);
 		},
+	);
+
+
+	app.use(
+		[
+			/\/api\/v\d{1,2}\/org\/\d{1,8}(\/\w{1,12})?$/, // api
+			/\/org\/\d{1,8}(\/\w{1,12})?$/, // ssr
+		],
+		isActive,
+		loadInstance,
 	);
 
 	// get one org

@@ -5,7 +5,7 @@ class OrgAPI {
   static async create(parentId, payload) {
     const { email, ...info } = payload;
 
-    const data = await fetch('/api/v1/orgs', {
+    const data = await fetch('/api/v1/org', {
       method: 'POST',
       body: {
         parentId,

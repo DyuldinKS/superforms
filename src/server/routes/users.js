@@ -1,4 +1,6 @@
 import { isNotAuthenticated } from '../middleware/sessions';
+import { isActive } from '../middleware/users';
+import loadInstance from '../middleware/loadInstance';
 import User from '../models/User';
 import Org from '../models/Org';
 import mailer from '../libs/mailer';
@@ -12,20 +14,24 @@ export default (app) => {
 	----------------------------------------------------------------------------*/
 
 	// send email for password reset
-	app.put('/api/v1/user/password', (req, res, next) => {
-		const { email, reset } = req.body;
+	app.put(
+		'/api/v1/user/password',
+		isNotAuthenticated,
+		(req, res, next) => {
+			const { email, reset } = req.body;
 
-		if(!reset) return next(new HttpError(400));
+			if(!reset) return next(new HttpError(400));
 
-		User.findByEmail(email)
-			.then((user) => {
-				if(!user) throw new HttpError(404, 'Not Found');
-				return user.restorePassword();
-			})
-			.then(user => mailer.sendPasswordRestoreEmail(user))
-			.then(() => res.status(200).send())
-			.catch(next);
-	});
+			User.findByEmail(email)
+				.then((user) => {
+					if(!user) throw new HttpError(404, 'Not Found');
+					return user.restorePassword();
+				})
+				.then(user => mailer.sendPasswordRestoreEmail(user))
+				.then(() => res.status(200).send())
+				.catch(next);
+		},
+	);
 
 
 	// send email with new password
@@ -59,9 +65,20 @@ export default (app) => {
 	);
 
 
+	app.use(
+		[
+			/\/api\/v\d{1,2}\/user\/\d{1,8}$/, // api
+			/\/user\/\d{1,8}$/, // ssr
+		],
+		isActive,
+		loadInstance,
+	);
+
+
 	// create user
 	app.post(
-		'/api/v1/users',
+		'/api/v1/user',
+		isActive,
 		(req, res, next) => {
 			const { self } = req.loaded;
 			const user = new User({ ...req.body });

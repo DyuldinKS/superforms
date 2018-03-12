@@ -1,11 +1,9 @@
-import { isAuthenticated } from '../middleware/sessions';
 import { isActive } from '../middleware/users';
 import loadInstance from '../middleware/loadInstance';
 import sessions from './sessions';
 import recipients from './recipients';
 import users from './users';
 import orgs from './orgs';
-import hbs from '../templates/pages';
 import Org from '../models/Org';
 import { HttpError } from '../libs/errors';
 import store from '../../client/apps/app/boot/store';
@@ -16,21 +14,8 @@ import ssr from '../templates/ssr';
 
 
 const router = (app) => {
-	app.use(
-		[
-			/\/(api\/v\d{1,2}\/)?org\/.*/,
-			/\/(api\/v\d{1,2}\/)?user\/.*/,
-			/\/(api\/v\d{1,2}\/)?recipient\/.*/,
-		],
-		isAuthenticated,
-		isActive,
-		loadInstance,
-	);
-
-
 	app.get(
 		'/',
-		isAuthenticated,
 		isActive,
 		(req, res, next) => {
 			const user = req.loaded.self;
@@ -63,16 +48,10 @@ const router = (app) => {
 	);
 
 
-	orgs(app);
 	users(app);
+	orgs(app);
 	sessions(app);
 	recipients(app);
-
-	// app.post('/api/emails/check', recipients.checkEmail);
-	// app.post('/api/users/register', users.add);
-	// app.get('/admin', sendAdminPage())
-	// app.post('/api/orgs/create', orgs.create);
-	// app.get('/api/orgs/:id', orgs.getOne)
 };
 
 export default router;

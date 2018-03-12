@@ -4,7 +4,7 @@ class UserAPI {
   static async create(cheifOrgId, payload) {
     const { email, role, ...info } = payload;
 
-    const data = await fetch('/api/v1/users', {
+    const data = await fetch('/api/v1/user', {
       method: 'POST',
       body: {
         orgId: cheifOrgId,
