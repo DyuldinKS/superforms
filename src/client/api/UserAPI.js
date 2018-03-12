@@ -1,13 +1,13 @@
 import { fetch } from './utils/defaultRequest';
 
 class UserAPI {
-  static async create(cheifOrgId, payload) {
+  static async create(orgId, payload) {
     const { email, role, ...info } = payload;
 
     const data = await fetch('/api/v1/user', {
       method: 'POST',
       body: {
-        orgId: cheifOrgId,
+        orgId,
         email,
         role,
         info,
