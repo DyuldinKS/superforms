@@ -80,7 +80,7 @@ class OrgsListContainer extends Component {
           </div>
 
           <Link
-            to={`/orgs/${orgId}/orgs/new`}
+            to={`/org/${orgId}/orgs/new`}
             className="btn btn-primary orgs-list-btn-add"
           >
             Добавить новую организацию
