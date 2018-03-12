@@ -20,7 +20,7 @@ function HeaderNavigation(props) {
         <NavItem>
           <Link
             className="nav-link"
-            to={`/orgs/${orgId}`}
+            to={`/org/${orgId}`}
           >
             Моя организация
           </Link>

@@ -1,11 +1,13 @@
-import { isAuthenticated } from '../middleware/sessions';
+import { isActive } from '../middleware/users';
+import loadInstance from '../middleware/loadInstance';
 import Recipient from '../models/Recipient';
 import { HttpError, PgError } from '../libs/errors';
 
 
 export default (app) => {
 	app.post(
-		'/api/v1/recipients/verification',
+		'/api/v1/recipient/verification',
+		isActive,
 		(req, res, next) => {
 			const { email, mode } = req.body;
 
@@ -32,7 +34,8 @@ export default (app) => {
 
 
 	app.post(
-		'/api/v1/recipients/search',
+		'/api/v1/recipient/search',
+		isActive,
 		(req, res, next) => {
 			let promiseToFind;
 			if(Array.isArray(req.body)) {
@@ -52,8 +55,20 @@ export default (app) => {
 	);
 
 
+	app.use(
+		[
+			/\/api\/v\d{1,2}\/recipient\/\d{1,8}$/, // api
+			/\/recipient\/\d{1,8}$/, // ssr
+		],
+		isActive,
+		loadInstance,
+	);
+
+
 	app.get(
-		'/api/v1/recipients/:id',
+		'/api/v1/recipient/:id',
+		isActive,
+		loadInstance,
 		(req, res, next) => {
 			const { rcpt } = req.loaded;
 			res.json(rcpt);
@@ -62,7 +77,8 @@ export default (app) => {
 
 
 	app.post(
-		'/api/v1/recipients',
+		'/api/v1/recipient',
+		isActive,
 		(req, res, next) => {
 			const { self } = req.loaded;
 			const { email } = req.body;
@@ -86,7 +102,9 @@ export default (app) => {
 
 	// update recipients
 	app.patch(
-		'/api/v1/recipients/:id',
+		'/api/v1/recipient/:id',
+		isActive,
+		loadInstance,
 		(req, res, next) => {
 			const { rcpt, self } = req.loaded;
 			const params = req.body;

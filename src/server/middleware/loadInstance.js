@@ -5,46 +5,39 @@ import { HttpError } from '../libs/errors';
 
 
 const models = {
-	recipients: {
+	recipient: {
 		model: Recipient,
 		// find: Recipient.find,
 		key: 'rcpt',
 	},
-	users: {
+	user: {
 		model: User,
 		// find: User.findById,
 		key: 'user',
 	},
-	orgs: {
+	org: {
 		model: Org,
 		key: 'org',
 	},
 };
 
 
-function getModelsToSearch(url) {
-	const modelsToSearch = [];
-
-	url.replace(/\/(\w+)\/(\d+)/, (match, category, id) => {
-		if(models[category]) {
-			modelsToSearch.push({ ...models[category], id });
-		}
-	});
-
-	return modelsToSearch;
+function getModelToSearch(url) {
+	const match = url.match(/\/(user|org|recipient)\/(\d{1,8})/);
+	if(!match) throw new Error('There is no any instance.');
+	const [, category, id] = match;
+	return { ...models[category], id };
 }
 
 // load all required data to 'req' object
 export default (req, res, next) => {
-	const modelsToSearch = getModelsToSearch(req.originalUrl);
-	Promise.all(modelsToSearch.map(({ model, id }) => model.findById(id)))
-		.then((loaded) => {
-			loaded.forEach((instance, i) => {
-				if(!instance) {
-					throw new HttpError(404, `${modelsToSearch[i].key} not found`);
-				}
-				req.loaded[modelsToSearch[i].key] = instance;
-			});
+	const { model, key, id } = getModelToSearch(req.originalUrl);
+	model.findById(id)
+		.then((instance) => {
+			if(!instance) {
+				throw new HttpError(404, `${key} not found`);
+			}
+			req.loaded[key] = instance;
 			next();
 		})
 		.catch(next);

@@ -1,10 +1,8 @@
 import { HttpError, PgError } from '../libs/errors';
 import hbs from '../templates/pages';
-import logger from '../libs/logger';
 
 
 function errorHandler(err, req, res, next) {
-	// console.log(err);
 	let httpError;
 
 	switch (err.constructor) {
@@ -24,9 +22,19 @@ function errorHandler(err, req, res, next) {
 	const { status, message } = httpError;
 
 
-	if(req.url.includes('api')) {
+	if(req.get('x-requested-with') === 'XMLHttpRequest') {
 		res.status(status).send(message);
 	} else {
+		if(status === '403') {
+			if(message === 'Unathrorized') {
+				res.redirect('/signin');
+				return;
+			}
+			if(message === 'Already authorized') {
+				res.redirect('/');
+				return;
+			}
+		}
 		res.send(hbs.errorPage({ status, message }));
 	}
 

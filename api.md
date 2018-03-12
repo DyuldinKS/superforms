@@ -17,26 +17,26 @@ URL | Page description
 ### Organization
 URL | Page description
 --- | --- 
-`/orgs/:id`<br>`/orgs/:id/info` | Organization profile
-`/orgs/:id/orgs` | Subordinate organizations;<br>*relative to the organization specified by id*
-`/orgs/:id/users` | Users of subordinate orgs;<br>*relative to the organization specified by id* 
-`/orgs/:id/forms` | Forms of the organization specified by id
-`/orgs/:id/settings` | Organization settings 
+`/org/:id`<br>`/org/:id/info` | Organization profile
+`/org/:id/orgs` | Subordinate organizations;<br>*relative to the organization specified by id*
+`/org/:id/users` | Users of subordinate orgs;<br>*relative to the organization specified by id*
+`/org/:id/forms` | Forms of the organization specified by id
+`/org/:id/settings` | Organization settings
 
 ### User
 URL | Page description
 --- | --- 
-`/users/:id`<br>`/users/:id/info` | User profile
-`/users/:id/settings` | User settings
+`/user/:id`<br>`/user/:id/info` | User profile
+`/user/:id/settings` | User settings
 
 ### Form
 URL  | Page description
 --- | --- 
-`/forms/:id`<br>`/forms/:id?token=...` | Form filling page;<br>***token** is used for automatic mailing*
-`/forms/:id/settings` | Form settings
-`/forms/:id/preview` | Form preview
-`/forms/:id/editing` | Form editing page
-`/forms/:id/responses` | Answers to the specified form
+`/form/:id`<br>`/form/:id?token=...` | Form filling page;<br>***token** is used for automatic mailing*
+`/form/:id/settings` | Form settings
+`/form/:id/preview` | Form preview
+`/form/:id/editing` | Form editing page
+`/form/:id/responses` | Answers to the specified form
 
 ### Response
 URL  | Page description
@@ -68,7 +68,7 @@ URL  | Page description
 ---
 
 ### Reset password
-*Send to the specified email link to resetting password.*
+*Send to the specified email link to resetting password.*\
 **URL** : `/api/v1/user/password`\
 **Method**:  `PUT`\
 **Request body**:
@@ -82,7 +82,7 @@ URL  | Page description
 
 ---
 ### Get new password
-*Generate new password and send it to the email.*
+*Generate new password and send it to the email.*\
 **URL** : `/api/v1/user/password`\
 **Query params**:
 ```ts
@@ -106,7 +106,7 @@ interface Recipient (
 ```
 ---
 ### Email verification
-**URL**: `/api/v1/recipients/verification`\
+**URL**: `/api/v1/recipient/verification`\
 **Method**: `POST`\
 **Request Body**: 
 ```ts
@@ -126,7 +126,7 @@ interface Recipient (
 ```
 ---
 ### Create
-**URL**: `/api/v1/recipients`\
+**URL**: `/api/v1/recipient`\
 **Method**: `POST`\
 **Request Body**:
 ```ts
@@ -136,13 +136,13 @@ interface Recipient (
 
 ---
 ### Get by id
-**URL**: `/api/v1/recipients/:id`\
+**URL**: `/api/v1/recipient/:id`\
 **Method**: `GET`\
 **Response body**: `rcpt: Recipient`
 
 ---
 ### Get by email
-**URL**: `/api/v1/recipients/search`\
+**URL**: `/api/v1/recipient/search`\
 **Method**: `POST`\
 **Request Body**:
 ```ts
@@ -152,7 +152,7 @@ interface Recipient (
 
 ---
 ### Update
-**URL**: `/api/v1/recipients/:id`\
+**URL**: `/api/v1/recipient/:id`\
 **Method**: `PATCH`\
 **Request Body**:
 ```ts
@@ -179,7 +179,7 @@ interface Org {
 ```
 ### Create
 **Method**:  POST
-**URL** : `/api/v1/orgs`\
+**URL** : `/api/v1/org`\
 **Request body**:
 ```ts
 {
@@ -191,13 +191,13 @@ interface Org {
 
 ---
 ### Get
-**URL**: `/api/v1/orgs/:id`\
+**URL**: `/api/v1/org/:id`\
 **Method**: `GET`\
 **Response body**: `org: Org`
 
 ---
 ### Update
-**URL**: `/api/v1/orgs/:id`\
+**URL**: `/api/v1/org/:id`\
 **Method**: `PATCH`\
 **Request Body**:
 ```ts
@@ -212,7 +212,7 @@ interface Org {
 
 ---
 ### Get subordinate organizations
-**URL**: `/api/v1/orgs/:id/orgs`\
+**URL**: `/api/v1/org/:id/orgs`\
 **Method**: `GET`\
 **Query params**:
 ```ts
@@ -233,7 +233,7 @@ maxDepth: number // default null - no limit
 ```
 ---
 ### Get users of subordinate organizations
-**URL**: `/api/v1/orgs/:id/users`\
+**URL**: `/api/v1/org/:id/users`\
 **Method**: `GET`\
 **Query params**:
 ```ts
@@ -255,7 +255,7 @@ maxDepth: number // default null - no limit
 ```
 ---
 ### Get forms of the organization
-**URL**: `/api/v1/orgs/:id/forms`\
+**URL**: `/api/v1/org/:id/forms`\
 **Method**: `GET`\
 **Query params**:
 ```ts
@@ -291,7 +291,7 @@ interface User {
 ```
 ### Create
 **Method**:  `POST`\
-**URL** : `/api/v1/users`\
+**URL** : `/api/v1/user`\
 **Request body**:
 ```ts
 {
@@ -305,13 +305,13 @@ interface User {
 
 ---
 ### Get
-**URL**: `/api/v1/users/:id`\
+**URL**: `/api/v1/user/:id`\
 **Method**: `GET`\
 **Response body**: `usr: User`
 
 ---
 ### Update
-**URL**: `/api/v1/users/:id`\
+**URL**: `/api/v1/user/:id`\
 **Method**: `PATCH`\
 **Request Body**:
 ```ts
@@ -364,7 +364,7 @@ interface Form {
 ```
 ### Create
 **Method**:  `POST`\
-**URL** : `/api/v1/forms`\
+**URL** : `/api/v1/form`\
 **Request body**:
 ```ts
 { scheme: Scheme }
@@ -373,13 +373,13 @@ interface Form {
 
 ---
 ### Get
-**URL**: `/api/v1/forms/:id`\
+**URL**: `/api/v1/form/:id`\
 **Method**: `GET`\
 **Response body**: `form: Form`
 
 ---
 ### Update
-**URL**: `/api/v1/forms/:id`\
+**URL**: `/api/v1/form/:id`\
 **Method**: `PATCH`\
 **Request Body**:
 ```ts
@@ -392,7 +392,7 @@ interface Form {
 
 ---
 ### Send
-**URL**: `/api/v1/forms/:id`\
+**URL**: `/api/v1/form/:id`\
 **Method**: `PATCH`\
 **Request Body**:
 ```ts
@@ -405,7 +405,7 @@ interface Form {
 
 ---
 ### Delete
-**URL**: `/api/v1/forms/:id`\
+**URL**: `/api/v1/form/:id`\
 **Method**: `PATCH`\
 **Request Body**:
 ```ts

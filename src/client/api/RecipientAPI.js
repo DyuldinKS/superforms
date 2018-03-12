@@ -2,7 +2,7 @@ import { fetch } from './utils/defaultRequest';
 
 class RecipientAPI {
   static async setEmail(id, email) {
-    const data = await fetch(`/api/v1/recipients/${id}`, {
+    const data = await fetch(`/api/v1/recipient/${id}`, {
       method: 'PATCH',
       body: { email },
     });
@@ -11,7 +11,7 @@ class RecipientAPI {
   }
 
   static async setActive(id, active) {
-    const data = await fetch(`/api/v1/recipients/${id}`, {
+    const data = await fetch(`/api/v1/recipient/${id}`, {
       method: 'PATCH',
       body: { active },
     });

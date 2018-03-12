@@ -7,25 +7,7 @@ import ssr from '../templates/ssr';
 
 
 export default (app) => {
-	// signin development stub
-	app.get(
-		'/signin/:email',
-		(req, res, next) => {
-			const { email } = req.params;
-
-			User.findByEmail(email)
-				.then((user) => {
-					if(!user) throw new HttpError(403, 'Incorrect email or password');
-					req.session.user = { id: user.id };
-					return res.redirect('/');
-				})
-				.then(next)
-				.catch(next);
-		},
-	);
-
-
-	// page to sign in or enter email and send pass reset link to it
+	// page to sign in or reset password
 	app.get(
 		[
 			'/recovery',
@@ -36,21 +18,6 @@ export default (app) => {
 			res.send(ssr.auth({ location: req.path }));
 		},
 	);
-
-
-	// (!) DEFERRED
-
-	// send password recovery page
-	// app.get('/recovery/:token', (req, res, next) => {
-	// 	const { token } = req.params;
-	// 	User.findByToken(token)
-	// 		.then((user) => {
-	// 			if(!user) throw new HttpError(404, 'Not Found');
-	// 			res.send(hbs.passRecoveryPage());
-	// 		})
-	// 		.catch(next);
-	// });
-
 
 	// sign in
 	app.post(
@@ -75,7 +42,6 @@ export default (app) => {
 		},
 	);
 
-
 	// sign out
 	app.delete('/api/v1/session', (req, res, next) => {
 		if(req.session.user) {
@@ -85,16 +51,5 @@ export default (app) => {
 			});
 		}
 		res.status(200).send();
-	});
-
-	app.get('/signout', (req, res, next) => {
-		if(req.session.user) {
-			req.session.destroy((err) => {
-				if(err) return next(new HttpError(500));
-				return res.status(200).send();
-			});
-		}
-
-		res.redirect('/signin');
 	});
 };

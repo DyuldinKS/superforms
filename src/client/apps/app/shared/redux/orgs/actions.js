@@ -48,7 +48,7 @@ export function create(parentId, payload) {
       dispatch(batchActions(
         createSuccess(parentId, data),
         entity.fetchOneSuccess(entityName, createdId, data),
-        router.replace(`/orgs/${createdId}`),
+        router.replace(`/org/${createdId}`),
       ));
 
       return {};

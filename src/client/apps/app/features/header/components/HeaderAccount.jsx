@@ -37,7 +37,7 @@ function HeaderAccount(props) {
   return (
     <div className="app-header-account">
       <Link
-        to={`/users/${userId}`}
+        to={`/user/${userId}`}
         className="app-header-account-username"
       >
         {`${firstName} ${lastName}`}

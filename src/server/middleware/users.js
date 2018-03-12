@@ -17,7 +17,10 @@ const deserializeUser = (req, res, next) => {
 
 const isActive = (req, res, next) => {
 	const { self } = req.loaded;
-	if(self instanceof User === false || !self.isActive()) {
+	if(self instanceof User === false) {
+		return next(new HttpError(403, 'Not authenticated'));
+	}
+	if(!self.isActive()) {
 		return next(new HttpError(403, 'Your account has been locked'));
 	}
 	return next();

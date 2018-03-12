@@ -1,11 +1,14 @@
+import { isActive } from '../middleware/users';
+import loadInstance from '../middleware/loadInstance';
 import Org from '../models/Org';
 import { HttpError, SmtpError, PgError } from '../libs/errors';
 
 
 export default (app) => {
-	// create rog
+	// create organization
 	app.post(
-		'/api/v1/orgs',
+		'/api/v1/org',
+		isActive,
 		(req, res, next) => {
 			const { self } = req.loaded;
 			const org = new Org({ ...req.body });
@@ -33,9 +36,19 @@ export default (app) => {
 		},
 	);
 
+
+	app.use(
+		[
+			/\/api\/v\d{1,2}\/org\/\d{1,8}(\/\w{1,12})?$/, // api
+			/\/org\/\d{1,8}(\/\w{1,12})?$/, // ssr
+		],
+		isActive,
+		loadInstance,
+	);
+
 	// get one org
 	app.get(
-		'/api/v1/orgs/:id',
+		'/api/v1/org/:id',
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const orgs = { [org.id]: org };
@@ -55,7 +68,7 @@ export default (app) => {
 
 	// get all orgs
 	app.get(
-		'/api/v1/orgs/:id/orgs',
+		'/api/v1/org/:id/orgs',
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const options = req.query;
@@ -70,7 +83,7 @@ export default (app) => {
 
 	// get all users
 	app.get(
-		'/api/v1/orgs/:id/users',
+		'/api/v1/org/:id/users',
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const options = req.query;
@@ -85,7 +98,7 @@ export default (app) => {
 
 	// update org
 	app.patch(
-		'/api/v1/orgs/:id',
+		'/api/v1/org/:id',
 		(req, res, next) => {
 			const { org, self } = req.loaded;
 			const params = req.body;

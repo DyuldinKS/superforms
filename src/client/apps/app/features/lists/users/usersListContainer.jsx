@@ -80,7 +80,7 @@ class UsersListContainer extends Component {
           </div>
 
           <Link
-            to={`/orgs/${orgId}/users/new`}
+            to={`/org/${orgId}/users/new`}
             className="btn btn-primary users-list-btn-add"
           >
             Добавить нового пользователя
