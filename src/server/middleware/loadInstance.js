@@ -5,17 +5,17 @@ import { HttpError } from '../libs/errors';
 
 
 const models = {
-	recipients: {
+	recipient: {
 		model: Recipient,
 		// find: Recipient.find,
 		key: 'rcpt',
 	},
-	users: {
+	user: {
 		model: User,
 		// find: User.findById,
 		key: 'user',
 	},
-	orgs: {
+	org: {
 		model: Org,
 		key: 'org',
 	},

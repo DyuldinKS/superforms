@@ -35,7 +35,7 @@ export default (app) => {
 
 	// get one org
 	app.get(
-		'/api/v1/orgs/:id',
+		'/api/v1/org/:id',
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const orgs = { [org.id]: org };
@@ -55,7 +55,7 @@ export default (app) => {
 
 	// get all orgs
 	app.get(
-		'/api/v1/orgs/:id/orgs',
+		'/api/v1/org/:id/orgs',
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const options = req.query;
@@ -70,7 +70,7 @@ export default (app) => {
 
 	// get all users
 	app.get(
-		'/api/v1/orgs/:id/users',
+		'/api/v1/org/:id/users',
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const options = req.query;
@@ -85,7 +85,7 @@ export default (app) => {
 
 	// update org
 	app.patch(
-		'/api/v1/orgs/:id',
+		'/api/v1/org/:id',
 		(req, res, next) => {
 			const { org, self } = req.loaded;
 			const params = req.body;

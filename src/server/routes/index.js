@@ -18,9 +18,9 @@ import ssr from '../templates/ssr';
 const router = (app) => {
 	app.use(
 		[
-			/\/(api\/v\d{1,2}\/)?orgs.*/,
-			/\/(api\/v\d{1,2}\/)?users.*/,
-			/\/(api\/v\d{1,2}\/)?recipients.*/,
+			/\/(api\/v\d{1,2}\/)?org\/.*/,
+			/\/(api\/v\d{1,2}\/)?user\/.*/,
+			/\/(api\/v\d{1,2}\/)?recipient\/.*/,
 		],
 		isAuthenticated,
 		isActive,

@@ -5,7 +5,7 @@ import { HttpError, PgError } from '../libs/errors';
 
 export default (app) => {
 	app.post(
-		'/api/v1/recipients/verification',
+		'/api/v1/recipient/verification',
 		(req, res, next) => {
 			const { email, mode } = req.body;
 
@@ -32,7 +32,7 @@ export default (app) => {
 
 
 	app.post(
-		'/api/v1/recipients/search',
+		'/api/v1/recipient/search',
 		(req, res, next) => {
 			let promiseToFind;
 			if(Array.isArray(req.body)) {
@@ -53,7 +53,7 @@ export default (app) => {
 
 
 	app.get(
-		'/api/v1/recipients/:id',
+		'/api/v1/recipient/:id',
 		(req, res, next) => {
 			const { rcpt } = req.loaded;
 			res.json(rcpt);
@@ -86,7 +86,7 @@ export default (app) => {
 
 	// update recipients
 	app.patch(
-		'/api/v1/recipients/:id',
+		'/api/v1/recipient/:id',
 		(req, res, next) => {
 			const { rcpt, self } = req.loaded;
 			const params = req.body;

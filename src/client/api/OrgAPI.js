@@ -18,13 +18,13 @@ class OrgAPI {
   }
 
   static async get(id) {
-    const data = await fetch(`/api/v1/orgs/${id}`);
+    const data = await fetch(`/api/v1/org/${id}`);
     return data;
   }
 
   static async getAffiliatedUsers(id, options = {}) {
     const url = getURLFromParts({
-      pathname: `/api/v1/orgs/${id}/users`,
+      pathname: `/api/v1/org/${id}/users`,
       search: {
         search: options.search,
         ...options.filters,
@@ -37,7 +37,7 @@ class OrgAPI {
 
   static async getAffiliatedOrgs(id, options = {}) {
     const url = getURLFromParts({
-      pathname: `/api/v1/orgs/${id}/orgs`,
+      pathname: `/api/v1/org/${id}/orgs`,
       search: {
         search: options.search,
         ...options.filters,
@@ -49,7 +49,7 @@ class OrgAPI {
   }
 
   static async updateInfo(id, payload) {
-    const data = await fetch(`/api/v1/orgs/${id}`, {
+    const data = await fetch(`/api/v1/org/${id}`, {
       method: 'PATCH',
       body: { info: payload },
     });

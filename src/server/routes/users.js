@@ -92,7 +92,7 @@ export default (app) => {
 
 	// get user
 	app.get(
-		'/api/v1/users/:id',
+		'/api/v1/user/:id',
 		(req, res, next) => {
 			const { user } = req.loaded;
 
@@ -111,7 +111,7 @@ export default (app) => {
 
 	// update user
 	app.patch(
-		'/api/v1/users/:id',
+		'/api/v1/user/:id',
 		(req, res, next) => {
 			const { user, self } = req.loaded;
 			const params = req.body;
