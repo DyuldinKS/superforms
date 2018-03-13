@@ -25,6 +25,14 @@ function HeaderNavigation(props) {
             Моя организация
           </Link>
         </NavItem>
+        <NavItem>
+          <Link
+            className="nav-link"
+            to="/form"
+          >
+            Форма
+          </Link>
+        </NavItem>
       </Nav>
     </nav>
   );
