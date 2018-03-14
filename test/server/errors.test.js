@@ -1,16 +1,11 @@
 import chai from 'chai';
 import assert from 'assert';
 import { HTTPError, PgError, SMTPError } from 'Server/errors';
-import db from 'Server/db';
-import mailer from 'Server/libs/mailer';
 
-
-// chai.use(chaiAsPromised);
-const should = chai.should();
 const { expect } = chai;
 
 
-describe('errors lib', () => {
+describe('errors', () => {
 	describe('HTTPError', () => {
 		it('should be instance of HTTPError', () => {
 			const err = new HTTPError(500, 'Internal server error');
