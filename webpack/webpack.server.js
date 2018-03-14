@@ -9,6 +9,7 @@ const ROOT_PATH = path.join(__dirname, '../');
 const SRC_PATH = path.join(ROOT_PATH, 'src');
 const SRC_SERVER_PATH = path.join(ROOT_PATH, 'src/server');
 const SRC_CLIENT_PATH = path.join(ROOT_PATH, 'src/client');
+const TEST_PATH = path.join(ROOT_PATH, 'test');
 const DIST_PATH = path.join(ROOT_PATH, 'dist');
 
 
@@ -35,7 +36,7 @@ const config = {
 		rules: [
 			{
 				test: /\.jsx?$/,
-				include: [SRC_PATH, __dirname],
+				include: [SRC_PATH, TEST_PATH, __dirname],
 				loader: 'babel-loader',
 			},
 			{
