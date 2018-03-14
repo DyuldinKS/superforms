@@ -1,7 +1,7 @@
 export default {
 	active: {
 		true: 'Активен',
-		false: 'Неактивен',
+		false: 'Заблокирован',
 	},
 	role: {
 		root: 'Главный администратор',
