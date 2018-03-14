@@ -10,23 +10,14 @@ HttpError.prototype.name = 'HttpError';
 
 class PgError extends Error {
 	constructor(err) {
-		if(err instanceof Error) {
+		if(typeof err === 'object') {
 			super(err.message);
 			// copy all properties excluding 'name'
-			Object.entries(err).forEach(([prop, value]) => {
-				if(prop !== 'name') {
-					this[prop] = value;
-				}
+			Object.getOwnPropertyNames(err).forEach((prop) => {
+				this[prop] = err[prop];
 			});
 
-			Object.defineProperty(
-				this,
-				'stack',
-				{
-					value: err.stack,
-					enumerable: false,
-				},
-			);
+			delete this.name; // should be 'PgError'
 		} else {
 			super(err);
 		}
@@ -61,6 +52,7 @@ class SmtpError extends Error {
 			});
 
 			delete this.rejectedErrors;
+			delete this.name; // should be 'SmtpError'
 		} else {
 			super(err);
 		}

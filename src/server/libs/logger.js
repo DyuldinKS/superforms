@@ -24,6 +24,7 @@ const devSerializers = {
 
 	err: (err) => ({
 		...err,
+		message: err.message,
 		name: Object.getPrototypeOf(err).name,
 		stack: err.stack,
 	}),
@@ -58,6 +59,7 @@ const prodSerializers = {
 
 	err: err => ({
 		...err,
+		message: err.message,
 		name: Object.getPrototypeOf(err).name,
 	}),
 };
