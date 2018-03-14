@@ -1,6 +1,6 @@
 import db from '../db/index';
 import Recipient from './Recipient';
-import { HttpError, SmtpError, PgError } from '../libs/errors';
+import { HTTPError, SMTPError, PgError } from '../errors';
 
 
 class Org extends Recipient {
@@ -20,7 +20,7 @@ class Org extends Recipient {
 		return rcpt.saveIfNotExists(authorId)
 			.then(() => {
 				if(!rcpt.active || rcpt.type !== 'rcpt') {
-					throw new HttpError(403, 'This email is not available');
+					throw new HTTPError(403, 'This email is not available');
 				}
 				return db.query(
 					'SELECT * FROM create_org($1::int, $2::jsonb, $3::int)',

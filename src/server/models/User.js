@@ -6,7 +6,7 @@ import AbstractModel from './AbstractModel';
 import Recipient from './Recipient';
 import LogRecord from './LogRecord';
 import passwordGenerator from '../libs/passwordGenerator';
-import { HttpError, SmtpError, PgError } from '../libs/errors';
+import { HTTPError, SMTPError, PgError } from '../errors';
 
 
 class User extends Recipient {
@@ -122,7 +122,7 @@ class User extends Recipient {
 		return rcpt.saveIfNotExists(authorId)
 			.then(() => {
 				if(!rcpt.active || rcpt.type !== 'rcpt') {
-					throw new HttpError(403, 'This email is not available');
+					throw new HTTPError(403, 'This email is not available');
 				}
 				return db.query(
 					'SELECT * FROM create_user($1, $2, $3, $4, $5, $6)',

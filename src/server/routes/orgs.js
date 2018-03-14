@@ -1,7 +1,7 @@
 import { isActive } from '../middleware/users';
 import loadInstance from '../middleware/loadInstance';
 import Org from '../models/Org';
-import { HttpError, SmtpError, PgError } from '../libs/errors';
+import { HTTPError, SMTPError, PgError } from '../errors';
 
 
 export default (app) => {
@@ -13,7 +13,7 @@ export default (app) => {
 			const { self } = req.loaded;
 			const org = new Org({ ...req.body });
 
-			if(!org.email) return next(new HttpError(400, 'Missing email'));
+			if(!org.email) return next(new HTTPError(400, 'Missing email'));
 			const { parentId } = org;
 
 			return org.save(self.id)

@@ -1,7 +1,7 @@
 import User from '../models/User';
 import Recipient from '../models/Recipient';
 import Org from '../models/Org';
-import { HttpError } from '../libs/errors';
+import { HTTPError } from '../errors';
 
 
 const models = {
@@ -35,7 +35,7 @@ export default (req, res, next) => {
 	model.findById(id)
 		.then((instance) => {
 			if(!instance) {
-				throw new HttpError(404, `${key} not found`);
+				throw new HTTPError(404, `${key} not found`);
 			}
 			req.loaded[key] = instance;
 			next();

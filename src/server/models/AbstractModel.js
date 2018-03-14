@@ -5,7 +5,7 @@ import {
 	staticValuesProps,
 	staticIdsProps,
 } from './convertedProps';
-import { HttpError } from '../libs/errors';
+import { HTTPError } from '../errors';
 
 // const { toCamelCase, toSnakeCase, toId } = convertedProps;
 
@@ -51,7 +51,7 @@ class AbstractModel {
 				if(prop in staticIdsProps) {
 					value = staticIdsProps[prop].convert(value);
 					if(value === undefined) {
-						throw new HttpError(
+						throw new HTTPError(
 							400,
 							`Invalid value: ${value} for property '${prop}'`,
 						);

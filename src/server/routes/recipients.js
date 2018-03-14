@@ -1,7 +1,7 @@
 import { isActive } from '../middleware/users';
 import loadInstance from '../middleware/loadInstance';
 import Recipient from '../models/Recipient';
-import { HttpError, PgError } from '../libs/errors';
+import { HTTPError, PgError } from '../errors';
 
 
 export default (app) => {
@@ -12,7 +12,7 @@ export default (app) => {
 			const { email, mode } = req.body;
 
 			if(typeof email !== 'string') {
-				return next(new HttpError(400, 'Invalid email'));
+				return next(new HTTPError(400, 'Invalid email'));
 			}
 
 			Promise.all([
@@ -47,7 +47,7 @@ export default (app) => {
 			}
 			promiseToFind
 				.then((result) => {
-					if(!result) throw new HttpError(404);
+					if(!result) throw new HTTPError(404);
 					res.json(result);
 				})
 				.catch(next);
@@ -89,10 +89,10 @@ export default (app) => {
 				.catch((err) => {
 					if(err instanceof PgError) {
 						if(err.code === '23502') {
-							return next(new HttpError(400, 'Invalid email address'));
+							return next(new HTTPError(400, 'Invalid email address'));
 						}
 						if(err.code === '23505') {
-							return next(new HttpError(403, 'The recipient already exists'));
+							return next(new HTTPError(403, 'The recipient already exists'));
 						}
 					}
 					return next(err);

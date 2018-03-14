@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 import config from '../config';
-import { PgError } from '../libs/errors';
+import { PgError } from '../errors';
 
 
 const pool = new Pool(config.pg);

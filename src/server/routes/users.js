@@ -4,7 +4,7 @@ import loadInstance from '../middleware/loadInstance';
 import User from '../models/User';
 import Org from '../models/Org';
 import mailer from '../libs/mailer';
-import { HttpError, SmtpError, PgError } from '../libs/errors';
+import { HTTPError, SMTPError, PgError } from '../errors';
 import ssr from '../templates/ssr';
 
 
@@ -20,11 +20,11 @@ export default (app) => {
 		(req, res, next) => {
 			const { email, reset } = req.body;
 
-			if(!reset) return next(new HttpError(400));
+			if(!reset) return next(new HTTPError(400));
 
 			User.findByEmail(email)
 				.then((user) => {
-					if(!user) throw new HttpError(404, 'Not Found');
+					if(!user) throw new HTTPError(404, 'Not Found');
 					return user.restorePassword();
 				})
 				.then(user => mailer.sendPasswordRestoreEmail(user))
@@ -41,12 +41,12 @@ export default (app) => {
 		(req, res, next) => {
 			const { token } = req.query;
 			if(!token) {
-				return next(new HttpError(404, 'Not Found'));
+				return next(new HTTPError(404, 'Not Found'));
 			}
 
 			User.findByToken(token)
 				.then((user) => {
-					if(!user) throw new HttpError(404, 'Not Found');
+					if(!user) throw new HTTPError(404, 'Not Found');
 					return user.resetPassword(user.id);
 				})
 				.then((user) => {
@@ -83,8 +83,8 @@ export default (app) => {
 			const { self } = req.loaded;
 			const user = new User({ ...req.body });
 
-			if(!user.email) return next(new HttpError(400, 'Missing email'));
-			if(!user.role) return next(new HttpError(400, 'Missing user role'));
+			if(!user.email) return next(new HTTPError(400, 'Missing email'));
+			if(!user.role) return next(new HTTPError(400, 'Missing user role'));
 
 			return user.save(self.id)
 				.then(() => user.resetPassword(self.id))
@@ -103,7 +103,7 @@ export default (app) => {
 
 			Org.findById(user.orgId)
 				.then((org) => {
-					if(!org) throw new HttpError(404, 'Organization of the user is not found');
+					if(!org) throw new HTTPError(404, 'Organization of the user is not found');
 					res.json({
 						users: { [user.id]: user },
 						orgs: { [org.id]: org },

@@ -1,4 +1,4 @@
-import { HttpError, PgError, SmtpError } from '../libs/errors';
+import { HTTPError, PgError, SMTPError } from '../errors';
 import hbs from '../templates/pages';
 
 
@@ -6,17 +6,17 @@ function errorHandler(err, req, res, next) {
 	let httpError;
 
 	switch (err.constructor) {
-	case HttpError: {
+	case HTTPError: {
 		httpError = err;
 		break;
 	}
-	case SmtpError: // fall through
+	case SMTPError: // fall through
 	case PgError: {
-		httpError = err.toHttpError();
+		httpError = err.toHTTPError();
 		break;
 	}
 	default: {
-		httpError = new HttpError(500);
+		httpError = new HTTPError(500);
 	}
 	}
 
@@ -27,12 +27,12 @@ function errorHandler(err, req, res, next) {
 		res.status(status).send(message);
 	} else {
 		// do not log redirection
-		if(status === '403') {
-			if(message === 'Unathrorized') {
+		if(status === 403) {
+			if(message === 'Not authenticated') {
 				res.redirect('/signin');
 				return;
 			}
-			if(message === 'Already authorized') {
+			if(message === 'Already authenticated') {
 				res.redirect('/');
 				return;
 			}
