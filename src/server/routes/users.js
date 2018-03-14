@@ -90,12 +90,6 @@ export default (app) => {
 				.then(() => user.resetPassword(self.id))
 				.then(() => mailer.sendRegistrationEmail(user))
 				.then(() => res.json(user))
-				.catch((err) => {
-					if(err instanceof SmtpError) {
-						throw new HttpError(202, 'SMTP-server not available');
-					}
-					throw err;
-				})
 				.catch(next);
 		},
 	);

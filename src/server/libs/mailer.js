@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import config from '../config';
 import hbs from '../templates/mail';
+import { SmtpError } from '../libs/errors';
+
 
 const { domain, nodemailer: { smtp } } = config;
 
@@ -8,8 +10,10 @@ const send = (message) => {
 	console.log(message);
 	const transporter = nodemailer.createTransport(smtp);
 	const { from } = config.nodemailer;
-	return transporter.sendMail({ ...message, from });
+	return transporter.sendMail({ ...message, from })
+		.catch((err) => { throw new SmtpError(err); });
 };
+
 
 const sendAll = (messages) => {
 	const pool = nodemailer.createTransport({ ...smtp, pool: true });
@@ -19,7 +23,7 @@ const sendAll = (messages) => {
 		const responsesAsPromises = [];
 		pool.on('idle', () => {
 			if(!pool.isIdle()) {
-				reject(new Error('broken SMTP-pool'));
+				reject(new SmtpError('broken SMTP-pool'));
 				pool.close();
 			}
 			// send next message from the pending queue
