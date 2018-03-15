@@ -31,7 +31,7 @@ const consts = Object.entries({ roles })
 		(conv, [label, { tableName, records }]) => {
 			const ids = Object.entries(records)
 				.reduce(
-					(prev, [id, value]) => Object.assign(prev, { [value]: id }),
+					(prev, [id, value]) => Object.assign(prev, { [value]: +id }),
 					{},
 				);
 
