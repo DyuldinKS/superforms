@@ -61,15 +61,6 @@ class User extends Recipient {
 	}
 
 
-	static log(operation, record, authorId) {
-		return db.query(
-			`INSERT INTO logs(operation, entity, record, author_id)
-			VALUES('U', 'user', $1::json, $2:int);`,
-			[record, authorId],
-		);
-	}
-
-
 	// ***************** INSTANCE METHODS ***************** //
 
 	authenticate(password) {
@@ -149,16 +140,6 @@ class User extends Recipient {
 		}
 		return '';
 	}
-
-
-	// @override
-	toJSON() {
-		const obj = super.toJSON();
-		delete obj.password;
-		delete obj.hash;
-		delete obj.token;
-		return obj;
-	}
 }
 
 
@@ -168,28 +149,15 @@ User.prototype.tableName = 'users';
 
 User.prototype.entityName = 'user';
 
-User.prototype.props = new Set([
-	'id',
-	'email',
-	'info',
-	'created',
-	'updated',
-	'deleted',
-	// ids
-	// 'roleId',
-	// 'statusId',
-	'orgId',
-	'authorId',
-	// values
-	'role',
-	// 'status',
-	'active',
-	// token for password setting
-	'token',
-	// secret
-	'password',
-	'hash',
-]);
+User.prototype.props = {
+	...Recipient.prototype.props,
+	orgId: { writable: false, enumerable: true },
+	info: { writable: true, enumerable: true },
+	role: { writable: true, enumerable: true },
+	token: { writable: false, enumerable: false },
+	password: { writable: false, enumerable: false },
+	hash: { writable: true, enumerable: false },
+};
 
 
 Object.freeze(User);

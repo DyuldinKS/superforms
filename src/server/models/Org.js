@@ -105,24 +105,11 @@ Org.prototype.tableName = 'organizations';
 
 Org.prototype.entityName = 'org';
 
-Org.prototype.props = new Set([
-	'id',
-	// 'childrenIds',
-	'email',
-	'info',
-	'created',
-	'updated',
-	'deleted',
-	// 'suborgsNum',
-	// 'employeesNum',
-	// ids
-	'parentId',
-	'statusId',
-	'authorId',
-	// related objects
-	// 'status',
-	'active',
-]);
+Org.prototype.props = {
+	...Recipient.prototype.props,
+	parentId: { writable: false, enumerable: true },
+	info: { writable: true, enumerable: true },
+};
 
 
 Object.freeze(Org);

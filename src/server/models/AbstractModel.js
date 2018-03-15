@@ -15,8 +15,6 @@ class AbstractModel {
 
 	static convertToModelProps(props, modelProps) {
 		const result = {};
-		const unexpected = {};
-		let areUnexpectedProps = false;
 
 		Object.entries(props).forEach(([prop, value]) => {
 			prop = camelCasedProps[prop] || prop;
@@ -24,18 +22,10 @@ class AbstractModel {
 				value = staticValuesProps[prop].convert(value);
 				prop = staticValuesProps[prop].propName;
 			}
-			if(modelProps.has(prop)) {
+			if(prop in modelProps) {
 				result[prop] = value;
-			} else {
-				unexpected[prop] = value;
-				areUnexpectedProps = true;
 			}
 		});
-
-		if(areUnexpectedProps && modelProps.has('info') === false
-			&& 'info' in result === false) {
-			result.info = unexpected;
-		}
 
 		return result;
 	}
@@ -43,11 +33,10 @@ class AbstractModel {
 
 	static convertToTableColumns(props, modelProps) {
 		const record = {};
-		const unexpected = {};
-		let areUnexpectedProps = false;
 
 		Object.entries(props).forEach(([prop, value]) => {
-			if(modelProps.has(prop)) {
+			// leave only model writable props
+			if(prop in modelProps && modelProps[prop].writable) {
 				if(prop in staticIdsProps) {
 					value = staticIdsProps[prop].convert(value);
 					if(value === undefined) {
@@ -59,16 +48,8 @@ class AbstractModel {
 					prop = staticIdsProps[prop].propName;
 				}
 				record[snakeCasedProps[prop] || prop] = value;
-			} else {
-				unexpected[prop] = value;
-				areUnexpectedProps = true;
 			}
 		});
-
-		if(areUnexpectedProps && modelProps.has('info')
-			&& 'info' in record === false) {
-			record.info = unexpected;
-		}
 
 		return record;
 	}
@@ -116,7 +97,17 @@ class AbstractModel {
 	}
 
 
-	toJSON() { return this; }
+	toJSON() {
+		return Object.keys(this).reduce(
+			(json, prop) => {
+				if(this.props[prop].enumerable) {
+					json[prop] = this[prop];
+				}
+				return json;
+			},
+			{},
+		);
+	}
 }
 
 

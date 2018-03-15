@@ -2,13 +2,12 @@ import db from '../db';
 
 const { rcptTypes, roles } = db;
 const pgProps = [
-	'status_id',
 	'type_id',
 	'role_id',
 	'author_id',
 	'user_id',
 	'org_id',
-	'chief_org_id',
+	'parent_id',
 ];
 
 

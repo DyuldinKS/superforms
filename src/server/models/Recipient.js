@@ -2,6 +2,7 @@ import emailSMTPVerificator from 'email-smtp-verificator';
 import config from '../config';
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
+import { HTTPError } from '../errors';
 
 
 class Recipient extends AbstractModel {
@@ -44,17 +45,6 @@ class Recipient extends AbstractModel {
 	}
 
 
-	// testForRegistration() {
-	// 	if(!this.isUnregistered()) {
-	// 		throw new Error('Email is already used');
-	// 	}
-	// 	if(!this.isBlocked()) {
-	// 		throw new Error('Email is blacklisted');
-	// 	}
-	// 	return this;
-	// }
-
-
 	save(authorId) {
 		return db.query(
 			'SELECT * FROM create_rcpt($1, $2)',
@@ -73,15 +63,25 @@ class Recipient extends AbstractModel {
 	}
 
 
+	update(params, authorId) {
+		if('email' in params && !params.email) {
+			throw new HTTPError(400, 'Bad email address');
+		}
+
+		return super.update(params, authorId);
+	}
+
+
 	toJSON() {
-		const { info } = this;
-		const unpacked = typeof info === 'object'
-			? { ...info, ...this }
-			: { ...this };
-		delete unpacked.info;
-		delete unpacked.type;
-		delete unpacked.updated;
-		return unpacked;
+		const obj = super.toJSON();
+
+		// unnest info for org and user instance
+		if(typeof obj.info === 'object') {
+			Object.assign(obj, { ...obj.info });
+			delete obj.info;
+		}
+
+		return obj;
 	}
 }
 
@@ -90,19 +90,16 @@ Recipient.prototype.tableName = 'recipients';
 
 Recipient.prototype.entityName = 'rcpt';
 
-Recipient.prototype.props = new Set([
-	'id',
-	'email',
-	'updated',
-	// ids
-	'authorId',
-	// 'typeId',
-	// 'statusId',
-	// related objects
-	'type',
-	// 'status'
-	'active',
-]);
+Recipient.prototype.props = {
+	id: { writable: false, enumerable: true },
+	email: { writable: true, enumerable: true },
+	type: { writable: false, enumerable: true },
+	active: { writable: true, enumerable: true },
+	created: { writable: false, enumerable: true },
+	updated: { writable: false, enumerable: true },
+	deleted: { writable: true, enumerable: true },
+	authorId: { writable: false, enumerable: true },
+};
 
 
 export default Recipient;
