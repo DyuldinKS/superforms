@@ -1,18 +1,39 @@
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
-import Org from '../../models/Org';
-import User from '../../models/User';
-import db from '../../db/index';
+import Org from '../../../src/server/models/Org';
+import User from '../../../src/server/models/User';
+import getRootUser from './getRootUser';
+
 
 const fsReadFile = promisify(fs.readFile);
 
 let root;
+let edDepUsers;
+let mscDistrictOrgs;
 
 
-const getRoot = () => (
-	db.query('SELECT * FROM users WHERE id = (SELECT min(id) FROM users);')
-		.then(data => new User(data))
+const readFiles = () => (
+	Promise.all([
+		'educationDepartmentUsers.json',
+		'mscDistrictOrgs.json',
+	]
+		.map(file => (
+			fsReadFile(path.join(__dirname, file))
+				.then(JSON.parse)
+		))
+	)
+		.then(([users, orgs]) => {
+			edDepUsers = users;
+			mscDistrictOrgs = orgs;
+		})
+);
+
+
+const loadRootUser = () => (
+	getRootUser().then(user => {
+		root = user;
+	})
 );
 
 
@@ -27,7 +48,9 @@ const createUsers = (org, users) => (
 		...data,
 		orgId: org.id,
 	})
-		.save(root.id)))
+		.save(root.id)
+		.catch(console.error))
+	)
 );
 
 
@@ -43,14 +66,13 @@ const createEducationDepartment = () => {
 		parentId: root.orgId,
 	})
 		.then((org) => { edDep = org; })
-		.then(() => fsReadFile(path.join(__dirname, 'educationDepartmentUsers.json')))
-		.then(JSON.parse)
-		.then(users => createUsers(edDep, users))
+		.then(() => {
+			const users = edDepUsers.map(({ email, ...info }) => (
+				{	email, info, role: 'user' }
+			));
+			return createUsers(edDep, users);
+		})
 		.then(() => edDep)
-		.catch((err) => {
-			if(edDep) return edDep;
-			throw err;
-		});
 };
 
 
@@ -67,33 +89,28 @@ const createIMC = parentOrg => (
 );
 
 
-const createSchoolsAndKindergartens = imc => (
-	fsReadFile(path.join(__dirname, 'mscDistrictOrgs.json'))
-		.then(JSON.parse)
-		.then(({ schools, kindergartens }) => {
-			const chain = Promise.resolve();
-			[
-				...schools.values,
-				...kindergartens.values,
-			].forEach(([shortName, fullName,,,, email]) => {
-				chain.then(() => createOrg({
-					email,
-					info: {
-						shortName,
-						fullName,
-						label: shortName,
-					},
-					authorId: root.id,
-					parentId: imc.id,
-				}));
-			});
-			return chain;
+const createSchoolsAndKindergartens = (imc) => {
+	const { schools, kindergartens } = mscDistrictOrgs;
+	const chain = Promise.resolve();
+	[...schools.values, ...kindergartens.values]
+		.forEach(([shortName, fullName,,,, email]) => {
+			chain.then(() => createOrg({
+				email,
+				info: {
+					shortName,
+					fullName,
+					label: shortName,
+				},
+				authorId: root.id,
+				parentId: imc.id,
+			}));
 		})
-);
+	return chain;
+};
 
 
-getRoot()
-	.then((user) => { root = user; })
+readFiles()
+	.then(loadRootUser)
 	.then(createEducationDepartment)
 	.then(createIMC)
 	.then(createSchoolsAndKindergartens)
