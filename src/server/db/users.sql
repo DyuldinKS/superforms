@@ -53,11 +53,11 @@ $$
 		VALUES (_rcpt_id, _org_id, _info, get_role_id(_role), _hash)
 		RETURNING * INTO _inserted;
 
+		-- log changes
+		PERFORM log('I', 'user', _rcpt_id, row_to_json(_inserted), _author_id);
 		PERFORM update_rcpt(_rcpt_id, json_build_object('type', 'user'), _author_id);
 
 		SELECT * FROM get_user(_rcpt_id) INTO _user;
-
-		PERFORM log('I', 'user', _rcpt_id, row_to_json(_inserted), _author_id);
 	END;
 $$
 LANGUAGE plpgsql;
@@ -118,15 +118,15 @@ BEGIN
 		role_id = coalesce(_new.role_id, usr.role_id),
 		hash = coalesce(_new.hash, usr.hash)
 	WHERE usr.id = _id;
-	-- update relative recipient
-	PERFORM update_rcpt(_id, _params, _author_id);
 
-	SELECT * FROM get_user(_id) INTO _updated;
 	-- log user _changes
 	_changes := json_strip_nulls(row_to_json(_new));
 	IF _changes::text != '{}' THEN
 		PERFORM log('U', 'user', _id, _changes, _author_id);
 	END IF;
+	PERFORM update_rcpt(_id, _params, _author_id);
+
+	SELECT * FROM get_user(_id) INTO _updated;
 END;
 $$
 LANGUAGE plpgsql;

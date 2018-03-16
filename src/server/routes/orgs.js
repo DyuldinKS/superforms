@@ -14,11 +14,8 @@ export default (app) => {
 			const org = new Org({ ...req.body });
 
 			if(!org.email) return next(new HTTPError(400, 'Missing email'));
-			const { parentId } = org;
 
 			return org.save(self.id)
-				.then(() => org.setParentOrg(parentId))
-				// .then(() => mailer.sendRegistrationTo(org))
 				.then(() => res.json(org))
 				.catch(next);
 		},

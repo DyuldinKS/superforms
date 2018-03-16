@@ -2,11 +2,9 @@ import bcrypt from 'bcrypt';
 import uuidv4 from 'uuid/v4';
 import config from '../config';
 import db from '../db/index';
-import AbstractModel from './AbstractModel';
 import Recipient from './Recipient';
-import LogRecord from './LogRecord';
 import passwordGenerator from '../libs/passwordGenerator';
-import { HTTPError, SMTPError, PgError } from '../errors';
+import { HTTPError } from '../errors';
 
 
 class User extends Recipient {
@@ -64,6 +62,7 @@ class User extends Recipient {
 	// ***************** INSTANCE METHODS ***************** //
 
 	authenticate(password) {
+		console.log(this);
 		return bcrypt.compare(password, this.hash)
 			.then((isPassValid) => {
 				this.isAuthenticated = isPassValid;
@@ -122,7 +121,7 @@ class User extends Recipient {
 						this.orgId,
 						this.info,
 						this.role,
-						null,
+						this.hash,
 						authorId,
 					],
 				);
@@ -146,10 +145,9 @@ class User extends Recipient {
 // ***************** PROTOTYPE PROPERTIES ***************** //
 
 User.prototype.tableName = 'users';
-
 User.prototype.entityName = 'user';
 
-User.prototype.props = {
+const props = {
 	...Recipient.prototype.props,
 	orgId: { writable: false, enumerable: true },
 	info: { writable: true, enumerable: true },
@@ -159,6 +157,8 @@ User.prototype.props = {
 	hash: { writable: true, enumerable: false },
 };
 
+User.prototype.props = props;
+User.prototype.dict = User.buildPropsDictionary(props);
 
 Object.freeze(User);
 

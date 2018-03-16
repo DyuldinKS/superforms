@@ -52,8 +52,7 @@ CREATE TABLE IF NOT EXISTS recipient_tags (
 
 
 CREATE TABLE IF NOT EXISTS organizations (
-	id integer PRIMARY KEY REFERENCES recipients(id)
-		DEFERRABLE INITIALLY DEFERRED,
+	id integer PRIMARY KEY REFERENCES recipients(id),
 	info jsonb NOT NULL
 );
 
@@ -61,15 +60,14 @@ CREATE TABLE IF NOT EXISTS organizations (
 CREATE TABLE IF NOT EXISTS org_links (
 	org_id integer NOT NULL REFERENCES organizations(id),
 	parent_id integer NOT NULL REFERENCES organizations(id),
-	distance integer NOT NULL DEFAULT 1
+	distance integer NOT NULL DEFAULT 1,
+	PRIMARY KEY(org_id, parent_id)
 );
 
 
 CREATE TABLE IF NOT EXISTS users (
-	id integer PRIMARY KEY REFERENCES recipients(id)
-		DEFERRABLE INITIALLY DEFERRED,
-	org_id integer NOT NULL REFERENCES organizations(id)
-		DEFERRABLE INITIALLY DEFERRED,
+	id integer PRIMARY KEY REFERENCES recipients(id),
+	org_id integer NOT NULL REFERENCES organizations(id),
 	info jsonb NOT NULL,
 	role_id integer NOT NULL REFERENCES roles(id),
 	hash varchar(255)
@@ -135,102 +133,12 @@ CREATE TABLE IF NOT EXISTS logs(
 
 	CONSTRAINT logs_author_id_fkey
 	FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE RESTRICT
-	DEFERRABLE INITIALLY DEFERRED
 );
 
 
 ALTER TABLE recipients ADD CONSTRAINT recipients_author_id_fkey
-FOREIGN KEY (author_id) REFERENCES users(id)
-DEFERRABLE INITIALLY DEFERRED;
+FOREIGN KEY (author_id) REFERENCES users(id);
 
 
 ALTER TABLE recipient_lists ADD CONSTRAINT recipient_lists_author_id_fkey
 FOREIGN KEY (author_id) REFERENCES users(id);
-
-
--------------------------------- FOR TESTS -------------------------------------
---------------------------------------------------------------------------------
-
--- select * from get_subordinate('users', 2);
--- select * from get_subordinate('users', 3);
--- select * from get_subordinate('users', 4);
--- select * from get_subordinate('orgs', 15);
--- select * from get_subordinate('orgs', 2, '{"minDepth": 0}')
-
-
-
--- CREATE OR REPLACE FUNCTION my_test_func(
--- 	_org_id integer,
--- 	_filter jsonb DEFAULT NULL
--- ) RETURNS SETOF entity AS
--- $$
--- 	DECLARE
--- 		a entity[];
--- 	BEGIN
--- 		a := array_agg(org) FROM get_subordinate('organizations', _org_id, _filter) org;
--- 		RETURN QUERY SELECT * FROM unnest(a);
--- 	END
--- $$
--- LANGUAGE plpgsql STABLE;
-
-
--- WITH
--- 	_filtered_orgs AS (
--- 		SELECT find_subordinate('organizations', 2, '{ "minDepth": 0, "maxDepth": 2 }') id
--- 	),
--- 	_parent_orgs AS (
--- 		SELECT p_id
--- 		FROM _filtered_orgs org, LATERAL get_parent_org_id(org.id) p_id
--- 		WHERE p_id IS NOT NULL
--- 	),
--- 	_filtered_with_parents AS (
--- 		SELECT id from _filtered_orgs
--- 		UNION
--- 		SELECT p_id from _parent_orgs
--- 	)
--- SELECT array(_filtered_orgs) FROM _filtered_orgs;
--- SELECT json_object_agg(
--- 	org_info.id,
--- 	info || (row_to_json(org_info)::jsonb - 'info')
--- )
--- FROM _filtered_with_parents org, LATERAL get_org_info(org.id) org_info;
-
-
-
---------------------- BASED ON FUNCTION ARRAYS OUTPUT --------------------------
---------------------------------------------------------------------------------
--- CREATE OR REPLACE FUNCTION find_subordinate_orgs_with_parents(
--- 	_org_id integer,
--- 	_filter jsonb DEFAULT NULL
--- ) RETURNS TABLE(entities json, list json) AS
--- $$
--- 	DECLARE
--- 		_filtered_orgs integer[] := find_subordinate('organizations', _org_id, _filter);
--- 		_orgs_with_parents integer[] := union_with_parent_orgs(_filtered_orgs);
--- 	BEGIN
--- 		RETURN QUERY
--- 			-- build organizations object
--- 			SELECT json_build_object(
--- 				'orgs', coalesce(
--- 					(
--- 						SELECT json_object_agg(
--- 							org_info.id,
--- 							info || (row_to_json(org_info)::jsonb - 'info')
--- 						)
--- 						FROM unnest(_orgs_with_parents) id,
--- 							LATERAL get_org_info(id) org_info
--- 					),
--- 					'{}'
--- 				)
--- 			) AS entities,
--- 			json_build_object(
--- 			-- the actual part of filtered organizations ids list
--- 				'entries',
--- 				(SELECT coalesce(array_to_json(_filtered_orgs), '[]')),
--- 				-- full length of filtered organizations list
--- 				'count',
--- 				(SELECT coalesce(array_length(_filtered_orgs, 1), 0))
--- 			) AS list;
--- 	END
--- $$
--- LANGUAGE plpgsql STABLE;

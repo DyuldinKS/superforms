@@ -90,7 +90,7 @@ Recipient.prototype.tableName = 'recipients';
 
 Recipient.prototype.entityName = 'rcpt';
 
-Recipient.prototype.props = {
+const props = {
 	id: { writable: false, enumerable: true },
 	email: { writable: true, enumerable: true },
 	type: { writable: false, enumerable: true },
@@ -100,6 +100,11 @@ Recipient.prototype.props = {
 	deleted: { writable: true, enumerable: true },
 	authorId: { writable: false, enumerable: true },
 };
+
+Recipient.prototype.props = props;
+Recipient.prototype.dict = Recipient.buildPropsDictionary(props);
+
+Object.freeze(Recipient);
 
 
 export default Recipient;

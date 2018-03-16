@@ -39,6 +39,7 @@ LANGUAGE SQL STABLE;
 CREATE OR REPLACE FUNCTION create_org(
 	_rcpt_id integer,
 	_info jsonb,
+	_parent_id integer,
 	_author_id integer,
 	OUT _org org
 ) AS
@@ -50,11 +51,38 @@ $$
 		VALUES (_rcpt_id, _info)
 		RETURNING * INTO _inserted;
 
+		-- log changes
+		PERFORM log('I', 'org', _rcpt_id, row_to_json(_inserted), _author_id);
 		PERFORM update_rcpt(_rcpt_id, json_build_object('type', 'org'), _author_id);
 
-		SELECT * FROM get_org(_rcpt_id) INTO _org;
+		PERFORM set_org_parent(_rcpt_id, _parent_id, _author_id);
 
-		PERFORM log('I', 'org', _rcpt_id, row_to_json(_inserted), _author_id);
+		SELECT * FROM get_org(_rcpt_id) INTO _org;
+	END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION set_org_parent(
+	_org_id integer,
+	_parent_id integer,
+	_author_id integer,
+	OUT _link org_links
+) AS
+$$
+	BEGIN
+		-- unlink org subtree (runs trigger)
+		DELETE FROM org_links
+		WHERE org_id = _org_id AND distance = 1;
+
+		-- link subtree to new parent (runs trigger)
+		INSERT INTO org_links(org_id, parent_id)
+		VALUES (_org_id, _parent_id)
+		RETURNING * INTO _link;
+
+		-- log last changes
+		PERFORM log('I', 'link', _org_id, row_to_json(_link), _author_id);
+		PERFORM update_rcpt(_org_id, null, _author_id);
 	END;
 $$
 LANGUAGE plpgsql;
@@ -105,7 +133,7 @@ LANGUAGE SQL STABLE;
 
 CREATE OR REPLACE FUNCTION update_org(
 	_id integer,
-	_params json,
+	_params jsonb,
 	_author_id integer,
 	OUT _updated org
 ) AS
@@ -121,15 +149,15 @@ BEGIN
 		SET info = _new.info
 		WHERE org.id = _id;
 	END IF;
-	-- update relative recipient
-	PERFORM update_rcpt(_id, _params, _author_id);
 
-	SELECT * FROM get_org(_id) INTO _updated;
 	-- log org changes
 	_changes := json_strip_nulls(row_to_json(_new));
 	IF _changes::text != '{}' THEN
 		PERFORM log('U', 'org', _id, _changes, _author_id);
 	END IF;
+	PERFORM update_rcpt(_id, _params, _author_id);
+
+	SELECT * FROM get_org(_id) INTO _updated;
 END;
 $$
 LANGUAGE plpgsql;
@@ -139,22 +167,26 @@ LANGUAGE plpgsql;
 /****************************  ORGANIZATIONS TREE  ****************************/
 
 
-CREATE OR REPLACE FUNCTION org_links_insert_link_to_itself() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION org_links_insert_link_to_itself()
+	RETURNS TRIGGER AS
+$$
 	BEGIN
 		INSERT INTO org_links (org_id, parent_id, distance)
 			VALUES (NEW.id, NEW.id, 0);
 		RETURN NULL;
 	END
-$$ LANGUAGE plpgsql;
+$$
+LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION org_links_insert_links() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION org_links_insert_links()
+	RETURNS TRIGGER AS
+$$
 	DECLARE
 		row RECORD;
 	BEGIN
-		RAISE NOTICE 'NEW: % | % | %', NEW.org_id, NEW.parent_id, NEW.distance;
 		IF (NEW.distance = 1) THEN
-			RAISE NOTICE 'NEW with distance = 1: % | % | %', NEW.org_id, NEW.parent_id, NEW.distance;
+			RAISE NOTICE 'root: % | % | %', NEW.org_id, NEW.parent_id, NEW.distance;
 			FOR row IN
 				SELECT down.org_id, up.parent_id,
 					down.distance + up.distance + 1 AS distance
@@ -164,38 +196,36 @@ CREATE OR REPLACE FUNCTION org_links_insert_links() RETURNS TRIGGER AS $$
 					AND down.distance + up.distance > 0
 			LOOP
 				INSERT INTO org_links VALUES(row.org_id, row.parent_id, row.distance);
-				RAISE NOTICE 'new row: % | % | %', row.org_id, row.parent_id, row.distance;
+				RAISE NOTICE 'new: % | % | %', row.org_id, row.parent_id, row.distance;
 			END LOOP;
 		END IF;
 		RETURN NULL;
 	END
-$$ LANGUAGE plpgsql;
+$$
+LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION org_links_delete_orgs_subtree() RETURNS TRIGGER AS $org_links_bd$
+CREATE OR REPLACE FUNCTION org_links_delete_orgs_subtree()
+	RETURNS TRIGGER AS
+$org_links_bd$
 	DECLARE
 		row RECORD;
 	BEGIN
-		RAISE NOTICE 'OLD: % | % | %', OLD.org_id, OLD.parent_id, OLD.distance;
 		IF (OLD.distance = 1) THEN
-			RAISE NOTICE 'OLD filtered: % | % | %', OLD.org_id, OLD.parent_id, OLD.distance;
+			RAISE NOTICE 'root: % | % | %', OLD.org_id, OLD.parent_id, OLD.distance;
 			FOR row IN
-				SELECT down.org_id, up.parent_id, down.distance + up.distance AS distance
-				FROM org_links down
-					JOIN org_links up
-					ON up.org_id = OLD.org_id
-						AND down.parent_id = OLD.org_id
-						AND up.distance > 0
-						AND up.distance + down.distance > 1
+				SELECT * FROM org_links
+				WHERE parent_id = OLD.org_id
 			LOOP
-				RAISE NOTICE 'deleted row: % | % | %', row.org_id, row.parent_id, row.distance;
+				RAISE NOTICE 'delete % with distance > %', row.org_id, row.distance;
 				DELETE FROM org_links
-				WHERE org_id = row.org_id AND parent_id = row.parent_id;
+				WHERE org_id = row.org_id AND distance > row.distance;
 			END LOOP;
 		END IF;
 		RETURN NULL;
 	END
-$org_links_bd$ LANGUAGE plpgsql;
+$org_links_bd$
+LANGUAGE plpgsql;
 
 
 CREATE TRIGGER link_to_itself_organizations_ai
