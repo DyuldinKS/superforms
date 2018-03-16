@@ -133,7 +133,7 @@ LANGUAGE SQL STABLE;
 
 CREATE OR REPLACE FUNCTION update_org(
 	_id integer,
-	_params jsonb,
+	_params json,
 	_author_id integer,
 	OUT _updated org
 ) AS
@@ -141,6 +141,7 @@ $$
 DECLARE
 	_new organizations;
 	_changes json;
+	_parent_id integer;
 BEGIN
 	SELECT * FROM json_populate_record(null::organizations, _params) INTO _new;
 	-- udpate org
@@ -155,6 +156,12 @@ BEGIN
 	IF _changes::text != '{}' THEN
 		PERFORM log('U', 'org', _id, _changes, _author_id);
 	END IF;
+	-- update parent org and log
+	_parent_id := (_params->>'parent_id')::int;
+	IF _parent_id IS NOT NULL THEN
+		PERFORM set_org_parent(_id, _parent_id, _author_id);
+	END IF;
+	-- update rcpt and log
 	PERFORM update_rcpt(_id, _params, _author_id);
 
 	SELECT * FROM get_org(_id) INTO _updated;

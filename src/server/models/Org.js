@@ -99,7 +99,7 @@ Org.prototype.entityName = 'org';
 
 const props = {
 	...Recipient.prototype.props,
-	parentId: { writable: false, enumerable: true },
+	parentId: { writable: true, enumerable: true },
 	info: { writable: true, enumerable: true },
 };
 
