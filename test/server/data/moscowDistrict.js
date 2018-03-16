@@ -37,12 +37,6 @@ const loadRootUser = () => (
 );
 
 
-const createOrg = orgData => (
-	new Org(orgData).save(root.id)
-		.then(org => org.setParentOrg(orgData.parentId))
-);
-
-
 const createUsers = (org, users) => (
 	Promise.all(users.map(data => new User({
 		...data,
@@ -56,7 +50,7 @@ const createUsers = (org, users) => (
 
 const createEducationDepartment = () => {
 	let edDep;
-	return createOrg({
+	return new Org({
 		email: 'roo@tumos.gov.spb.ru',
 		info: {
 			label: 'Отдел образования Московского района Санкт-Петербурга',
@@ -65,6 +59,7 @@ const createEducationDepartment = () => {
 		},
 		parentId: root.orgId,
 	})
+		.save(root.id)
 		.then((org) => { edDep = org; })
 		.then(() => {
 			const users = edDepUsers.map(({ email, ...info }) => (
@@ -77,7 +72,7 @@ const createEducationDepartment = () => {
 
 
 const createIMC = parentOrg => (
-	createOrg({
+	new Org({
 		email: 'info@imc-mosk.ru',
 		info: {
 			label: 'ИМЦ Московского района',
@@ -86,15 +81,18 @@ const createIMC = parentOrg => (
 		},
 		parentId: parentOrg.id,
 	})
+		.save(root.id)
 );
 
 
 const createSchoolsAndKindergartens = (imc) => {
 	const { schools, kindergartens } = mscDistrictOrgs;
 	const chain = Promise.resolve();
-	[...schools.values, ...kindergartens.values]
-		.forEach(([shortName, fullName,,,, email]) => {
-			chain.then(() => createOrg({
+	const orgs = [...schools.values, ...kindergartens.values];
+
+	orgs.forEach(([shortName, fullName,,,, email]) => {
+		chain.then(() => (
+			new Org({
 				email,
 				info: {
 					shortName,
@@ -103,8 +101,10 @@ const createSchoolsAndKindergartens = (imc) => {
 				},
 				authorId: root.id,
 				parentId: imc.id,
-			}));
-		})
+			})
+				.save(root.id)
+		))
+	})
 	return chain;
 };
 
