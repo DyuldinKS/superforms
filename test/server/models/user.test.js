@@ -50,12 +50,6 @@ describe('User model', () => {
 		assert.deepStrictEqual({ ...user }, { orgId: 287, authorId: 1 });
 	});
 
-	// id of tables with constant values
-	it('should transform ids of tables with const values to value', () => {
-		const user = new User({ id: 13, role_id: 2 });
-		assert.deepStrictEqual({ ...user }, { id: 13, role: 'admin' });
-	});
-
 	
 	it('should update only writable props', () => {
 		sinon.stub(db, 'query').resolves({});
@@ -87,11 +81,7 @@ describe('User model', () => {
 		assert(id === 13);
 		assert(authorId === 1);
 
-		const result = { ...writable };
-		result.role_id = 1;
-		delete result.role;
-
-		assert.deepStrictEqual(updated, result);
+		assert.deepStrictEqual(updated, writable);
 
 		db.query.restore();
 	});
@@ -111,7 +101,7 @@ describe('User model', () => {
 
 
 	it('should unnest info prop for client', () => {
-		const user = new User({ id: 13, role_id: '1' });
+		const user = new User({ id: 13, role: 'recipient' });
 		user.assign({
 			info: { firstName: 'Winston', lastName: 'McCall' },
 			password: 'super-secret',
@@ -120,7 +110,7 @@ describe('User model', () => {
 			user.toJSON(),
 			{
 				id: 13,
-				role: 'root',
+				role: 'recipient',
 				firstName: 'Winston',
 				lastName: 'McCall',
 			});

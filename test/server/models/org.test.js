@@ -60,25 +60,27 @@ describe('Org model', () => {
 			info: { fullName: 'Massachusetts Institute of Technology', label: 'MIT' },
 			active: false,
 			deleted: false,
+			parentId: 111,
 		};
 		// props that can not be updated
 		const unwritable = {
 			id: 14,
 			type: 'rcpt',
-			parentId: 666,
 		};
 
 		// pass all props
 		org.update({ ...writable, ...unwritable }, 1);
 
 		assert(db.query.calledOnce);
-		const [query, [id, updated, authorId]] = db.query.firstCall.args;
 
+		const [query, [id, updated, authorId]] = db.query.firstCall.args;
 		assert(query.includes('update_org'));
 		assert(id === 13);
 		assert(authorId === 1);
 
-		assert.deepStrictEqual(updated, writable);
+		const result = { ...writable, parent_id: writable.parentId };
+		delete result.parentId;
+		assert.deepStrictEqual(updated, result);
 
 		db.query.restore();
 	});
