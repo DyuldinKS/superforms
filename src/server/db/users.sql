@@ -36,6 +36,31 @@ $$
 LANGUAGE SQL STABLE;
 
 
+CREATE OR REPLACE FUNCTION get_user_by_email(_email varchar(255))
+	RETURNS TABLE (
+		id integer,
+		email varchar(255),
+		hash varchar(255),
+		role varchar(255),
+		active boolean,
+		"orgId" integer,
+		deleted timestamp
+	) AS
+$$
+	SELECT usr.id,
+		rcpt.email,
+		usr.hash,
+		get_role_name(usr.role_id),
+		rcpt.active,
+		usr.org_id,
+		rcpt.deleted
+	FROM users usr
+	JOIN recipients rcpt ON rcpt.email = _email
+		AND usr.id = rcpt.id;
+$$
+LANGUAGE SQL STABLE;
+
+
 CREATE OR REPLACE FUNCTION create_user(
 	_rcpt_id integer,
 	_org_id integer,

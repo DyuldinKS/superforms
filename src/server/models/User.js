@@ -10,23 +10,8 @@ import { HTTPError } from '../errors';
 class User extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
-	static findOne({ email, id }, options = {}) {
-		const column = id ? 'id' : 'email';
-
-		return db.query(
-			`SELECT usr.id, usr.info, usr.role_id, usr.org_id,
-				rcpt.email, rcpt.active
-				${options.secret ? ', usr.hash ' : ''}
-			FROM users usr
-			JOIN recipients rcpt ON usr.id = rcpt.id
-			WHERE rcpt.${column} = $1;`,
-			[id || email],
-		);
-	}
-
-
 	static findById(id) {
-		return User.findOne({ id })
+		return db.query('SELECT * FROM get_user($1);', [id])
 			.then((found) => {
 				if(!found) return null;
 				return new User(found);
@@ -35,7 +20,7 @@ class User extends Recipient {
 
 	// for authentication or password recovery
 	static findByEmail(email) {
-		return User.findOne({ email }, { secret: true })
+		return db.query('SELECT * FROM get_user_by_email($1)', [email])
 			.then((found) => {
 				if(!found) return null;
 				return new User(found);
