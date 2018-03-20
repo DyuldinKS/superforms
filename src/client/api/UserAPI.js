@@ -31,6 +31,15 @@ class UserAPI {
     return data;
   }
 
+  static async setPassword(id, password) {
+    const data = await fetch(`/api/v1/user/${id}`, {
+      method: 'PATCH',
+      body: { password },
+    });
+
+    return data;
+  }
+
   static async setRole(id, role) {
     const data = await fetch(`/api/v1/user/${id}`, {
       method: 'PATCH',

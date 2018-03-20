@@ -13,7 +13,8 @@ import {
 import { AccordionItem } from 'shared/ui/accordion';
 import * as usersModule from 'apps/app/shared/redux/users';
 import { ChangeEmail } from '../../shared/components/forms';
-import { ChangeRole, ChangeUserInfo } from './forms';
+import { ChangePassword, ChangeRole, ChangeUserInfo } from './forms';
+import UserAPI from 'api/UserAPI';
 
 const propTypes = {
   // from Redux
@@ -42,10 +43,11 @@ class UserSettings extends Component {
   constructor(props) {
     super(props);
 
-    this.handleInfoChange = this.handleInfoChange.bind(this);
-    this.handleEmailChange = this.handleEmailChange.bind(this);
-    this.handleRoleChange = this.handleRoleChange.bind(this);
     this.handleActiveChange = this.handleActiveChange.bind(this);
+    this.handleEmailChange = this.handleEmailChange.bind(this);
+    this.handleInfoChange = this.handleInfoChange.bind(this);
+    this.handlePasswordChange = this.handlePasswordChange.bind(this);
+    this.handleRoleChange = this.handleRoleChange.bind(this);
   }
 
   handleActiveChange() {
@@ -61,6 +63,17 @@ class UserSettings extends Component {
   handleEmailChange(form) {
     const { id, changeEmail } = this.props;
     changeEmail(id, form.email);
+  }
+
+  async handlePasswordChange(password) {
+    const { id } = this.props;
+
+    try {
+      const response = await UserAPI.setPassword(id, password);
+      alert('Пароль успешно изменен. Не забудьте сообщить пользователю его новый пароль!');
+    } catch (error) {
+      alert(`Произошла ошибка: ${error.message}`);
+    }
   }
 
   handleRoleChange(form) {
@@ -122,6 +135,14 @@ class UserSettings extends Component {
             <ChangeEmail
               email={email}
               onSubmit={this.handleEmailChange}
+            />
+          </AccordionItem>
+
+          <AccordionItem
+            label="Сменить пароль"
+          >
+            <ChangePassword
+              onSubmit={this.handlePasswordChange}
             />
           </AccordionItem>
         </Nav>
