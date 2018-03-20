@@ -31,7 +31,7 @@ function OrgsListItem(props) {
     <React.Fragment>
       <div className="orgs-list-item-cell-name">
         <Link
-          to={`/orgs/${id}`}
+          to={`/org/${id}`}
         >
           {name}
         </Link>
