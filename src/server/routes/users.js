@@ -47,7 +47,7 @@ export default (app) => {
 			User.findByToken(token)
 				.then((user) => {
 					if(!user) throw new HTTPError(404, 'Not Found');
-					return user.resetPassword(user.id);
+					return user.resetPassword({ authorId: user.id });
 				})
 				.then((user) => {
 					mailer.sendPasswordResetEmail(user);
@@ -121,8 +121,17 @@ export default (app) => {
 			const { user, self } = req.loaded;
 			const params = req.body;
 
-			user.update(params, self.id)
-				.then(() => res.json(user))
+			let updateChain = Promise.resolve();
+			const { password } = params;
+			if(password) {
+				updateChain = updateChain
+					.then(() => User.encrypt(password))
+					.then((hash) => { params.hash = hash; });
+			}
+
+			updateChain
+				.then(() => user.update(params, self.id))
+				.then(() => res.send(user))
 				.catch(next);
 		},
 	);

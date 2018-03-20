@@ -44,6 +44,11 @@ class User extends Recipient {
 	}
 
 
+	static encrypt(password) {
+		return bcrypt.hash(password, config.bcrypt.saltRound);
+	}
+
+
 	// ***************** INSTANCE METHODS ***************** //
 
 	authenticate(password) {
@@ -82,9 +87,9 @@ class User extends Recipient {
 	}
 
 
-	resetPassword(authorId) {
-		this.password = passwordGenerator(8);
-		return bcrypt.hash(this.password, config.bcrypt.saltRound)
+	resetPassword({ password, authorId }) {
+		this.password = password || passwordGenerator(8);
+		return User.encrypt(this.password)
 			.then(hash => this.update({ hash }, authorId))
 			.then(() => this.deleteToken())
 			.then(() => this);

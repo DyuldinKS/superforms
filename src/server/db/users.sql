@@ -9,6 +9,7 @@ CREATE TYPE usr AS (
 	role varchar(255),
 	active boolean,
 	"orgId" integer,
+	hash varchar(255),
 	created timestamp,
 	updated timestamp,
 	deleted timestamp,
@@ -16,7 +17,10 @@ CREATE TYPE usr AS (
 );
 
 
-CREATE OR REPLACE FUNCTION get_user(_id integer)
+CREATE OR REPLACE FUNCTION get_user(
+	_id integer,
+	mode varchar(255) DEFAULT NULL
+)
 	RETURNS usr AS
 $$
 	SELECT usr.id,
@@ -25,6 +29,7 @@ $$
 		get_role_name(usr.role_id),
 		rcpt.active,
 		usr.org_id,
+		CASE WHEN mode = 'auth' THEN usr.hash ELSE NULL END,
 		rcpt.created,
 		rcpt.updated,
 		rcpt.deleted,
@@ -37,26 +42,12 @@ LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION get_user_by_email(_email varchar(255))
-	RETURNS TABLE (
-		id integer,
-		email varchar(255),
-		hash varchar(255),
-		role varchar(255),
-		active boolean,
-		"orgId" integer,
-		deleted timestamp
-	) AS
+	RETURNS usr AS
 $$
-	SELECT usr.id,
-		rcpt.email,
-		usr.hash,
-		get_role_name(usr.role_id),
-		rcpt.active,
-		usr.org_id,
-		rcpt.deleted
-	FROM users usr
-	JOIN recipients rcpt ON rcpt.email = _email
-		AND usr.id = rcpt.id;
+	SELECT * FROM get_user(
+		(SELECT id FROM recipients WHERE email = _email),
+		'auth'
+	);
 $$
 LANGUAGE SQL STABLE;
 
@@ -137,6 +128,9 @@ DECLARE
 	_changes json;
 BEGIN
 	SELECT * FROM json_populate_record(null::users, _params) INTO _new;
+
+	_new.role_id = get_role_id(_params->>'role');
+
 	-- update user
 	UPDATE users usr
 	SET info = coalesce(_new.info, usr.info),
