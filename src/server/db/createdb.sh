@@ -24,11 +24,11 @@ readonly DB_NAME=${1:-sf2}
 readonly INPUT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly INPUT_FILES=(
 	'schema.sql'
-	'init.sql'
 	'recipients.sql'
 	'common.sql'
 	'users.sql'
 	'orgs.sql'
+	'init.sql'
 )
 
 

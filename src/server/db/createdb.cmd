@@ -8,7 +8,7 @@ SET me=%~n0
 SET db_name=sf2
 SET PGUSER=postgres
 SET input_path=%~dp0
-SET "input_files=schema.sql init.sql recipients.sql common.sql users.sql orgs.sql"
+SET "input_files=schema.sql recipients.sql common.sql users.sql orgs.sql init.sql"
 
 :: Prompt arguments
 SET /P db_name=Database name: (%db_name%)

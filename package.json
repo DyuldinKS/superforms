@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "createdb": "chmod ugo+x ./src/server/db/createdb.sh && ./src/server/db/createdb.sh",
-    "initdb": "babel-node --presets es2015,stage-2 ./src/server/db/init.js",
+    "initdb": "babel-node --presets es2015,stage-2 ./test/server/data/moscowDistrict.js",
     "build:server": "webpack --config webpack/webpack.server.js",
     "build:server:watch": "webpack --config webpack/webpack.server.js --watch",
     "build:client:prod": "cross-env NODE_ENV=production webpack --config webpack/webpack.client.js",
