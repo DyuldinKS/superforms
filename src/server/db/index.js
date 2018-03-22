@@ -17,7 +17,13 @@ function queryAll(queryString, values) {
 
 function query(queryString, values) {
 	return queryAll(queryString, values)
-		.then(result => result[0]);
+		.then((result) => {
+			const [record] = result;
+			// ckeck the record returned by SQL functions
+			return !record || Object.keys(record).every(prop => record[prop] === null)
+				? null
+				: record;
+		});
 }
 
 
