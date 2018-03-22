@@ -16,7 +16,7 @@ $$
 		json_build_object(
 			'firstName', usr.name,
 			'lastName', usr.surname,
-			'patronomyc', usr.patronymic
+			'patronymic', usr.patronymic
 		) AS info
 	FROM users usr
 	JOIN user_status_logs usl ON usl.user_id = usr.id
