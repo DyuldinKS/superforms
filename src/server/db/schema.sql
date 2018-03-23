@@ -92,10 +92,10 @@ CREATE TABLE IF NOT EXISTS forms (
 	id serial PRIMARY KEY,
 	title text NOT NULL,
 	description text,
-	scheme jsonb NOT NULL,
+	scheme json NOT NULL,
 	sent json,
 	owner_id integer NOT NULL REFERENCES users(id),
-	created timestamp DEFAULT now(),
+	created timestamp NOT NULL DEFAULT now(),
 	updated timestamp,
 	deleted timestamp,
 	author_id integer NOT NULL REFERENCES users(id)
