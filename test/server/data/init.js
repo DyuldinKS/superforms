@@ -27,13 +27,13 @@ const loadData = () => {
 			const { schools, kindergartens } = JSON.parse(imcOrgs);
 			const orgs = [...schools.values, ...kindergartens.values];
 
-			const [users, forms] = [imcUsers, imcForms].map(buffer => 
+			const [users, forms] = [imcUsers, imcForms].map(buffer => (
 				buffer.toString()
-				.replace(/\\\\/g, '\\')
-				.split('\n')
-				.slice(0, -1)
-				.map(JSON.parse)
-			);
+					.replace(/\\\\/g, '\\')
+					.split('\n')
+					.slice(0, -1)
+					.map(JSON.parse)
+			));
 
 			return { orgs, users, forms };
 		})
@@ -190,7 +190,6 @@ const run = () => {
 		// .then(() => createIMCResponses({ author }))
 		.then(() => console.log('\nSuccess! All organizations have been saved.'))
 		.catch(console.error);
-		
 };
 
 
