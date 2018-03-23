@@ -10,9 +10,9 @@ CREATE TYPE usr AS (
 	active boolean,
 	"orgId" integer,
 	hash varchar(255),
-	created timestamp,
-	updated timestamp,
-	deleted timestamp,
+	created timestamptz,
+	updated timestamptz,
+	deleted timestamptz,
 	"authorId" integer
 );
 
