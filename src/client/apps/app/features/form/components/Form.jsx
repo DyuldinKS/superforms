@@ -1,19 +1,18 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import * as formModule from 'apps/app/shared/redux/forms';
 import { Button } from 'reactstrap';
+import createForm from './createForm';
 import FormItem from './FormItem';
 
 const propTypes = {
-  id: PropTypes.string.isRequired,
   order: PropTypes.array.isRequired,
-  onSubmit: PropTypes.func,
+  items: PropTypes.object.isRequired,
+  values: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired,
+  valid: PropTypes.bool.isRequired,
 };
 
-const defaultProps = {
-  onSubmit: () => {},
-};
+const defaultProps = {};
 
 class Form extends Component {
   constructor(props) {
@@ -23,22 +22,31 @@ class Form extends Component {
   }
 
   handleSubmit(event) {
+    const { values, errors, valid } = this.props;
     event.preventDefault();
-    const data = new FormData(event.target);
-    console.log(data);
+
+    if (!valid) {
+      alert(JSON.stringify(errors));
+      return;
+    }
+
+    alert(JSON.stringify(values));
   }
 
   render() {
-    const { order, onSubmit, id: formId } = this.props;
+    const {
+      order,
+      items,
+    } = this.props;
 
     return (
-      <form onSubmit={this.handleSubmit} className="container">
+      <form onSubmit={this.handleSubmit} className="container" noValidate>
         {
           order.map(itemId => (
             <FormItem
               key={itemId}
-              formId={formId}
               id={itemId}
+              {...items[itemId]}
             />
           ))
         }
@@ -52,12 +60,4 @@ class Form extends Component {
 Form.propTypes = propTypes;
 Form.defaultProps = defaultProps;
 
-function mapStateToProps(state, ownProps) {
-  const { id } = ownProps;
-
-  return {
-    order: formModule.selectors.getItemsOrder(state, id),
-  };
-}
-
-export default connect(mapStateToProps, null)(Form);
+export default createForm(Form);

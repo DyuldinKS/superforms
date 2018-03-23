@@ -5,23 +5,18 @@ import connectInput from './connectInput';
 import { basePropTypes, baseDefaultProps } from './BaseInput';
 import {
   notEmpty,
-  isShorterOrEqual,
 } from '../../utils/validators';
 import createValidation from '../../utils/createValidation';
 
 const propTypes = {
   ...basePropTypes,
-  maxLength: PropTypes.number,
-  textarea: PropTypes.bool,
 };
 
 const defaultProps = {
   ...baseDefaultProps,
-  maxLength: null,
-  textarea: false,
 };
 
-class InputString extends PureComponent {
+class InputTime extends PureComponent {
   constructor(props) {
     super(props);
 
@@ -35,17 +30,10 @@ class InputString extends PureComponent {
 
   createValidation() {
     const validators = [];
-    const {
-      maxLength,
-      required,
-    } = this.props;
+    const { required } = this.props;
 
     if (required === true) {
       validators.push(notEmpty);
-    }
-
-    if (maxLength !== undefined) {
-      validators.push(isShorterOrEqual(maxLength));
     }
 
     return createValidation(validators);
@@ -63,7 +51,6 @@ class InputString extends PureComponent {
       error,
       name,
       required,
-      textarea,
       value,
     } = this.props;
 
@@ -74,7 +61,7 @@ class InputString extends PureComponent {
           name={name}
           onChange={this.handleChange}
           required={required === true}
-          type={textarea ? 'textarea' : 'text'}
+          type="time"
           value={value}
         />
         <FormFeedback>{error}</FormFeedback>
@@ -83,7 +70,7 @@ class InputString extends PureComponent {
   }
 }
 
-InputString.propTypes = propTypes;
-InputString.defaultProps = defaultProps;
+InputTime.propTypes = propTypes;
+InputTime.defaultProps = defaultProps;
 
-export default connectInput(InputString);
+export default connectInput(InputTime);

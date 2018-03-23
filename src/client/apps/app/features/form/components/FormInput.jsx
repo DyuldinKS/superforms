@@ -1,29 +1,42 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import * as formModule from 'apps/app/shared/redux/forms';
 import { FormGroup, FormText, Label } from 'reactstrap';
-import InputNumber from './inputs/InputNumber';
+import { inputTypes } from '../utils/constants';
+import getInputByType from '../utils/getInputByType';
 
 const propTypes = {
-  formId: PropTypes.string.isRequired,
-  id: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
   description: PropTypes.string,
+  id: PropTypes.string.isRequired,
+  required: PropTypes.bool,
+  title: PropTypes.string.isRequired,
+  type: PropTypes.oneOf(Object.values(inputTypes)).isRequired,
 };
 
 const defaultProps = {
   description: null,
+  required: false,
 };
 
 function FormInput(props) {
-  const { title, id, description } = props;
+  const {
+    description,
+    id,
+    required,
+    title,
+    type,
+    ...passProps
+  } = props;
+  const Input = getInputByType(type);
 
   return (
     <FormGroup>
       <Label>{title}</Label>
       <FormText color="info">{description}</FormText>
-      <InputNumber name={id} />
+      <Input
+        {...passProps}
+        name={id}
+        required={required}
+      />
     </FormGroup>
   );
 }
@@ -31,10 +44,4 @@ function FormInput(props) {
 FormInput.propTypes = propTypes;
 FormInput.defaultProps = defaultProps;
 
-function mapStateToProps(state, ownProps) {
-  const { formId, id: itemId } = ownProps;
-
-  return formModule.selectors.getItem(state, formId, itemId);
-}
-
-export default connect(mapStateToProps, null)(FormInput);
+export default FormInput;

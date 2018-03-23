@@ -1,0 +1,17 @@
+.form-check.is-invalid {
+  .form-check-label {
+    color: #dc3545;
+  }
+}
+
+.input-select-option-other {
+  position: static;
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+
+  > input[type="checkbox"] {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
