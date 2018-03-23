@@ -8,9 +8,9 @@ CREATE TYPE org AS (
 	info jsonb,
 	active boolean,
 	"parentId" integer,
-	created timestamp,
-	updated timestamp,
-	deleted timestamp,
+	created timestamptz,
+	updated timestamptz,
+	deleted timestamptz,
 	"authorId" integer
 );
 
