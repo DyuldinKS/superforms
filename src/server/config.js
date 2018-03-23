@@ -31,8 +31,4 @@ export default {
 	bcrypt: {
 		saltRound: 10,
 	},
-	root: {
-		email: 'root@',
-		password: 'justDoIt',
-	},
 };
