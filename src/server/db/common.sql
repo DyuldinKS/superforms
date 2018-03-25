@@ -25,13 +25,13 @@ LANGUAGE SQL STABLE;
 
 
 CREATE TYPE entity AS (
-	id INTEGER,
-	email VARCHAR(255),
-	info JSONB,
-	created TIMESTAMP,
-	updated TIMESTAMP,
-	deleted TIMESTAMP,
-	author_id INTEGER
+	id integer,
+	email varchar(255),
+	info jsonb,
+	created timestamptz,
+	updated timestamptz,
+	deleted timestamptz,
+	author_id integer
 );
 
 
