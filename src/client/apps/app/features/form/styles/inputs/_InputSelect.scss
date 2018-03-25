@@ -6,6 +6,7 @@ fieldset.form-group.is-invalid {
   & ~ .invalid-feedback {
     display: block;
     margin-bottom: 0.5rem;
+    margin-top: 0;
   }
 }
 
@@ -24,7 +25,8 @@ fieldset.form-group.is-invalid {
   align-items: center;
   margin-top: 5px;
 
-  > input[type="checkbox"] {
+  > input[type="checkbox"],
+  > input[type="radio"] {
     margin-top: 0;
     margin-bottom: 0;
   }
