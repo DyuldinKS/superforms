@@ -27,10 +27,6 @@ const defaultProps = {
 };
 
 class InputNumber extends BaseInput {
-  componentDidMount() {
-    this.validate = this.createValidation();
-  }
-
   createValidation() {
     const validators = [];
     const {
@@ -63,7 +59,6 @@ class InputNumber extends BaseInput {
 
   render() {
     const {
-      invalid,
       max,
       min,
       name,
@@ -74,7 +69,7 @@ class InputNumber extends BaseInput {
     return (
       <React.Fragment>
         <Input
-          className={invalid ? 'is-invalid' : ''}
+          className={this.isErrorVisible() ? 'is-invalid' : ''}
           max={max}
           min={min}
           name={name}

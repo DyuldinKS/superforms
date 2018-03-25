@@ -15,10 +15,6 @@ const defaultProps = {
 };
 
 class InputDate extends BaseInput {
-  componentDidMount() {
-    this.validate = this.createValidation();
-  }
-
   createValidation() {
     const validators = [];
     const { required } = this.props;
@@ -32,7 +28,6 @@ class InputDate extends BaseInput {
 
   render() {
     const {
-      invalid,
       name,
       required,
       value,
@@ -41,7 +36,7 @@ class InputDate extends BaseInput {
     return (
       <React.Fragment>
         <Input
-          className={invalid ? 'is-invalid' : ''}
+          className={this.isErrorVisible() ? 'is-invalid' : ''}
           name={name}
           onBlur={this.handleBlur}
           onChange={this.handleChange}

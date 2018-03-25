@@ -22,10 +22,6 @@ const defaultProps = {
 };
 
 class InputString extends BaseInput {
-  componentDidMount() {
-    this.validate = this.createValidation();
-  }
-
   createValidation() {
     const validators = [];
     const {
@@ -46,7 +42,6 @@ class InputString extends BaseInput {
 
   render() {
     const {
-      invalid,
       name,
       required,
       textarea,
@@ -56,7 +51,7 @@ class InputString extends BaseInput {
     return (
       <React.Fragment>
         <Input
-          className={invalid ? 'is-invalid' : ''}
+          className={this.isErrorVisible() ? 'is-invalid' : ''}
           name={name}
           onBlur={this.handleBlur}
           onChange={this.handleChange}
