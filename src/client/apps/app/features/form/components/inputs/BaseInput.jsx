@@ -4,6 +4,7 @@ import { FormFeedback } from 'reactstrap';
 
 export const basePropTypes = {
   error: PropTypes.string,
+  submitError: PropTypes.bool,
   invalid: PropTypes.bool,
   name: PropTypes.string.isRequired,
   required: PropTypes.bool,
@@ -14,6 +15,7 @@ export const basePropTypes = {
 
 export const baseDefaultProps = {
   error: null,
+  submitError: false,
   invalid: false,
   required: false,
 };
@@ -61,7 +63,8 @@ class BaseInput extends PureComponent {
   }
 
   isErrorVisible() {
-    return !this.state.inputting && this.props.invalid;
+    return this.props.submitError
+      || (!this.state.inputting && this.props.invalid);
   }
 
   render() {

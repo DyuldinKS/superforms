@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { getCoords } from 'shared/utils';
 import deleteMapProp from '../utils/deleteMapProp';
 
 /*
@@ -29,13 +30,17 @@ export default function createForm(WrappedComponent) {
       super(props);
 
       this.state = {
-        values: {},
         errors: null,
+        submitErrors: null,
+        values: {},
       };
 
       this.getInputProps = this.getInputProps.bind(this);
+      this.getRef = this.getRef.bind(this);
+      this.handleSubmit = this.handleSubmit.bind(this);
       this.setError = this.setError.bind(this);
       this.setValue = this.setValue.bind(this);
+      this.focusOnFirstError = this.focusOnFirstError.bind(this);
     }
 
     getChildContext() {
@@ -47,15 +52,36 @@ export default function createForm(WrappedComponent) {
     }
 
     getInputProps(name) {
-      const { errors, values } = this.state;
+      const { errors, submitErrors, values } = this.state;
       const error = errors && errors[name];
+      const submitError = submitErrors && submitErrors[name];
 
       return {
-        value: values[name] || '',
         error: error || '',
-        valid: !error,
+        submitError: !!submitError,
         invalid: !!error,
+        valid: !error,
+        value: values[name] || '',
       };
+    }
+
+    getRef(form) {
+      this.formRef = form;
+    }
+
+    handleSubmit(event) {
+      event.preventDefault();
+      const { errors, values } = this.state;
+
+      if (errors) {
+        this.setState(state => ({
+          ...state,
+          submitErrors: { ...errors },
+        }), this.focusOnFirstError);
+        return;
+      }
+
+      alert(JSON.stringify(values));
     }
 
     setError(name, error) {
@@ -72,7 +98,19 @@ export default function createForm(WrappedComponent) {
           [name]: value,
         },
         errors: updateErrors(state.errors, name, error),
+        submitErrors: deleteMapProp(state.submitErrors, name),
       }));
+    }
+
+    focusOnFirstError() {
+      const { items, order } = this.props;
+      const { errors } = this.state;
+      const name = order.find(itemId => errors[itemId]);
+      if (!name) return;
+      const input = this.formRef.elements[name];
+      const { top } = getCoords(input);
+      window.scrollTo(window.pageXOffset, top - 50);
+      input.focus();
     }
 
     render() {
@@ -83,9 +121,11 @@ export default function createForm(WrappedComponent) {
 
       const passProps = {
         errors,
-        values,
-        valid: !errors,
+        getRef: this.getRef,
+        handleSubmit: this.handleSubmit,
         invalid: !!errors,
+        valid: !errors,
+        values,
       };
 
       return (

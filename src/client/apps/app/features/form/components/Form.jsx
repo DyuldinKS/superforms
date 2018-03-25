@@ -5,11 +5,13 @@ import createForm from './createForm';
 import FormItem from './FormItem';
 
 const propTypes = {
-  order: PropTypes.array.isRequired,
-  items: PropTypes.object.isRequired,
-  values: PropTypes.object.isRequired,
   errors: PropTypes.object.isRequired,
+  getRef: PropTypes.func.isRequired,
+  handleSubmit: PropTypes.func.isRequired,
+  items: PropTypes.object.isRequired,
+  order: PropTypes.array.isRequired,
   valid: PropTypes.bool.isRequired,
+  values: PropTypes.object.isRequired,
 };
 
 const defaultProps = {};
@@ -22,25 +24,23 @@ class Form extends Component {
   }
 
   handleSubmit(event) {
-    const { values, errors, valid } = this.props;
-    event.preventDefault();
-
-    if (!valid) {
-      alert(JSON.stringify(errors));
-      return;
-    }
-
-    alert(JSON.stringify(values));
+    this.props.handleSubmit(event);
   }
 
   render() {
     const {
-      order,
+      getRef,
       items,
+      order,
     } = this.props;
 
     return (
-      <form onSubmit={this.handleSubmit} className="container" noValidate>
+      <form
+        className="container"
+        ref={getRef}
+        noValidate
+        onSubmit={this.handleSubmit}
+      >
         {
           order.map(itemId => (
             <FormItem
