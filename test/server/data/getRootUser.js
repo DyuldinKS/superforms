@@ -3,9 +3,7 @@ import db from '../../../src/server/db';
 
 
 const getRootUser = () => (
-	db.query(`SELECT * FROM get_user((
-		SELECT min(id) FROM (SELECT id FROM users ORDER BY id OFFSET 1) AS ordered
-	));`)
+	db.query(`SELECT * FROM get_user((SELECT min(id) FROM users));`)
 		.then(data => new User(data))
 );
 
