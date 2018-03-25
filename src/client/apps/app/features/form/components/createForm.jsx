@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import deleteMapProp from '../utils/deleteMapProp';
 
-function handleErrorUpdate(errors, name, value) {
-  if (!value) {
-    // Error gone
-    const { [name]: removedName, ...withoutName } = errors;
-    return withoutName;
-  }
+/*
+  value = null - remove error
+  value = undefined - preserve current error
+*/
+function updateErrors(errors, name, value) {
+  if (value === undefined) return errors;
+
+  if (!value) return deleteMapProp(errors, name);
 
   return {
     ...errors,
@@ -17,7 +20,8 @@ function handleErrorUpdate(errors, name, value) {
 export default function createForm(WrappedComponent) {
   const childContextTypes = {
     getInputProps: PropTypes.func.isRequired,
-    handleChange: PropTypes.func.isRequired,
+    setError: PropTypes.func.isRequired,
+    setValue: PropTypes.func.isRequired,
   };
 
   class FormContainer extends Component {
@@ -26,40 +30,49 @@ export default function createForm(WrappedComponent) {
 
       this.state = {
         values: {},
-        errors: {},
+        errors: null,
       };
 
       this.getInputProps = this.getInputProps.bind(this);
-      this.handleChange = this.handleChange.bind(this);
+      this.setError = this.setError.bind(this);
+      this.setValue = this.setValue.bind(this);
     }
 
     getChildContext() {
       return {
         getInputProps: this.getInputProps,
-        handleChange: this.handleChange,
+        setError: this.setError,
+        setValue: this.setValue,
       };
     }
 
     getInputProps(name) {
+      const { errors, values } = this.state;
+      const error = errors && errors[name];
+
       return {
-        value: this.state.values[name] || '',
-        error: this.state.errors[name] || '',
+        value: values[name] || '',
+        error: error || '',
+        valid: !error,
+        invalid: !!error,
       };
     }
 
-    handleChange(name, value, error) {
+    setError(name, error) {
+      this.setState(state => ({
+        values: state.values,
+        errors: updateErrors(state.errors, name, error),
+      }));
+    }
+
+    setValue(name, value, error) {
       this.setState(state => ({
         values: {
           ...state.values,
           [name]: value,
         },
-        errors: handleErrorUpdate(state.errors, name, error),
+        errors: updateErrors(state.errors, name, error),
       }));
-    }
-
-    isValid() {
-      const { errors } = this.state;
-      return Object.keys(errors).length === 0;
     }
 
     render() {
@@ -71,7 +84,8 @@ export default function createForm(WrappedComponent) {
       const passProps = {
         errors,
         values,
-        valid: this.isValid(),
+        valid: !errors,
+        invalid: !!errors,
       };
 
       return (

@@ -1,8 +1,8 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import { FormFeedback, Input } from 'reactstrap';
+import { Input } from 'reactstrap';
 import connectInput from './connectInput';
-import { basePropTypes, baseDefaultProps } from './BaseInput';
+import BaseInput from './BaseInput';
 import {
   notEmpty,
   isShorterOrEqual,
@@ -10,25 +10,18 @@ import {
 import createValidation from '../../utils/createValidation';
 
 const propTypes = {
-  ...basePropTypes,
+  ...BaseInput.propTypes,
   maxLength: PropTypes.number,
   textarea: PropTypes.bool,
 };
 
 const defaultProps = {
-  ...baseDefaultProps,
+  ...BaseInput.defaultProps,
   maxLength: null,
   textarea: false,
 };
 
-class InputString extends PureComponent {
-  constructor(props) {
-    super(props);
-
-    this.createValidation = this.createValidation.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-  }
-
+class InputString extends BaseInput {
   componentDidMount() {
     this.validate = this.createValidation();
   }
@@ -51,16 +44,9 @@ class InputString extends PureComponent {
     return createValidation(validators);
   }
 
-  handleChange(event) {
-    const { name, onChange } = this.props;
-    const { value } = event.target;
-    const error = this.validate(value.trim());
-    onChange(name, value, error);
-  }
-
   render() {
     const {
-      error,
+      invalid,
       name,
       required,
       textarea,
@@ -70,14 +56,15 @@ class InputString extends PureComponent {
     return (
       <React.Fragment>
         <Input
-          className={error ? 'is-invalid' : ''}
+          className={invalid ? 'is-invalid' : ''}
           name={name}
+          onBlur={this.handleBlur}
           onChange={this.handleChange}
           required={required === true}
           type={textarea ? 'textarea' : 'text'}
           value={value}
         />
-        <FormFeedback>{error}</FormFeedback>
+        {super.render()}
       </React.Fragment>
     );
   }

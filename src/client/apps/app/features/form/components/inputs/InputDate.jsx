@@ -1,29 +1,20 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import { FormFeedback, Input } from 'reactstrap';
+import { Input } from 'reactstrap';
 import connectInput from './connectInput';
-import { basePropTypes, baseDefaultProps } from './BaseInput';
-import {
-  notEmpty,
-} from '../../utils/validators';
+import BaseInput from './BaseInput';
+import { notEmpty } from '../../utils/validators';
 import createValidation from '../../utils/createValidation';
 
 const propTypes = {
-  ...basePropTypes,
+  ...BaseInput.propTypes,
 };
 
 const defaultProps = {
-  ...baseDefaultProps,
+  ...BaseInput.defaultProps,
 };
 
-class InputDate extends PureComponent {
-  constructor(props) {
-    super(props);
-
-    this.createValidation = this.createValidation.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-  }
-
+class InputDate extends BaseInput {
   componentDidMount() {
     this.validate = this.createValidation();
   }
@@ -39,16 +30,9 @@ class InputDate extends PureComponent {
     return createValidation(validators);
   }
 
-  handleChange(event) {
-    const { name, onChange } = this.props;
-    const { value } = event.target;
-    const error = this.validate(value.trim());
-    onChange(name, value, error);
-  }
-
   render() {
     const {
-      error,
+      invalid,
       name,
       required,
       value,
@@ -57,14 +41,15 @@ class InputDate extends PureComponent {
     return (
       <React.Fragment>
         <Input
-          className={error ? 'is-invalid' : ''}
+          className={invalid ? 'is-invalid' : ''}
           name={name}
+          onBlur={this.handleBlur}
           onChange={this.handleChange}
           required={required === true}
           type="date"
           value={value}
         />
-        <FormFeedback>{error}</FormFeedback>
+        {super.render()}
       </React.Fragment>
     );
   }

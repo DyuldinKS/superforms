@@ -42,7 +42,7 @@ class InputRadioGroup extends PureComponent {
   }
 
   handleOptionToggle(event) {
-    const { name, onChange, values: toggleMap = {} } = this.props;
+    const { name, setValue, values: toggleMap = {} } = this.props;
     const { value: optionId } = event.target;
     let nextValue = null;
 
@@ -51,11 +51,11 @@ class InputRadioGroup extends PureComponent {
     }
 
     const error = this.validate(nextValue);
-    onChange(name, nextValue, error);
+    setValue(name, nextValue, error);
   }
 
   handleOtherChange(value) {
-    const { name, onChange } = this.props;
+    const { name, setValue } = this.props;
     let nextValue = null;
 
     if (value !== undefined) {
@@ -63,23 +63,24 @@ class InputRadioGroup extends PureComponent {
     }
 
     const error = this.validate(nextValue);
-    onChange(name, nextValue, error);
+    setValue(name, nextValue, error);
   }
 
 
   render() {
     const {
       error,
+      invalid,
       name,
       optionOther,
       options,
       required,
       value: toggleMap,
     } = this.props;
-    const invalid = !!error;
 
     return (
       <React.Fragment>
+        <FormText color="danger">{error}</FormText>
         <FormGroup tag="fieldset">
           {
             options.map((option, optionId) => (
@@ -118,7 +119,6 @@ class InputRadioGroup extends PureComponent {
             : null
           }
         </FormGroup>
-        <FormText color="danger">{error}</FormText>
       </React.Fragment>
     );
   }

@@ -1,14 +1,13 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { FormFeedback } from 'reactstrap';
-import createValidation from '../../utils/createValidation';
-import composeValidatorsByProps from '../../utils/validators';
 
 export const basePropTypes = {
   error: PropTypes.string,
   name: PropTypes.string.isRequired,
   required: PropTypes.bool,
-  onChange: PropTypes.func.isRequired,
+  setError: PropTypes.func.isRequired,
+  setValue: PropTypes.func.isRequired,
   value: PropTypes.any.isRequired,
 };
 
@@ -21,9 +20,7 @@ class BaseInput extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.propsThatAffectValidation = [];
-
-    this.createValidation = this.createValidation.bind(this);
+    this.handleBlur = this.handleBlur.bind(this);
     this.handleChange = this.handleChange.bind(this);
   }
 
@@ -31,32 +28,26 @@ class BaseInput extends PureComponent {
     this.validate = this.createValidation();
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.propsThatAffectValidation.some(name =>
-      this.props[name] !== prevProps[name])) {
-      this.validate = this.createValidation();
-    }
+  createValidation() {
+    return () => null;
   }
 
-  createValidation() {
-    const validators = composeValidatorsByProps(
-      this.props,
-      this.propsThatAffectValidation,
-    );
-    return createValidation(validators);
+  handleBlur() {
+    const { name, setError, value } = this.props;
+    const error = this.validate(value.trim());
+    setError(name, error);
   }
 
   handleChange(event) {
-    const { name, onChange } = this.props;
+    const { name, setValue } = this.props;
     const { value } = event.target;
-    const error = this.validate(value.trim());
-    onChange(name, value, error);
+    setValue(name, value);
   }
 
   render() {
-    const { error } = this.props;
-
-    return <FormFeedback>{error}</FormFeedback>;
+    return (
+      <FormFeedback>{this.props.error}</FormFeedback>
+    );
   }
 }
 

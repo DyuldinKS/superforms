@@ -8,14 +8,16 @@ export default function connectInput(WrappedComponent) {
 
   const contextTypes = {
     getInputProps: PropTypes.func.isRequired,
-    handleChange: PropTypes.func.isRequired,
+    setError: PropTypes.func.isRequired,
+    setValue: PropTypes.func.isRequired,
   };
 
   function ConnectedInput(props, context) {
     const { name } = props;
     const {
       getInputProps,
-      handleChange,
+      setError,
+      setValue,
     } = context;
 
     const inputProps = getInputProps(name);
@@ -24,7 +26,8 @@ export default function connectInput(WrappedComponent) {
       <WrappedComponent
         {...props}
         {...inputProps}
-        onChange={handleChange}
+        setError={setError}
+        setValue={setValue}
       />
     );
   }

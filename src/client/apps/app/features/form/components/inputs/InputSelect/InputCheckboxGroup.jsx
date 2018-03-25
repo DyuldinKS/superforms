@@ -49,7 +49,7 @@ class InputCheckboxGroup extends PureComponent {
   }
 
   handleOptionToggle(event) {
-    const { name, onChange, value: toggleMap = {} } = this.props;
+    const { name, setValue, value: toggleMap = {} } = this.props;
     const { value: optionId } = event.target;
     let value = {};
 
@@ -60,11 +60,11 @@ class InputCheckboxGroup extends PureComponent {
     }
 
     const error = this.validate(value);
-    onChange(name, value, error);
+    setValue(name, value, error);
   }
 
   handleOtherChange(value) {
-    const { name, onChange, value: toggleMap = {} } = this.props;
+    const { name, setValue, value: toggleMap = {} } = this.props;
     let nextValue = {};
 
     if (value !== undefined) {
@@ -74,22 +74,23 @@ class InputCheckboxGroup extends PureComponent {
     }
 
     const error = this.validate(nextValue);
-    onChange(name, nextValue, error);
+    setValue(name, nextValue, error);
   }
 
   render() {
     const {
       error,
+      invalid,
       name,
       optionOther,
       options,
       required,
       value: toggleMap,
     } = this.props;
-    const invalid = !!error;
 
     return (
       <React.Fragment>
+        <FormText color="danger">{error}</FormText>
         <FormGroup tag="fieldset">
           {
             options.map((option, optionId) => (
@@ -128,7 +129,6 @@ class InputCheckboxGroup extends PureComponent {
             : null
           }
         </FormGroup>
-        <FormText color="danger">{error}</FormText>
       </React.Fragment>
     );
   }

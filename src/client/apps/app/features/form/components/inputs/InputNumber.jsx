@@ -1,8 +1,8 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import { FormFeedback, Input } from 'reactstrap';
+import { Input } from 'reactstrap';
 import connectInput from './connectInput';
-import { basePropTypes, baseDefaultProps } from './BaseInput';
+import BaseInput from './BaseInput';
 import {
   notEmpty,
   isGreaterOrEqual,
@@ -13,27 +13,20 @@ import {
 import createValidation from '../../utils/createValidation';
 
 const propTypes = {
-  ...basePropTypes,
+  ...BaseInput.propTypes,
   integer: PropTypes.bool,
   max: PropTypes.number,
   min: PropTypes.number,
 };
 
 const defaultProps = {
-  ...baseDefaultProps,
+  ...BaseInput.defaultProps,
   integer: false,
   max: null,
   min: null,
 };
 
-class InputNumber extends PureComponent {
-  constructor(props) {
-    super(props);
-
-    this.createValidation = this.createValidation.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-  }
-
+class InputNumber extends BaseInput {
   componentDidMount() {
     this.validate = this.createValidation();
   }
@@ -47,11 +40,11 @@ class InputNumber extends PureComponent {
       required,
     } = this.props;
 
-    if (required === true) {
+    if (required) {
       validators.push(notEmpty);
     }
 
-    if (integer === true) {
+    if (integer) {
       validators.push(isInteger);
     } else {
       validators.push(isNumber);
@@ -68,16 +61,9 @@ class InputNumber extends PureComponent {
     return createValidation(validators);
   }
 
-  handleChange(event) {
-    const { name, onChange } = this.props;
-    const { value } = event.target;
-    const error = this.validate(value.trim());
-    onChange(name, value, error);
-  }
-
   render() {
     const {
-      error,
+      invalid,
       max,
       min,
       name,
@@ -88,16 +74,17 @@ class InputNumber extends PureComponent {
     return (
       <React.Fragment>
         <Input
-          className={error ? 'is-invalid' : ''}
+          className={invalid ? 'is-invalid' : ''}
           max={max}
           min={min}
           name={name}
+          onBlur={this.handleBlur}
           onChange={this.handleChange}
           required={required === true}
           type="text"
           value={value}
         />
-        <FormFeedback>{error}</FormFeedback>
+        {super.render()}
       </React.Fragment>
     );
   }
