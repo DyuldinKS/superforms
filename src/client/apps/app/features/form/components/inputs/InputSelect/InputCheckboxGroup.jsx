@@ -24,6 +24,10 @@ class InputCheckboxGroup extends PureComponent {
   constructor(props) {
     super(props);
 
+    this.state = {
+      dirty: false,
+    };
+
     this.createValidation = this.createValidation.bind(this);
     this.handleOptionToggle = this.handleOptionToggle.bind(this);
     this.handleOtherChange = this.handleOtherChange.bind(this);
@@ -31,17 +35,20 @@ class InputCheckboxGroup extends PureComponent {
 
   componentDidMount() {
     this.validate = this.createValidation();
+    const { name, setError, value } = this.props;
+    const error = this.validate(value.trim());
+    setError(name, error);
   }
 
   createValidation() {
     const validators = [];
     const { optionOther, required } = this.props;
 
-    if (required === true) {
+    if (required) {
       validators.push(notEmpty);
     }
 
-    if (optionOther === true) {
+    if (optionOther) {
       validators.push(notEmptyOptionOther);
     }
 
@@ -61,6 +68,7 @@ class InputCheckboxGroup extends PureComponent {
 
     const error = this.validate(value);
     setValue(name, value, error);
+    this.setState(() => ({ dirty: true }));
   }
 
   handleOtherChange(value) {
@@ -75,12 +83,17 @@ class InputCheckboxGroup extends PureComponent {
 
     const error = this.validate(nextValue);
     setValue(name, nextValue, error);
+    this.setState(() => ({ dirty: true }));
+  }
+
+  isErrorVisible() {
+    return this.props.submitError
+      || (this.state.dirty && this.props.invalid);
   }
 
   render() {
     const {
       error,
-      invalid,
       name,
       optionOther,
       options,
@@ -90,14 +103,17 @@ class InputCheckboxGroup extends PureComponent {
 
     return (
       <div className="input-check-wrapper">
-        <FormGroup tag="fieldset" className={invalid ? 'is-invalid' : ''}>
+        <FormGroup
+          className={this.isErrorVisible() ? 'is-invalid' : ''}
+          name={name}
+          tag="fieldset"
+        >
           {
             options.map((option, optionId) => (
               <FormGroup check key={optionId}>
                 <Label check>
                   <Input
                     checked={toggleMap[optionId] === true}
-                    name={name}
                     onChange={this.handleOptionToggle}
                     required={required === true}
                     type="checkbox"
@@ -113,8 +129,7 @@ class InputCheckboxGroup extends PureComponent {
             ? (
               <OptionOther
                 checked={toggleMap.other !== undefined}
-                invalid={invalid}
-                name={name}
+                invalid={this.isErrorVisible()}
                 onChange={this.handleOtherChange}
                 required={required === true}
                 type="checkbox"

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { getCoords } from 'shared/utils';
 import deleteMapProp from '../utils/deleteMapProp';
+import { inputTypes } from '../utils/constants';
 
 /*
   value = null - remove error
@@ -109,7 +110,10 @@ export default function createForm(WrappedComponent) {
       if (!name) return;
       const input = this.formRef.elements[name];
       const { top } = getCoords(input);
-      window.scrollTo(window.pageXOffset, top - 50);
+      const offset = items[name].type === inputTypes.SELECT
+        ? 75
+        : 50;
+      window.scrollTo(window.pageXOffset, top - offset);
       input.focus();
     }
 

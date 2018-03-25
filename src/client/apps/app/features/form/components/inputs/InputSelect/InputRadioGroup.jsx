@@ -4,7 +4,8 @@ import { FormFeedback, FormGroup, Input, Label } from 'reactstrap';
 import connectInput from '../connectInput';
 import { basePropTypes, baseDefaultProps } from '../BaseInput';
 import OptionOther from './OptionOther';
-import { notEmpty } from '../../../utils/validators';
+import { notEmpty, notEmptyOptionOther } from '../../../utils/validators';
+import createValidation from '../../../utils/createValidation';
 
 const propTypes = {
   ...basePropTypes,
@@ -22,6 +23,10 @@ class InputRadioGroup extends PureComponent {
   constructor(props) {
     super(props);
 
+    this.state = {
+      dirty: false,
+    };
+
     this.createValidation = this.createValidation.bind(this);
     this.handleOptionToggle = this.handleOptionToggle.bind(this);
     this.handleOtherChange = this.handleOtherChange.bind(this);
@@ -29,16 +34,24 @@ class InputRadioGroup extends PureComponent {
 
   componentDidMount() {
     this.validate = this.createValidation();
+    const { name, setError, value } = this.props;
+    const error = this.validate(value.trim());
+    setError(name, error);
   }
 
   createValidation() {
-    const { required } = this.props;
+    const validators = [];
+    const { optionOther, required } = this.props;
 
-    if (required === true) {
+    if (required) {
       return notEmpty;
     }
 
-    return () => null;
+    if (optionOther) {
+      validators.push(notEmptyOptionOther);
+    }
+
+    return createValidation(validators);
   }
 
   handleOptionToggle(event) {
@@ -52,6 +65,7 @@ class InputRadioGroup extends PureComponent {
 
     const error = this.validate(nextValue);
     setValue(name, nextValue, error);
+    this.setState(() => ({ dirty: true }));
   }
 
   handleOtherChange(value) {
@@ -64,13 +78,17 @@ class InputRadioGroup extends PureComponent {
 
     const error = this.validate(nextValue);
     setValue(name, nextValue, error);
+    this.setState(() => ({ dirty: true }));
   }
 
+  isErrorVisible() {
+    return this.props.submitError
+      || (this.state.dirty && this.props.invalid);
+  }
 
   render() {
     const {
       error,
-      invalid,
       name,
       optionOther,
       options,
@@ -80,14 +98,17 @@ class InputRadioGroup extends PureComponent {
 
     return (
       <div className="input-check-wrapper">
-        <FormGroup tag="fieldset" className={invalid ? 'is-invalid' : ''}>
+        <FormGroup
+          className={this.isErrorVisible() ? 'is-invalid' : ''}
+          name={name}
+          tag="fieldset"
+        >
           {
             options.map((option, optionId) => (
               <FormGroup check key={optionId}>
                 <Label check>
                   <Input
                     checked={toggleMap[optionId] === true}
-                    name={name}
                     onChange={this.handleOptionToggle}
                     required={required === true}
                     type="radio"
@@ -103,8 +124,7 @@ class InputRadioGroup extends PureComponent {
             ? (
               <OptionOther
                 checked={toggleMap.other !== undefined}
-                invalid={invalid}
-                name={name}
+                invalid={this.isErrorVisible()}
                 onChange={this.handleOtherChange}
                 required={required === true}
                 type="radio"
