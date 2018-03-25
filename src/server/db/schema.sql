@@ -105,13 +105,16 @@ CREATE TABLE IF NOT EXISTS forms (
 CREATE TABLE IF NOT EXISTS responses (
 	id serial PRIMARY KEY,
 	form_id integer NOT NULL REFERENCES forms(id),
-	list json NOT NULL,
-	owner_id integer NOT NULL REFERENCES recipients(id),
-	recipient_id integer NOT NULL REFERENCES recipients(id),
+	items json NOT NULL,
+	owner_id integer REFERENCES recipients(id),
+	recipient_id integer REFERENCES recipients(id),
 	created timestamptz DEFAULT now(),
 	updated timestamptz,
 	deleted timestamptz,
-	author_id integer NOT NULL REFERENCES users(id)
+	-- if the respondent is unknown, delegate the operation to the system bot
+	author_id integer NOT NULL REFERENCES users(id) DEFAULT (
+		SELECT min(id) FROM users
+	)
 );
 
 
