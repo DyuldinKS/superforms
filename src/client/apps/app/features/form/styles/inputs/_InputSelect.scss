@@ -1,6 +1,20 @@
-.form-check.is-invalid {
+fieldset.form-group.is-invalid {
   .form-check-label {
     color: #dc3545;
+  }
+
+  & ~ .invalid-feedback {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.input-check-wrapper {
+  display: flex;
+  flex-direction: column;
+
+  fieldset {
+    order: 1;
   }
 }
 

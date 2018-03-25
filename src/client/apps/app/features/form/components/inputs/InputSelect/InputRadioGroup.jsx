@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { FormText, FormGroup, Input, Label } from 'reactstrap';
+import { FormFeedback, FormGroup, Input, Label } from 'reactstrap';
 import connectInput from '../connectInput';
 import { basePropTypes, baseDefaultProps } from '../BaseInput';
 import OptionOther from './OptionOther';
@@ -79,16 +79,11 @@ class InputRadioGroup extends PureComponent {
     } = this.props;
 
     return (
-      <React.Fragment>
-        <FormText color="danger">{error}</FormText>
-        <FormGroup tag="fieldset">
+      <div className="input-check-wrapper">
+        <FormGroup tag="fieldset" className={invalid ? 'is-invalid' : ''}>
           {
             options.map((option, optionId) => (
-              <FormGroup
-                check
-                className={invalid ? 'is-invalid' : ''}
-                key={optionId}
-              >
+              <FormGroup check key={optionId}>
                 <Label check>
                   <Input
                     checked={toggleMap[optionId] === true}
@@ -119,7 +114,8 @@ class InputRadioGroup extends PureComponent {
             : null
           }
         </FormGroup>
-      </React.Fragment>
+        <FormFeedback>{error}</FormFeedback>
+      </div>
     );
   }
 }
