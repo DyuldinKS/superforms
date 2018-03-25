@@ -31,7 +31,11 @@ function FormInput(props) {
   return (
     <FormGroup>
       <Label>{title}</Label>
-      <FormText color="info">{description}</FormText>
+      {
+        description
+        ? <FormText color="info">{description}</FormText>
+        : null
+      }
       <Input
         {...passProps}
         name={id}
