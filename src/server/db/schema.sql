@@ -102,6 +102,13 @@ CREATE TABLE IF NOT EXISTS forms (
 );
 
 
+CREATE OR REPLACE FUNCTION get_bot_id() RETURNS integer AS
+$$
+	SELECT min(id) FROM users
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
 CREATE TABLE IF NOT EXISTS responses (
 	id serial PRIMARY KEY,
 	form_id integer NOT NULL REFERENCES forms(id),
@@ -112,9 +119,7 @@ CREATE TABLE IF NOT EXISTS responses (
 	updated timestamptz,
 	deleted timestamptz,
 	-- if the respondent is unknown, delegate the operation to the system bot
-	author_id integer NOT NULL REFERENCES users(id) DEFAULT (
-		SELECT min(id) FROM users
-	)
+	author_id integer NOT NULL REFERENCES users(id) DEFAULT get_bot_id()
 );
 
 
