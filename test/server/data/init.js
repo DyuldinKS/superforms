@@ -14,8 +14,10 @@ const loadData = () => {
 	const files = [
 		'mscDistrictOrgs.json',
 		'imc-users.tmp',
-		'imc-forms.tmp'
+		'imc-forms.tmp',
+		'imc-responses.tmp',
 	];
+
 	// read files
 	return Promise.all(
 		files.map(file => (
@@ -23,44 +25,25 @@ const loadData = () => {
 		)),
 	)
 		// parse files
-		.then(([imcOrgs, imcUsers, imcForms]) => {
+		.then(([imcOrgs, ...imcData]) => {
 			const { schools, kindergartens } = JSON.parse(imcOrgs);
 			const orgs = [...schools.values, ...kindergartens.values];
 
-			const [users, forms] = [imcUsers, imcForms].map(buffer => (
+			const [users, forms, responses] = imcData.map(buffer => (
 				buffer.toString()
-					.replace(/\\\\/g, '\\')
+					.trim()
+					.replace(/\\\\/g, '\\') // replace '\\' with '\'
 					.split('\n')
-					.slice(0, -1)
 					.map(JSON.parse)
 			));
 
-			return { orgs, users, forms };
+			return { orgs, users, forms, responses };
 		})
 };
 
 
 const getBot = () => db.query('SELECT min(id) AS id FROM users;');
 const getSystem = () => db.query('SELECT min(id) AS id FROM organizations;');
-
-
-const createUsers = (org, users) => (
-	Promise.all(users.map(data => new User({
-		...data,
-		orgId: org.id,
-	})
-		.save(root.id)
-	))
-);
-
-
-const createForms = (users, forms, ids) => (
-	Promise.all(forms.map((form) => new Form({
-		...form,
-		owner_id: ids[form.author_id],
-		author_id: root,
-	})))
-)
 
 
 const getOrCreateEducationDepartment = ({ author }) => (
@@ -131,8 +114,8 @@ const getOrCreateIMCUsers = ({ author }) => {
 
 	imc.users.forEach((record) => {
 		chain = chain
-			.then(() => User.findByEmail(record.email)
-			.then(user => {
+			.then(() => User.findByEmail(record.email))
+			.then((user) => {
 				if(user) {
 					if(user.orgId !== imc.id) {
 						throw new Error(`User (${user.email}) is not in IMC.`)
@@ -143,13 +126,76 @@ const getOrCreateIMCUsers = ({ author }) => {
 				record.orgId = imc.id;
 				return new User(record).save(author.id);
 			})
-			.then(user => {
+			.then((user) => {
 				imc.conversion.users[record.id] = user.id;
 				console.log(`${record.id} -> ${user.id} (${user.email}): ok`)
 			})
-		)
 	})
-	return chain;
+	return chain.then(() => {
+		console.log(`${imc.users.length} users were exported`);
+	});
+};
+
+
+const getOrCreateIMCForms = ({ author }) => {
+	console.log('\nCreating IMC forms...')
+	imc.conversion.forms = {};
+	let chain = Promise.resolve();
+
+	imc.forms.forEach((record) => {
+		chain = chain
+			.then(() => db.query(
+				'SELECT id FROM forms WHERE created = $1',
+				[record.created]
+			))
+			.then((form) => {
+				if(form) return form;
+
+				// replace owner id with corresponding new id
+				record.owner_id = imc.conversion.users[record.owner_id];
+				return db.query(
+					'SELECT id FROM create_form($1::json, $2::int)',
+					[record, author.id],
+				);
+			})
+			.then((form) => {
+				imc.conversion.forms[record.id] = form.id;
+			})
+	})
+
+	return chain.then(() => {
+		console.log(JSON.stringify(imc.conversion.forms));
+		console.log(`${imc.forms.length} forms were exported`);
+	});
+};
+
+
+const getOrCreateIMCResponses = ({ author }) => {
+	console.log('\nCreating IMC responses...')
+	imc.conversion.responses = {};
+
+	return Promise.all(imc.responses.map((record) => (
+		db.query(
+			'SELECT id FROM responses WHERE created = $1',
+			[record.created]
+		)
+			.then((response) => {
+				if(response) return response;
+
+				// replace form id with corresponding new id
+				record.form_id = imc.conversion.forms[record.form_id];
+				return db.query(
+					'SELECT id FROM create_response($1::json, $2::int)',
+					[record, author.id],
+				);
+			})
+			.then((response) => {
+				imc.conversion.responses[record.id] = response.id;
+			})
+	)))
+		.then(() => {
+			console.log(`${imc.responses.length} responses were exported`);
+		});
 };
 
 
@@ -186,9 +232,9 @@ const run = () => {
 		.then(() => getOrCreateIMC({ author }))
 		.then(() => createIMCOrgs({ author }))
 		.then(() => getOrCreateIMCUsers({ author }))
-		// .then(() => createIMCForms({ author }))
-		// .then(() => createIMCResponses({ author }))
-		.then(() => console.log('\nSuccess! All organizations have been saved.'))
+		.then(() => getOrCreateIMCForms({ author }))
+		.then(() => getOrCreateIMCResponses({ author }))
+		.then(() => console.log('\nSuccess!\nGood luck with this trash!'))
 		.catch(console.error);
 };
 
