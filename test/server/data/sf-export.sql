@@ -64,7 +64,6 @@ CREATE TABLE new_responses (
 );
 
 
-
 CREATE OR REPLACE FUNCTION rebuild_items(_items json)
 	RETURNS json AS
 $$
@@ -191,28 +190,6 @@ $$
 LANGUAGE SQL IMMUTABLE;
 
 
-CREATE OR REPLACE FUNCTION rebuild_answer_test(
-	answer json,
-	options json,
-	multiple boolean,
-	OUT res json
-) AS
-$$
-	BEGIN
-		IF options IS NULL THEN
-			IF answer#>>'{}' = '' THEN res := null; -- convert empty strings to null
-			ELSE res := answer;
-			END IF;
-		-- the question type is 'select'
-		ELSE
-			SELECT rebuild_select_answer(answer, options, multiple)
-			INTO res;
-		END IF;
-	END;
-$$
-LANGUAGE plpgsql IMMUTABLE;
-
-
 CREATE OR REPLACE FUNCTION rebuild_responses_by_form(_form_id integer)
 	RETURNS SETOF new_responses AS
 $$
@@ -221,7 +198,7 @@ $$
 		json_strip_nulls(
 			json_object_agg(
 				question.hash,
-				rebuild_answer_test(
+				rebuild_answer(
 					answer.body,
 					question.body->'options',
 					(question.body->>'multiple')::boolean
