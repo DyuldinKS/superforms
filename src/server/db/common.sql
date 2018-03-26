@@ -1,3 +1,13 @@
+/*********************************  SYSTEM  ***********************************/
+
+
+CREATE OR REPLACE FUNCTION get_bot_id() RETURNS integer AS
+$$
+	SELECT min(id) FROM users
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
 
 /**********************************  ROLES  ***********************************/
 
