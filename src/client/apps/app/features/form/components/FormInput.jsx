@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { FormGroup, FormText, Label } from 'reactstrap';
+import RequiredAsterisk from './RequiredAsterisk';
 import { inputTypes } from '../utils/constants';
 import getInputByType from '../utils/getInputByType';
 
@@ -30,11 +31,16 @@ function FormInput(props) {
 
   return (
     <FormGroup>
-      <Label>{title}</Label>
+      <Label>
+        {title}
+        {
+          required &&
+            <RequiredAsterisk />
+        }
+      </Label>
       {
-        description
-        ? <FormText color="info">{description}</FormText>
-        : null
+        description &&
+          <FormText color="info">{description}</FormText>
       }
       <Input
         {...passProps}
