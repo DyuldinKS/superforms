@@ -14,37 +14,19 @@ describe('forms sql-functions test', () => {
 	before(() => (
 		db.query('SELECT min(id) AS id FROM users;')
 			.then((user) => { bot = user; })
-			// keep last_value of the forms_id_seq
-			.then(() => db.query('SELECT last_value FROM forms_id_seq;'))
-			.then((seq) => { seqLastId = seq.last_value; })
 	));
-
-
-	after(() => (
-		// remove test forms
-		db.query(`DELETE FROM forms WHERE id >= ${seqLastId}`)
-			// remove logs
-			.then(() => db.query(
-				`DELETE FROM logs WHERE entity = 'form' AND entity_id >= $1`,
-				[seqLastId],
-			))
-			// restore sequence
-			.then(() => (
-				db.query(`ALTER SEQUENCE forms_id_seq RESTART WITH ${seqLastId};`)
-			))
-	))
 
 
 	const nativeCreateForm = (form, authorId) => (
 		db.query(
-			'SELECT * FROM create_form($1::json, $2)',
+			'SELECT * FROM create_form($1::json, $2::int)',
 			[form, authorId]
 		)
 	);
 
 
 	const nativeGetForm = (id) => (
-		db.query('SELECT * FROM get_form($1)', [id])
+		db.query('SELECT * FROM get_form($1::int)', [id])
 	)
 
 

@@ -3,3 +3,4 @@
 --recursive
 --glob '*.test.js'
 test
+test/setup.js
