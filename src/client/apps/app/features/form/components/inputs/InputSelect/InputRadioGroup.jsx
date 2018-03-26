@@ -98,10 +98,9 @@ class InputRadioGroup extends PureComponent {
 
     return (
       <div className="input-check-wrapper">
-        <FormGroup
+        <fieldset
           className={this.isErrorVisible() ? 'is-invalid' : ''}
           name={name}
-          tag="fieldset"
         >
           {
             options.map((option, optionId) => (
@@ -133,7 +132,7 @@ class InputRadioGroup extends PureComponent {
               )
             : null
           }
-        </FormGroup>
+        </fieldset>
         <FormFeedback>{error}</FormFeedback>
       </div>
     );

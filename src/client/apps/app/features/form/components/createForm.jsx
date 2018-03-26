@@ -109,11 +109,9 @@ export default function createForm(WrappedComponent) {
       const name = order.find(itemId => errors[itemId]);
       if (!name) return;
       const input = this.formRef.elements[name];
-      const { top } = getCoords(input);
-      const offset = items[name].type === inputTypes.SELECT
-        ? 75
-        : 50;
-      window.scrollTo(window.pageXOffset, top - offset);
+      const formGroup = input.closest('.form-group') || input;
+      const { top } = getCoords(formGroup);
+      window.scrollTo(window.pageXOffset, top - 50);
       input.focus();
     }
 
