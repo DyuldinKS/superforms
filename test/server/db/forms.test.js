@@ -8,7 +8,6 @@ const { expect } = chai;
 
 describe('forms sql-functions test', () => {
 	let bot;
-	let seqLastId;
 
 
 	before(() => (
@@ -55,12 +54,6 @@ describe('forms sql-functions test', () => {
 				delete expected.author_id;
 
 				assert.deepStrictEqual(expected, { ...actual });
-
-				return db.query(
-					`SELECT * FROM logs
-					WHERE entity = 'form' AND entity_id = $1`,
-					[actual.id],
-				)
 			})
 	})
 
