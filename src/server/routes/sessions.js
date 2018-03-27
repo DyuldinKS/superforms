@@ -9,10 +9,7 @@ import ssr from '../templates/ssr';
 export default (app) => {
 	// page to sign in or reset password
 	app.get(
-		[
-			'/recovery',
-			'/signin',
-		],
+		['/recovery', '/signin'],
 		isNotAuthenticated,
 		(req, res, next) => {
 			res.send(ssr.auth({ location: req.path }));
@@ -29,6 +26,7 @@ export default (app) => {
 			User.findByEmail(email)
 				.then((user) => {
 					if(!user) throw new HTTPError(403, 'Incorrect email or password');
+					if(!user.hash) throw new HTTPError(403, 'Please reset your password');
 					return user.authenticate(password);
 				})
 				.then((user) => {
