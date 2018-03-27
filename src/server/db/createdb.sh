@@ -27,6 +27,8 @@ readonly INPUT_FILES=(
 	'common.sql'
 	'users.sql'
 	'orgs.sql'
+	'forms.sql'
+	'responses.sql'
 	'init.sql'
 )
 

@@ -90,22 +90,29 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 
 CREATE TABLE IF NOT EXISTS forms (
 	id serial PRIMARY KEY,
-	scheme jsonb NOT NULL,
-	options jsonb,
-	author_id integer NOT NULL REFERENCES users(id),
-	status_id integer NOT NULL REFERENCES states(id),
-	modified timestamptz
+	title text NOT NULL,
+	description text,
+	scheme json NOT NULL,
+	sent json,
+	owner_id integer NOT NULL REFERENCES users(id),
+	created timestamptz NOT NULL DEFAULT now(),
+	updated timestamptz,
+	deleted timestamptz,
+	author_id integer NOT NULL REFERENCES users(id)
 );
 
 
 CREATE TABLE IF NOT EXISTS responses (
 	id serial PRIMARY KEY,
 	form_id integer NOT NULL REFERENCES forms(id),
-	list jsonb NOT NULL,
-	author_id integer NOT NULL REFERENCES users(id),
-	recipient_id integer NOT NULL REFERENCES recipients(id),
-	status_id integer NOT NULL,
-	modified timestamptz
+	items json NOT NULL,
+	owner_id integer REFERENCES recipients(id),
+	recipient_id integer REFERENCES recipients(id),
+	created timestamptz DEFAULT now(),
+	updated timestamptz,
+	deleted timestamptz,
+	-- if the respondent is unknown, delegate the operation to the system bot
+	author_id integer NOT NULL REFERENCES users(id)
 );
 
 
