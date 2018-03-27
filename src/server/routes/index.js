@@ -1,9 +1,9 @@
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
 import sessions from './sessions';
 import recipients from './recipients';
 import users from './users';
 import orgs from './orgs';
+import forms from './forms';
 import Org from '../models/Org';
 import { HTTPError } from '../errors';
 import store from '../../client/apps/app/boot/store';
@@ -47,11 +47,11 @@ const router = (app) => {
 		},
 	);
 
-
+	forms(app);
+	recipients(app);
 	users(app);
 	orgs(app);
 	sessions(app);
-	recipients(app);
 };
 
 export default router;
