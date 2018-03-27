@@ -34,7 +34,7 @@ const allSources = Object.values(source)
 	.reduce((prev, src) => `${prev}${src}`, '');
 
 
-const generate = (min = 12, max) => {
+const generate = (min = 8, max) => {
 	const sources = Object.values(source);
 	const chars = sources.map(pickChar);
 

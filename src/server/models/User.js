@@ -2,33 +2,16 @@ import bcrypt from 'bcrypt';
 import uuidv4 from 'uuid/v4';
 import config from '../config';
 import db from '../db/index';
-import AbstractModel from './AbstractModel';
 import Recipient from './Recipient';
-import LogRecord from './LogRecord';
 import passwordGenerator from '../libs/passwordGenerator';
-import { HttpError, SmtpError, PgError } from '../libs/errors';
+import { HTTPError } from '../errors';
 
 
 class User extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
-	static findOne({ email, id }, options = {}) {
-		const column = id ? 'id' : 'email';
-
-		return db.query(
-			`SELECT usr.id, usr.info, usr.role_id, usr.org_id,
-				rcpt.email, rcpt.active
-				${options.secret ? ', usr.hash ' : ''}
-			FROM users usr
-			JOIN recipients rcpt ON usr.id = rcpt.id
-			WHERE rcpt.${column} = $1;`,
-			[id || email],
-		);
-	}
-
-
 	static findById(id) {
-		return User.findOne({ id })
+		return db.query('SELECT * FROM get_user($1);', [id])
 			.then((found) => {
 				if(!found) return null;
 				return new User(found);
@@ -37,7 +20,7 @@ class User extends Recipient {
 
 	// for authentication or password recovery
 	static findByEmail(email) {
-		return User.findOne({ email }, { secret: true })
+		return db.query('SELECT * FROM get_user_by_email($1)', [email])
 			.then((found) => {
 				if(!found) return null;
 				return new User(found);
@@ -61,18 +44,15 @@ class User extends Recipient {
 	}
 
 
-	static log(operation, record, authorId) {
-		return db.query(
-			`INSERT INTO logs(operation, entity, record, author_id)
-			VALUES('U', 'user', $1::json, $2:int);`,
-			[record, authorId],
-		);
+	static encrypt(password) {
+		return bcrypt.hash(password, config.bcrypt.saltRound);
 	}
 
 
 	// ***************** INSTANCE METHODS ***************** //
 
 	authenticate(password) {
+		console.log(this);
 		return bcrypt.compare(password, this.hash)
 			.then((isPassValid) => {
 				this.isAuthenticated = isPassValid;
@@ -107,9 +87,9 @@ class User extends Recipient {
 	}
 
 
-	resetPassword(authorId) {
-		this.password = passwordGenerator(8);
-		return bcrypt.hash(this.password, config.bcrypt.saltRound)
+	resetPassword({ password, authorId }) {
+		this.password = password || passwordGenerator(8);
+		return User.encrypt(this.password)
 			.then(hash => this.update({ hash }, authorId))
 			.then(() => this.deleteToken())
 			.then(() => this);
@@ -122,7 +102,7 @@ class User extends Recipient {
 		return rcpt.saveIfNotExists(authorId)
 			.then(() => {
 				if(!rcpt.active || rcpt.type !== 'rcpt') {
-					throw new HttpError(403, 'This email is not available');
+					throw new HTTPError(403, 'This email is not available');
 				}
 				return db.query(
 					'SELECT * FROM create_user($1, $2, $3, $4, $5, $6)',
@@ -131,7 +111,7 @@ class User extends Recipient {
 						this.orgId,
 						this.info,
 						this.role,
-						null,
+						this.hash,
 						authorId,
 					],
 				);
@@ -149,48 +129,26 @@ class User extends Recipient {
 		}
 		return '';
 	}
-
-
-	// @override
-	toJSON() {
-		const obj = super.toJSON();
-		delete obj.password;
-		delete obj.hash;
-		delete obj.token;
-		return obj;
-	}
 }
 
 
 // ***************** PROTOTYPE PROPERTIES ***************** //
 
 User.prototype.tableName = 'users';
-
 User.prototype.entityName = 'user';
 
-User.prototype.props = new Set([
-	'id',
-	'email',
-	'info',
-	'created',
-	'updated',
-	'deleted',
-	// ids
-	// 'roleId',
-	// 'statusId',
-	'orgId',
-	'authorId',
-	// values
-	'role',
-	// 'status',
-	'active',
-	// token for password setting
-	'token',
-	// secret
-	'password',
-	'hash',
-]);
+const props = {
+	...Recipient.prototype.props,
+	orgId: { writable: false, enumerable: true },
+	info: { writable: true, enumerable: true },
+	role: { writable: true, enumerable: true },
+	token: { writable: false, enumerable: false },
+	password: { writable: false, enumerable: false },
+	hash: { writable: true, enumerable: false },
+};
 
+User.prototype.props = props;
+User.prototype.dict = User.buildPropsDictionary(props);
 
 Object.freeze(User);
 

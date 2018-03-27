@@ -1,3 +1,13 @@
+/*********************************  SYSTEM  ***********************************/
+
+
+CREATE OR REPLACE FUNCTION get_bot_id() RETURNS integer AS
+$$
+	SELECT min(id) FROM users
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
 
 /**********************************  ROLES  ***********************************/
 
@@ -25,19 +35,19 @@ LANGUAGE SQL STABLE;
 
 
 CREATE TYPE entity AS (
-	id INTEGER,
-	email VARCHAR(255),
-	info JSONB,
-	created TIMESTAMP,
-	updated TIMESTAMP,
-	deleted TIMESTAMP,
-	author_id INTEGER
+	id integer,
+	email varchar(255),
+	info jsonb,
+	created timestamptz,
+	updated timestamptz,
+	deleted timestamptz,
+	author_id integer
 );
 
 
 CREATE OR REPLACE FUNCTION get_subordinate_orgs(
 	_org_id integer,
-	_filter jsonb DEFAULT NULL
+	_filter jsonb DEFAULT '{}'
 ) RETURNS SETOF entity AS
 $$
 	DECLARE
@@ -66,25 +76,25 @@ LANGUAGE plpgsql STABLE;
 
 CREATE OR REPLACE FUNCTION get_subordinate_users(
 	_org_id integer,
-	_filter jsonb DEFAULT NULL
+	_filter jsonb DEFAULT '{}'
 ) RETURNS SETOF entity AS
 $$
 	DECLARE
 		_active boolean := (_filter->>'active')::boolean;
 		_role_id integer := get_role_id(_filter->>'role');
-		_min_depth integer := (_filter->>'minDepth')::int;
 		_deleted boolean := (_filter->>'deleted')::boolean;
 	BEGIN
-		IF _min_depth IS NULL THEN
-			_filter := coalesce(_filter, '{}'::jsonb) || '{ "minDepth": 0 }'::jsonb;
+		IF _filter->'minDepth' IS NULL THEN
+			_filter := jsonb_set(_filter, '{minDepth}', '0');
 		END IF;
+
 		RETURN QUERY
 			SELECT usr.id, rcpt.email, usr.info, rcpt.created,
 				rcpt.updated, rcpt.deleted, rcpt.author_id
 			FROM users usr
 			JOIN recipients rcpt ON rcpt.id = usr.id
 			WHERE usr.org_id IN (
-				SELECT id FROM get_subordinate_orgs(_org_id, _filter)
+				SELECT id FROM get_subordinate_orgs(_org_id, _filter - 'active')
 			)
 				AND (_active IS NULL OR rcpt.active = _active)
 				AND (_role_id IS NULL OR usr.role_id = _role_id)

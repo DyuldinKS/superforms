@@ -1,6 +1,6 @@
 import db from '../db/index';
 import Recipient from './Recipient';
-import { HttpError, SmtpError, PgError } from '../libs/errors';
+import { HTTPError } from '../errors';
 
 
 class Org extends Recipient {
@@ -20,27 +20,19 @@ class Org extends Recipient {
 		return rcpt.saveIfNotExists(authorId)
 			.then(() => {
 				if(!rcpt.active || rcpt.type !== 'rcpt') {
-					throw new HttpError(403, 'This email is not available');
+					throw new HTTPError(403, 'This email is not available');
 				}
 				return db.query(
-					'SELECT * FROM create_org($1::int, $2::jsonb, $3::int)',
+					'SELECT * FROM create_org($1::int, $2::jsonb, $3::int, $4::int)',
 					[
 						rcpt.id,
 						this.info,
+						this.parentId,
 						authorId,
 					],
 				);
 			})
 			.then(org => this.assign(org));
-	}
-
-
-	setParentOrg(parentId) {
-		return db.query(
-			'INSERT INTO org_links(org_id, parent_id) VALUES($1, $2);',
-			[this.id, parentId],
-		)
-			.then(() => this.assign({ parentId }));
 	}
 
 
@@ -105,25 +97,14 @@ Org.prototype.tableName = 'organizations';
 
 Org.prototype.entityName = 'org';
 
-Org.prototype.props = new Set([
-	'id',
-	// 'childrenIds',
-	'email',
-	'info',
-	'created',
-	'updated',
-	'deleted',
-	// 'suborgsNum',
-	// 'employeesNum',
-	// ids
-	'parentId',
-	'statusId',
-	'authorId',
-	// related objects
-	// 'status',
-	'active',
-]);
+const props = {
+	...Recipient.prototype.props,
+	parentId: { writable: true, enumerable: true },
+	info: { writable: true, enumerable: true },
+};
 
+Org.prototype.props = props;
+Org.prototype.dict = Org.buildPropsDictionary(props);
 
 Object.freeze(Org);
 

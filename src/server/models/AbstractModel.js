@@ -1,74 +1,65 @@
 import db from '../db/index';
-import {
-	camelCasedProps,
-	snakeCasedProps,
-	staticValuesProps,
-	staticIdsProps,
-} from './convertedProps';
-import { HttpError } from '../libs/errors';
-
-// const { toCamelCase, toSnakeCase, toId } = convertedProps;
 
 
 class AbstractModel {
 	// ****************** STATIC METHODS ****************** //
 
-	static convertToModelProps(props, modelProps) {
-		const result = {};
-		const unexpected = {};
-		let areUnexpectedProps = false;
+	static toCamelCase(str) {
+		return str.replace(/[-_]+(.)?/g, (match, g) => (g ? g.toUpperCase() : ''));
+	}
 
-		Object.entries(props).forEach(([prop, value]) => {
-			prop = camelCasedProps[prop] || prop;
-			if(prop in staticValuesProps) {
-				value = staticValuesProps[prop].convert(value);
-				prop = staticValuesProps[prop].propName;
-			}
-			if(modelProps.has(prop)) {
-				result[prop] = value;
-			} else {
-				unexpected[prop] = value;
-				areUnexpectedProps = true;
+	static toSnakeCase(str) {
+		return str.replace(/([A-Z]+)/g, ([...upper]) => {
+			const lower = upper.join('').toLowerCase();
+			return lower.length > 1
+				// example: customHTTPError -> custom_http_error
+				? `_${lower.slice(0, -1)}_${lower.slice(-1)}`
+				: `_${lower}`;
+		});
+	}
+
+
+	static buildPropsDictionary(props) {
+		const camelCased = {};
+		const snakeCased = {};
+
+		let snakeCasedProp;
+
+		Object.keys(props).forEach((prop) => {
+			snakeCasedProp = AbstractModel.toSnakeCase(prop);
+			if(prop !== snakeCasedProp) {
+				camelCased[snakeCasedProp] = prop;
+				snakeCased[prop] = snakeCasedProp;
 			}
 		});
 
-		if(areUnexpectedProps && modelProps.has('info') === false
-			&& 'info' in result === false) {
-			result.info = unexpected;
-		}
+		return { camelCased, snakeCased };
+	}
+
+
+	static convertToModelProps(props, instance) {
+		const result = {};
+
+		Object.entries(props).forEach(([prop, value]) => {
+			prop = instance.dict.camelCased[prop] || prop;
+			if(prop in instance.props) {
+				result[prop] = value;
+			}
+		});
 
 		return result;
 	}
 
 
-	static convertToTableColumns(props, modelProps) {
+	static convertToTableColumns(props, instance) {
 		const record = {};
-		const unexpected = {};
-		let areUnexpectedProps = false;
 
 		Object.entries(props).forEach(([prop, value]) => {
-			if(modelProps.has(prop)) {
-				if(prop in staticIdsProps) {
-					value = staticIdsProps[prop].convert(value);
-					if(value === undefined) {
-						throw new HttpError(
-							400,
-							`Invalid value: ${value} for property '${prop}'`,
-						);
-					}
-					prop = staticIdsProps[prop].propName;
-				}
-				record[snakeCasedProps[prop] || prop] = value;
-			} else {
-				unexpected[prop] = value;
-				areUnexpectedProps = true;
+			// leave only model writable props
+			if(prop in instance.props && instance.props[prop].writable) {
+				record[instance.dict.snakeCased[prop] || prop] = value;
 			}
 		});
-
-		if(areUnexpectedProps && modelProps.has('info')
-			&& 'info' in record === false) {
-			record.info = unexpected;
-		}
 
 		return record;
 	}
@@ -83,22 +74,27 @@ class AbstractModel {
 	}
 
 
-	assign(instance) {
-		if(!instance) return null;
-		Object.assign(
-			this,
-			AbstractModel.convertToModelProps(instance, this.props),
-		);
+	assign(props) {
+		if(!props) return null;
+
+		const converted = AbstractModel.convertToModelProps(props, this);
+		Object.assign(this, converted);
+
 		return this;
 	}
 
 
 	convertToTableColumns(props) {
-		return AbstractModel.convertToTableColumns(props, this.props);
+		if(!props) return null;
+		return AbstractModel.convertToTableColumns(props, this);
 	}
 
 
-	save() { throw new Error(`The \'save\' method of ${this} must be implemented`); }
+	save() {
+		throw new Error(`The .save() method of ${
+			this.constructor
+		} must be implemented`);
+	}
 
 
 	update(props, authorId) {
@@ -116,7 +112,17 @@ class AbstractModel {
 	}
 
 
-	toJSON() { return this; }
+	toJSON() {
+		return Object.keys(this).reduce(
+			(json, prop) => {
+				if(this.props[prop].enumerable) {
+					json[prop] = this[prop];
+				}
+				return json;
+			},
+			{},
+		);
+	}
 }
 
 

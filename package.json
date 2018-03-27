@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "createdb": "chmod ugo+x ./src/server/db/createdb.sh && ./src/server/db/createdb.sh",
-    "initdb": "babel-node --presets es2015,stage-2 ./src/server/db/init.js",
+    "initdb": "babel-node --presets es2015,stage-2 ./test/server/data/init.js",
     "build:server": "webpack --config webpack/webpack.server.js",
     "build:server:watch": "webpack --config webpack/webpack.server.js --watch",
     "build:client:prod": "cross-env NODE_ENV=production webpack --config webpack/webpack.client.js",
     "build:client:dev": "cross-env NODE_ENV=development webpack --config webpack/webpack.client.js",
+    "test": "npx mocha-webpack --opts ./test/mocha-webpack.opts",
     "supervisor:dev": "cross-env NODE_ENV=development supervisor ./dist/server.js | npx bunyan",
     "supervisor:debug": "cross-env NODE_ENV=debug supervisor ./dist/server.js | npx bunyan",
     "supervisor:prod": "cross-env NODE_ENV=production supervisor ./dist/server.js | npx bunyan",
@@ -50,7 +51,7 @@
     "handlebars-loader": "^1.6.0",
     "ignore-loader": "^0.1.2",
     "make-dir-webpack-plugin": "^0.1.0",
-    "mocha": "^4.0.1",
+    "mocha": "^4.1.0",
     "mocha-webpack": "^1.0.1",
     "node-sass": "^4.7.2",
     "postcss": "^6.0.14",
@@ -97,6 +98,7 @@
     "reactstrap": "^5.0.0-alpha.4",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
+    "ssri": "^5.3.0",
     "throttle-debounce": "^1.0.1",
     "uuid": "^3.1.0"
   }

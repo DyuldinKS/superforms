@@ -5,7 +5,7 @@ import recipients from './recipients';
 import users from './users';
 import orgs from './orgs';
 import Org from '../models/Org';
-import { HttpError } from '../libs/errors';
+import { HTTPError } from '../errors';
 import store from '../../client/apps/app/boot/store';
 import * as routerModule from '../../client/shared/router/redux';
 import * as sessionModule from '../../client/apps/app/shared/redux/session';
@@ -23,7 +23,7 @@ const router = (app) => {
 			Org.findById(user.orgId)
 				.then((org) => {
 					if(!org) {
-						throw new HttpError(404, 'Organization of the user is not found');
+						throw new HTTPError(404, 'Organization of the user is not found');
 					}
 					const session = { userId: String(user.id), orgId: String(org.id) };
 
