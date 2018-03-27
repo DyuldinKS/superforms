@@ -3,14 +3,16 @@ import PropTypes from 'prop-types';
 import Form from 'shared/form/components/Form';
 import { data as fakeData } from './fakeData';
 
-const propTypes = {};
+const propTypes = {
+  form: PropTypes.object.isRequired,
+};
 
 const defaultProps = {};
 
 function InterviewContainer(props) {
   return (
     <Form
-      form={fakeData}
+      {...props}
     />
   );
 }

@@ -6,13 +6,13 @@ import FormDelimeter from './FormDelimeter';
 
 const propTypes = {
   id: PropTypes.string.isRequired,
-  _type: PropTypes.string.isRequired,
+  itemType: PropTypes.string.isRequired,
 };
 
 const defaultProps = {};
 
 function FormItem(props) {
-  const { _type: itemType, ...passProps } = props;
+  const { itemType, ...passProps } = props;
 
   switch (itemType) {
     case formItems.INPUT:

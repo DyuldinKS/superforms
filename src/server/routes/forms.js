@@ -2,6 +2,7 @@ import { isActive } from '../middleware/users';
 import loadInstance from '../middleware/loadInstance';
 import Form from '../models/Form';
 import { HTTPError } from '../errors';
+import ssr from '../templates/ssr';
 
 
 export default (app) => {
@@ -14,6 +15,15 @@ export default (app) => {
 		loadInstance,
 	);
 
+	app.get(
+		'/form/:id',
+		isActive,
+		loadInstance,
+		(req, res, next) => {
+			const { form } = req.loaded;
+			res.send(ssr.interview({ form }));
+		},
+	);
 
 	app.get(
 		'/api/v1/form/:id',

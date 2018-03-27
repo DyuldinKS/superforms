@@ -1,6 +1,6 @@
 export const formItems = {
   DELIMETER: 'delimeter',
-  INPUT: 'question',
+  INPUT: 'input',
 };
 
 export const inputTypes = {
@@ -8,6 +8,6 @@ export const inputTypes = {
   NUMBER: 'number',
   PHONE: 'phone',
   SELECT: 'select',
-  TEXT: 'text',
+  TEXT: 'string',
   TIME: 'time',
 };
