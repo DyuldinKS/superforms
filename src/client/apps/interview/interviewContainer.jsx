@@ -1,14 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Form from 'shared/form/components/Form';
-// import FormHeader from './components/FormHeader';
 import { data as fakeData } from './fakeData';
 
 const propTypes = {};
 
 const defaultProps = {};
 
-function FormRoute() {
+function InterviewContainer(props) {
   return (
     <Form
       form={fakeData}
@@ -16,7 +15,7 @@ function FormRoute() {
   );
 }
 
-FormRoute.propTypes = propTypes;
-FormRoute.defaultProps = defaultProps;
+InterviewContainer.propTypes = propTypes;
+InterviewContainer.defaultProps = defaultProps;
 
-export default FormRoute;
+export default InterviewContainer;

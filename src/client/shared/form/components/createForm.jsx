@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { getCoords } from 'shared/utils';
 import deleteMapProp from '../utils/deleteMapProp';
-import { inputTypes } from '../utils/constants';
 
 /*
   value = null - remove error

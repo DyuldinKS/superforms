@@ -100,5 +100,5 @@ import realScheme from './scheme';
 
 export const data = {
   title: 'Моя форма',
-  scheme,
+  scheme: realScheme,
 };
