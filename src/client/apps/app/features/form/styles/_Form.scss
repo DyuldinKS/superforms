@@ -1,0 +1,18 @@
+.generated-form {
+  max-width: 700px;
+  margin: 50px auto 50px auto;
+  padding: 20px 10px 50px 10px;
+  border: 1px solid $card-border-color;
+  background-color: #fff;
+  box-shadow: 0px 1px 5px 0 rgba(0, 0, 0, 0.15);
+
+  @media (min-width: 700px) {
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+
+  .form-group > label {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+}

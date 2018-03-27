@@ -3,13 +3,13 @@ import PropTypes from 'prop-types';
 import { Button } from 'reactstrap';
 import createForm from './createForm';
 import FormItem from './FormItem';
+import RequiredAsterisk from './RequiredAsterisk';
 
 const propTypes = {
   errors: PropTypes.object.isRequired,
+  form: PropTypes.object.isRequired,
   getRef: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
-  items: PropTypes.object.isRequired,
-  order: PropTypes.array.isRequired,
   valid: PropTypes.bool.isRequired,
   values: PropTypes.object.isRequired,
 };
@@ -28,19 +28,20 @@ class Form extends Component {
   }
 
   render() {
-    const {
-      getRef,
-      items,
-      order,
-    } = this.props;
+    const { getRef, form } = this.props;
+    const { scheme, title } = form;
+    const { items, order } = scheme;
 
     return (
       <form
-        className="container"
+        className="generated-form"
         ref={getRef}
         noValidate
         onSubmit={this.handleSubmit}
       >
+        <h1>{title}</h1>
+        <p><RequiredAsterisk /> Обязательное поле</p>
+
         {
           order.map(itemId => (
             <FormItem
@@ -51,7 +52,7 @@ class Form extends Component {
           ))
         }
 
-        <Button type="submit">Submit</Button>
+        <Button type="submit" color="primary">Отправить</Button>
       </form>
     );
   }
