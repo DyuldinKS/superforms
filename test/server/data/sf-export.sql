@@ -64,6 +64,33 @@ CREATE TABLE new_responses (
 );
 
 
+CREATE OR REPLACE FUNCTION rebuild_item_body(_item json)
+	RETURNS jsonb AS
+$$
+	SELECT jsonb_strip_nulls(
+		_item::jsonb - '_type'
+			|| jsonb_build_object(
+				'itemType', (
+					CASE _item->>'_type'
+					WHEN 'delimeter' THEN 'delimeter'
+					ELSE 'input'
+					END
+				),
+				-- 'type',
+				-- CASE item->>'type'
+				-- WHEN 'integer', 'float', 'financial' THEN 'number'
+				-- ELSE item->>'type'
+				-- END,
+				'required', (_item->>'required')::boolean,
+				'multiple', (_item->>'multiple')::boolean,
+				'max', nullif(_item->>'selectmax', '')::integer,
+				'description', nullif(_item->>'description', '')
+			)
+	);
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION rebuild_items(_items json)
 	RETURNS json AS
 $$
@@ -75,15 +102,12 @@ $$
 		SELECT
 		index,
 		left(md5(index::text || item::text), 4) AS id,
-		(item::jsonb - '_type') || json_build_object(
-			'itemType',
-			CASE WHEN item->>'_type' = 'delimeter' THEN 'delimeter' ELSE 'input' END
-		)::jsonb AS item
+		rebuild_item_body(item) AS item
 		FROM json_array_elements(_items)
 			WITH ORDINALITY AS ordered(item, index)
 	) AS modified;
 $$
-LANGUAGE SQL STABLE;
+LANGUAGE SQL IMMUTABLE;
 
 
 CREATE OR REPLACE FUNCTION rebuild_form(_id integer)
@@ -157,7 +181,7 @@ $$
 					)
 				);
 			ELSE
-				json_array := null;
+				json_array := null; -- unexpected value
 			END IF;
 		ELSE json_array = json_build_array(answer);
 		END IF;
