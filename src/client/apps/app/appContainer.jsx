@@ -9,7 +9,7 @@ import CreateUserRoute from './features/creation/user/createUserRoute';
 import CreateOrgRoute from './features/creation/org/createOrgRoute';
 import UserProfileRoute from './features/profiles/user/userProfileRoute';
 import OrgProfileRoute from './features/profiles/org/orgProfileRoute';
-import FormRoute from './features/form/formContainer';
+import FormRoute from './features/form/formRoute';
 
 function App() {
   return (

@@ -20,6 +20,10 @@ function updateErrors(errors, name, value) {
 }
 
 export default function createForm(WrappedComponent) {
+  const propTypes = {
+    form: PropTypes.object.isRequired,
+  };
+
   const childContextTypes = {
     getInputProps: PropTypes.func.isRequired,
     setError: PropTypes.func.isRequired,
@@ -104,7 +108,7 @@ export default function createForm(WrappedComponent) {
     }
 
     focusOnFirstError() {
-      const { items, order } = this.props;
+      const { order } = this.props.form.scheme;
       const { errors } = this.state;
       const name = order.find(itemId => errors[itemId]);
       if (!name) return;
@@ -144,6 +148,7 @@ export default function createForm(WrappedComponent) {
     || 'Component';
 
   FormContainer.displayName = `withFormState(${wrappedComponentName})`;
+  FormContainer.propTypes = propTypes;
   FormContainer.childContextTypes = childContextTypes;
 
   return FormContainer;

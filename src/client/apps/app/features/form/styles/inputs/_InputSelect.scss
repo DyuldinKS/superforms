@@ -19,6 +19,21 @@ fieldset.is-invalid {
   }
 }
 
+.generated-form {
+  .form-check input[type='checkbox'],
+  .form-check input[type='radio'] {
+    margin-top: 0.4rem;
+  }
+
+  .form-check {
+    margin-bottom: 0.1rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
 .input-select-option-other {
   position: static;
   display: flex;
@@ -27,7 +42,7 @@ fieldset.is-invalid {
 
   > input[type="checkbox"],
   > input[type="radio"] {
-    margin-top: 0;
-    margin-bottom: 0;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
   }
 }
