@@ -1,8 +1,14 @@
 @import '../../../styles/main';
 
+.app {
+  width: 100%;
+  height: 100%;
+}
+
 @import
   '../features/header/styles/index',
   '../features/profiles/styles',
   '../features/lists/styles',
   '../features/creation/styles',
-  '../features/form/styles';
+  '../features/form/styles',
+  '../features/formGenerator/styles';

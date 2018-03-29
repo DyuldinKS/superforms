@@ -33,6 +33,14 @@ function HeaderNavigation(props) {
             Форма
           </Link>
         </NavItem>
+        <NavItem>
+          <Link
+            className="nav-link"
+            to="/generator"
+          >
+            Генератор
+          </Link>
+        </NavItem>
       </Nav>
     </nav>
   );
