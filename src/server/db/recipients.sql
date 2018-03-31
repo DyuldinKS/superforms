@@ -21,12 +21,31 @@ CREATE TYPE rcpt_short AS (
 );
 
 
-CREATE OR REPLACE FUNCTION export_rcpt_short(_record recipients)
+CREATE OR REPLACE FUNCTION to_recipients(
+	_props json,
+	OUT _record recipients
+) AS
+$$
+	BEGIN
+		IF _props::jsonb ? 'authorId'
+		THEN _record := json_populate_record(null::rcpt_full, _props)::recipients;
+		ELSE _record := json_populate_record(null::recipients, _props);
+		END IF;
+	END;
+$$
+LANGUAGE plpgsql IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION to_rcpt_short(_record recipients)
 	RETURNS rcpt_short AS
 $$
 	SELECT _record.id, _record.email, _record.type, _record.active;
 $$
 LANGUAGE SQL IMMUTABLE;
+
+
+CREATE CAST (json AS recipients)
+WITH FUNCTION to_recipients(json);
 
 
 CREATE CAST (rcpt_full AS recipients)
@@ -38,7 +57,7 @@ WITH INOUT;
 
 
 CREATE CAST (recipients AS rcpt_short)
-WITH FUNCTION export_rcpt_short(recipients);
+WITH FUNCTION to_rcpt_short(recipients);
 
 
 
@@ -69,8 +88,7 @@ CREATE OR REPLACE FUNCTION create_rcpt(
 ) AS
 $$
 	BEGIN
-		SELECT * FROM json_populate_record(null::recipients, _props)
-		INTO _inserted;
+		_inserted = _props::recipients;
 
 		_inserted.id = nextval('recipients_id_seq');
 		_inserted.type = coalesce(_inserted.type, 'rcpt');
@@ -86,28 +104,20 @@ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_or_create_rcpt(
 	_props json,
-	_author_id integer,
-	OUT _rcpt recipients
-) AS
+	_author_id integer
+) RETURNS recipients AS
 $$
-	DECLARE
-		_selected recipients%ROWTYPE;
-	BEGIN
-		SELECT * FROM recipients WHERE email = _props->>'email' INTO _selected;
-		RAISE NOTICE '%', _selected;
-		RAISE NOTICE '%', _selected IS NULL;
-		IF _selected IS NULL
-		THEN _rcpt := create_rcpt(_props, _author_id);
-		ELSE _rcpt := get_rcpt(_selected.id);
-		END IF;
-	END;
+	SELECT * FROM coalesce(
+		get_rcpt(_props->>'email'),
+		create_rcpt(_props, _author_id)
+	);
 $$
-LANGUAGE plpgsql;
+LANGUAGE SQL;
 
 
 CREATE OR REPLACE FUNCTION update_rcpt(
 	_id integer,
-	_params json,
+	_props json,
 	_author_id integer,
 	OUT _updated recipients
 ) AS
@@ -116,8 +126,7 @@ $$
 		_new recipients;
 		_changes jsonb;
 	BEGIN
-		SELECT * FROM json_populate_record(null::recipients, _params) INTO _new;
-
+		_new := _props::recipients;
 		_new.updated = now();
 		_new.author_id = _author_id;
 

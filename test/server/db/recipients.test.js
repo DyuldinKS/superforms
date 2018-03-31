@@ -275,5 +275,36 @@ describe('recipients sql-functions test', () => {
 				assert(updatedProps.author_id !== actual.author_id);
 				assert(updatedProps.updated !== actual.updated);
 			})
-	})
+	});
+
+
+
+
+	it('should cast type to recipients', () => {
+		const rcpt = {
+			id: 182,
+			email: '@test',
+			authorId: 13,
+		};
+
+		const expected = {
+			id: rcpt.id,
+			email: rcpt.email,
+			type: null,
+			active: null,
+			created: null,
+			updated: null,
+			deleted: null,
+			author_id: rcpt.authorId,
+		};
+
+		db.query('SELECT ($1::json::recipients).*;', [rcpt])
+			.then((actual) => {
+				assert.deepStrictEqual(expected, { ...actual });
+				return db.query('SELECT ($1::json::recipients).*;', [expected]);
+			})
+			.then((actual) => {
+				assert.deepStrictEqual(expected, { ...actual });
+			})
+	});
 });
