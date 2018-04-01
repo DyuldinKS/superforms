@@ -124,9 +124,10 @@ CREATE OR REPLACE FUNCTION update_rcpt(
 $$
 	DECLARE
 		_new recipients;
-		_changes jsonb;
+		_changes json;
 	BEGIN
 		_new := _props::recipients;
+		_new.id := null;
 		_new.updated = now();
 		_new.author_id = _author_id;
 
@@ -142,7 +143,7 @@ $$
 		RETURNING * INTO _updated;
 
 		_changes := json_strip_nulls(row_to_json(_new));
-		PERFORM log('U', 'rcpt', _id, _changes::json, _author_id);
+		PERFORM log('U', 'rcpt', _id, _changes, _author_id);
 	END;
 $$
 LANGUAGE plpgsql;

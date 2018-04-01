@@ -55,11 +55,12 @@ CREATE OR REPLACE FUNCTION to_users(
 ) AS
 $$
 	DECLARE
-		_usr user_full;
+		_user user_full;
 	BEGIN
 		_record := json_populate_record(null::users, _props);
+		_user := json_populate_record(null::user_full, _props);
 
-		_record.org_id = coalesce(_record.org_id, (_props->>'orgId')::int);
+		_record.org_id = coalesce(_record.org_id, _user."orgId");
 		_record.role_id = coalesce(_record.role_id, get_role_id(_usr.role));
 	END;
 $$
@@ -175,6 +176,7 @@ DECLARE
 	_changes json;
 BEGIN
 	_new := _params::users;
+	_new.id := null;
 
 	-- update user
 	UPDATE users usr
@@ -185,9 +187,9 @@ BEGIN
 	WHERE usr.id = _id;
 
 	-- log user _changes
-	_changes := jsonb_strip_nulls(row_to_json(_new)::jsonb - 'id');
+	_changes := jsonb_strip_nulls(row_to_json(_new));
 	IF _changes::text != '{}' THEN
-		PERFORM log('U', 'user', _id, _changes::json, _author_id);
+		PERFORM log('U', 'user', _id, _changes, _author_id);
 	END IF;
 	PERFORM update_rcpt(_id, _params, _author_id);
 
