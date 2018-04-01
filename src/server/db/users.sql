@@ -61,7 +61,7 @@ $$
 		_user := json_populate_record(null::user_full, _props);
 
 		_record.org_id = coalesce(_record.org_id, _user."orgId");
-		_record.role_id = coalesce(_record.role_id, get_role_id(_usr.role));
+		_record.role_id = coalesce(_record.role_id, get_role_id(_user.role));
 	END;
 $$
 LANGUAGE plpgsql IMMUTABLE;
@@ -116,16 +116,16 @@ WITH FUNCTION to_user_short(user_with_rcpt);
 CREATE OR REPLACE FUNCTION get_user(
 	_id integer,
 	_mode varchar(255) DEFAULT '',
-	OUT _usr user_with_rcpt
+	OUT _user user_with_rcpt
 ) AS
 $$
 	BEGIN
 		SELECT * FROM users
 		JOIN recipients USING (id)
 		WHERE users.id = _id
-		INTO _usr;
+		INTO _user;
 
-		IF _mode != 'auth' THEN _usr.hash := null; END IF;
+		IF _mode != 'auth' THEN _user.hash := null; END IF;
 	END;
 $$
 LANGUAGE plpgsql STABLE;
