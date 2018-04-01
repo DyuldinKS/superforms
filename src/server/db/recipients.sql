@@ -27,10 +27,8 @@ CREATE OR REPLACE FUNCTION to_recipients(
 ) AS
 $$
 	BEGIN
-		IF _props::jsonb ? 'authorId'
-		THEN _record := json_populate_record(null::rcpt_full, _props)::recipients;
-		ELSE _record := json_populate_record(null::recipients, _props);
-		END IF;
+		_record := json_populate_record(null::recipients, _props);
+		_record.author_id = coalesce(_record.author_id, (_props->>'authorId')::int);
 	END;
 $$
 LANGUAGE plpgsql IMMUTABLE;
@@ -61,9 +59,9 @@ WITH FUNCTION to_rcpt_short(recipients);
 
 
 
-/*********************************  FUNCTIONS *********************************/
+/*******************************  CRUD METHODS ********************************/
 
-
+-- find by id
 CREATE OR REPLACE FUNCTION get_rcpt(_id integer)
 	RETURNS recipients AS
 $$
@@ -72,7 +70,7 @@ $$
 LANGUAGE SQL STABLE;
 
 
-
+-- find by email
 CREATE OR REPLACE FUNCTION get_rcpt(_email text)
 	RETURNS recipients AS
 $$
@@ -97,6 +95,8 @@ $$
 		_inserted.author_id = _author_id;
 
 		INSERT INTO recipients SELECT _inserted.*;
+
+		PERFORM log('I', 'rcpt', _inserted.id, row_to_json(_inserted), _author_id);
 	END;
 $$
 LANGUAGE plpgsql;
@@ -146,24 +146,3 @@ $$
 	END;
 $$
 LANGUAGE plpgsql;
-
-
-
-/************************************  LOG  ***********************************/
-
-
-CREATE OR REPLACE FUNCTION log_rcpt_tr()
-	RETURNS TRIGGER AS
-$$
-BEGIN
-	PERFORM log('I', 'rcpt', NEW.id, row_to_json(NEW.*), NEW.author_id);
-	RETURN NEW;
-END;
-$$
-LANGUAGE plpgsql;
-
-
-CREATE TRIGGER log_recipients_ai
-AFTER INSERT ON recipients
-FOR EACH ROW
-EXECUTE PROCEDURE log_rcpt_tr();

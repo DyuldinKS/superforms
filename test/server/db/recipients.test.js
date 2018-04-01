@@ -278,8 +278,6 @@ describe('recipients sql-functions test', () => {
 	});
 
 
-
-
 	it('should cast type to recipients', () => {
 		const rcpt = {
 			id: 182,
