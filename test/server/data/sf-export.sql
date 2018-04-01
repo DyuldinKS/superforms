@@ -76,11 +76,20 @@ $$
 					ELSE 'input'
 					END
 				),
-				-- 'type',
-				-- CASE item->>'type'
-				-- WHEN 'integer', 'float', 'financial' THEN 'number'
-				-- ELSE item->>'type'
-				-- END,
+				'type', (
+					CASE _item->>'type'
+					WHEN 'integer' THEN 'number'
+					WHEN 'float' THEN 'number'
+					WHEN 'financial' THEN 'number'
+					ELSE _item->>'type'
+					END
+				),
+				'integer', (
+					CASE _item->>'type'
+					WHEN 'integer' THEN true
+					ELSE null
+					END
+				),
 				'required', (_item->>'required')::boolean,
 				'multiple', (_item->>'multiple')::boolean,
 				'max', nullif(_item->>'selectmax', '')::integer,
