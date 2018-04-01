@@ -47,11 +47,8 @@ describe('forms sql-functions test', () => {
 					...form,
 					id: actual.id,
 					deleted: null,
-					ownerId: form.owner_id,
-					authorId: form.author_id,
+					response_count: 0,
 				}
-				delete expected.owner_id;
-				delete expected.author_id;
 
 				assert.deepStrictEqual(expected, { ...actual });
 			})
@@ -64,6 +61,7 @@ describe('forms sql-functions test', () => {
 			title: 'test2',
 			scheme: {},
 			owner_id: bot.id,
+			author_id: -1,
 		}
 
 		return nativeCreateForm(form, bot.id)
@@ -76,11 +74,10 @@ describe('forms sql-functions test', () => {
 					created: actual.created,
 					updated: null,
 					deleted: null,
-					ownerId: form.owner_id,
-					authorId: bot.id, // taken from the second create_form() param
+					owner_id: form.owner_id,
+					author_id: bot.id, // taken from the second create_form() param
+					response_count: 0,
 				};
-				delete expected.owner_id;
-				delete expected.author_id;				
 
 				assert(actual.created instanceof Date);
 				assert(actual.id !== form.id);
