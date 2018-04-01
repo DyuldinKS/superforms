@@ -228,9 +228,9 @@ $$
 	-- build organizations object
 	SELECT json_build_object(
 			'users',
-			build_entities_object('users', _users_ids.list),
+			build_entities_object('users', _users_ids.list, 'user_short'),
 			'orgs',
-			build_entities_object('orgs', _orgs_ids.list)
+			build_entities_object('orgs', _orgs_ids.list, 'org_short')
 		) AS entities,
 		build_list_object(_users_ids.list) AS list
 	FROM _users_ids, _orgs_ids;

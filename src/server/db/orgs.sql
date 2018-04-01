@@ -256,7 +256,7 @@ $$
 	-- build organizations object
 	SELECT json_build_object(
 			'orgs',
-			build_entities_object('orgs', _orgs_and_parents_ids.list)
+			build_entities_object('orgs', _orgs_and_parents_ids.list, 'org_short')
 		) AS entities,
 		build_list_object(_orgs_ids.list) AS list
 	FROM _orgs_ids, _orgs_and_parents_ids;
