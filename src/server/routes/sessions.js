@@ -27,6 +27,7 @@ export default (app) => {
 				.then((user) => {
 					if(!user) throw new HTTPError(403, 'Incorrect email or password');
 					if(!user.hash) throw new HTTPError(403, 'Please reset your password');
+					if(!user.active) throw new HTTPError(403, 'Your account has been locked');
 					return user.authenticate(password);
 				})
 				.then((user) => {
