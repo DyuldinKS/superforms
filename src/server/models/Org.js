@@ -7,11 +7,11 @@ class Org extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
 	static findById(id) {
-		return db.query('SELECT * FROM get_org($1::int)', [id])
-			.then((found) => {
-				if(!found) return null;
-				return new Org(found);
-			});
+		return db.query(
+			'SELECT (_found::org_full).* FROM get_org($1::int) _found;',
+			[id],
+		)
+			.then(found => (found ? new Org(found) : null));
 	}
 
 	// @implements
@@ -19,18 +19,11 @@ class Org extends Recipient {
 		const rcpt = new Recipient(this);
 		return rcpt.saveIfNotExists(authorId)
 			.then(() => {
-				if(!rcpt.active || rcpt.type !== 'rcpt') {
+				if(rcpt.type !== 'rcpt' || !rcpt.active || rcpt.deleted) {
 					throw new HTTPError(403, 'This email is not available');
 				}
-				return db.query(
-					'SELECT * FROM create_org($1::int, $2::jsonb, $3::int, $4::int)',
-					[
-						rcpt.id,
-						this.info,
-						this.parentId,
-						authorId,
-					],
-				);
+				this.id = rcpt.id;
+				return super.save(authorId);
 			})
 			.then(org => this.assign(org));
 	}
@@ -99,6 +92,7 @@ Org.prototype.entityName = 'org';
 
 const props = {
 	...Recipient.prototype.props,
+	id: { writable: true, enumerable: true },
 	parentId: { writable: true, enumerable: true },
 	info: { writable: true, enumerable: true },
 };

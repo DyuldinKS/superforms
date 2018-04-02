@@ -8,19 +8,28 @@ import { HTTPError } from '../errors';
 class Recipient extends AbstractModel {
 	// ***************** STATIC METHODS ***************** //
 
-	static find({ id, email }) {
-		const column = id ? 'id' : 'email';
+	static findById(id) {
 		return db.query(
-			`SELECT * FROM recipients rcp
-			WHERE rcp.${column} = $1`,
-			[id || email],
+			'SELECT (_found::rcpt_full).* FROM get_rcpt($1::int) _found;',
+			[id],
 		)
-			.then(rcp => (rcp ? new Recipient(rcp) : null));
+			.then(found => (found ? new Recipient(found) : null));
 	}
 
 
-	static findById(id) {
-		return Recipient.find({ id });
+	static findByEmail(email) {
+		return db.query(
+			'SELECT (_found::rcpt_full).* FROM get_rcpt($1::text) _found;',
+			[email],
+		)
+			.then(found => (found ? new Recipient(found) : null));
+	}
+
+
+	static find({ id, email }) {
+		if(id !== undefined) return Recipient.findById(id);
+		if(email !== undefined) return Recipient.findByEmail(email);
+		throw new Error('No search attributes specified');
 	}
 
 
@@ -45,19 +54,10 @@ class Recipient extends AbstractModel {
 	}
 
 
-	save(authorId) {
-		return db.query(
-			'SELECT * FROM create_rcpt($1, $2)',
-			[this.email, authorId],
-		)
-			.then(saved => this.assign(saved));
-	}
-
-
 	saveIfNotExists(authorId) {
 		return db.query(
-			'SELECT * FROM get_or_create_rcpt($1, $2)',
-			[this.email, authorId],
+			'SELECT (_rcpt::rcpt_full).* FROM get_or_create_rcpt($1, $2) _rcpt',
+			[this, authorId],
 		)
 			.then(rcpt => this.assign(rcpt));
 	}

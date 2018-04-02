@@ -41,7 +41,7 @@ class AbstractModel {
 		const result = {};
 
 		Object.entries(props).forEach(([prop, value]) => {
-			prop = instance.dict.camelCased[prop] || prop;
+			// prop = instance.dict.camelCased[prop] || prop;
 			if(prop in instance.props) {
 				result[prop] = value;
 			}
@@ -84,44 +84,51 @@ class AbstractModel {
 	}
 
 
-	convertToTableColumns(props) {
+	filterProps(props, type) {
 		if(!props) return null;
-		return AbstractModel.convertToTableColumns(props, this);
+		const writable = {};
+
+		Object.keys(props).forEach((prop) => {
+			// leave only model writable props
+			if(prop in this.props && this.props[prop][type]) {
+				writable[prop] = props[prop];
+			}
+		});
+
+		return writable;
 	}
 
 
-	save() {
-		throw new Error(`The .save() method of ${
-			this.constructor
-		} must be implemented`);
+	save(authorId) {
+		const type = `${this.entityName}_full`;
+		const create = `create_${this.entityName}`;
+		const writableProps = this.filterProps(this, 'writable');
+
+		return db.query(
+			`SELECT (new::${type}).*
+			FROM ${create}($1::json, $2::int) new`,
+			[writableProps, authorId],
+		)
+			.then(res => this.assign(res));
 	}
 
 
 	update(props, authorId) {
-		const pgProps = this.convertToTableColumns(props);
-		// merge with the current info of instance
-		if('info' in pgProps) {
-			pgProps.info = { ...this.info, ...pgProps.info };
-		}
+		const type = `${this.entityName}_full`;
+		const update = `update_${this.entityName}`;
+		const writableProps = this.filterProps(props, 'writable');
 
 		return db.query(
-			`SELECT * FROM update_${this.entityName}($1::int, $2::json, $3::int)`,
-			[this.id, pgProps, authorId],
+			`SELECT (_updated::${type}).*
+			FROM ${update}($1::int, $2::json, $3::int) _updated`,
+			[this.id, writableProps, authorId],
 		)
-			.then(rcpt => this.assign(rcpt));
+			.then(res => this.assign(res));
 	}
 
 
 	toJSON() {
-		return Object.keys(this).reduce(
-			(json, prop) => {
-				if(this.props[prop].enumerable) {
-					json[prop] = this[prop];
-				}
-				return json;
-			},
-			{},
-		);
+		return this.filterProps(this, 'enumerable');
 	}
 }
 
