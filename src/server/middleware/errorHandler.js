@@ -25,6 +25,7 @@ function errorHandler(err, req, res, next) {
 
 	if(req.get('x-requested-with') === 'XMLHttpRequest') {
 		res.status(status).send(message);
+		req.log.error({ res, err }); // log response and original error
 	} else {
 		// do not log redirection
 		if(status === 403) {
@@ -38,10 +39,8 @@ function errorHandler(err, req, res, next) {
 			}
 		}
 		res.send(hbs.errorPage({ status, message }));
+		req.log.error({ err }); // log only original error
 	}
-
-	// log response and original error
-	req.log.error({ res, err });
 }
 
 export default errorHandler;
