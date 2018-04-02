@@ -76,9 +76,12 @@ class Org extends Recipient {
 
 
 	findAllUsers(options = {}) {
+		const filter = Org.buildFilter(options);
+		if('minDepth' in filter === false) filter.minDepth = 0;
+
 		return db.query(
 			'SELECT * FROM find_users_of_subordinate_orgs($1::int, $2::jsonb)',
-			[this.id, Org.buildFilter(options)],
+			[this.id, filter],
 		);
 	}
 }
