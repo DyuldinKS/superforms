@@ -1,46 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import BuildingBlock from './BuildingBlock';
+import FormItemSample from './FormItemSample';
+import { samples, getSample } from '../utils/samples';
 
 const propTypes = {};
 
 const defaultProps = {};
 
-const blocks = [
-  {
-    name: 'Короткий ответ',
-  },
-  {
-    name: 'Число',
-  },
-  {
-    name: 'Выбор из списка',
-  },
-  {
-    name: 'Время',
-  },
-  {
-    name: 'Дата',
-  },
-];
-
 function SideBar(props) {
-  const {
-    findItem,
-    moveItem,
-    removeItem,
-  } = props;
-
   return (
     <div className="form-generator-side-bar">
       {
-        blocks.map((block, blockId) => (
-          <BuildingBlock
-            item={block}
-            key={blockId}
-            moveItem={moveItem}
-            findItem={findItem}
-            removeItem={removeItem}
+        samples.map(sampleId => (
+          <FormItemSample
+            id={sampleId}
+            item={getSample(sampleId)}
+            key={sampleId}
           />
         ))
       }
