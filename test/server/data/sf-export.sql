@@ -3,32 +3,42 @@ CREATE TYPE usr AS (
 	email text,
 	active boolean,
 	role text,
-	info json
+	info json,
+	created timestamptz
 );
 
 
 CREATE OR REPLACE FUNCTION rebuild_user(_id integer)
 	RETURNS usr AS
 $$
-	SELECT usr.id, usr.email,
-		CASE st.name WHEN 'active' THEN true ELSE false END AS active,
+	SELECT users.id,
+		users.email,
+		(
+			SELECT status_id != 3
+			FROM user_status_logs
+			WHERE changed IN (
+				SELECT max(changed)
+				FROM user_status_logs
+				WHERE user_id = _id
+				GROUP BY user_id
+			)
+		) AS active,
 		CASE role.name WHEN 'employee' THEN 'user' ELSE role.name END AS role,
 		json_build_object(
-			'firstName', usr.name,
-			'lastName', usr.surname,
-			'patronymic', usr.patronymic
-		) AS info
-	FROM users usr
-	JOIN user_status_logs usl ON usl.user_id = usr.id
-		AND usl.changed IN (
-			SELECT max(changed)
+			'firstName', users.name,
+			'lastName', users.surname,
+			'patronymic', users.patronymic
+		) AS info,
+		(
+			SELECT min(changed)
 			FROM user_status_logs
+			WHERE status_id = 2 AND user_id = _id
 			GROUP BY user_id
-		)
-	JOIN status st ON usl.status_id = st.id
-	JOIN user_roles ur ON ur.user_id = usr.id
+		) AS created
+	FROM users
+	JOIN user_roles ur ON ur.user_id = users.id
 	JOIN roles role ON ur.role_id = role.id
-	WHERE usr.id = _id;
+	WHERE users.id = _id;
 $$
 LANGUAGE SQL STABLE;
 
@@ -76,11 +86,20 @@ $$
 					ELSE 'input'
 					END
 				),
-				-- 'type',
-				-- CASE item->>'type'
-				-- WHEN 'integer', 'float', 'financial' THEN 'number'
-				-- ELSE item->>'type'
-				-- END,
+				'type', (
+					CASE _item->>'type'
+					WHEN 'integer' THEN 'number'
+					WHEN 'float' THEN 'number'
+					WHEN 'financial' THEN 'number'
+					ELSE _item->>'type'
+					END
+				),
+				'integer', (
+					CASE _item->>'type'
+					WHEN 'integer' THEN true
+					ELSE null
+					END
+				),
 				'required', (_item->>'required')::boolean,
 				'multiple', (_item->>'multiple')::boolean,
 				'max', nullif(_item->>'selectmax', '')::integer,
@@ -117,10 +136,12 @@ $$
 		template->>'title',
 		template->>'description',
 		rebuild_items(template->'items') AS scheme,
-		json_build_object(
-			'time', sent,
-			'expires', expires,
-			'refilling', allowrefill
+		json_strip_nulls(
+			json_build_object(
+				'time', sent,
+				'expires', expires,
+				'refilling', allowrefill
+			)
 		) AS sent,
 		user_id AS owner_id,
 		created,
