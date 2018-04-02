@@ -136,10 +136,12 @@ $$
 		template->>'title',
 		template->>'description',
 		rebuild_items(template->'items') AS scheme,
-		json_build_object(
-			'time', sent,
-			'expires', expires,
-			'refilling', allowrefill
+		json_strip_nulls(
+			json_build_object(
+				'time', sent,
+				'expires', expires,
+				'refilling', allowrefill
+			)
 		) AS sent,
 		user_id AS owner_id,
 		created,
