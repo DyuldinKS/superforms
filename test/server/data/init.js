@@ -2,9 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import db from '../../../src/server/db';
-import Recipient from '../../../src/server/models/Recipient';
-import Org from '../../../src/server/models/Org';
-import User from '../../../src/server/models/User';
 
 
 const fsReadFile = promisify(fs.readFile);
@@ -46,98 +43,87 @@ const getBot = () => db.query('SELECT min(id) AS id FROM users;');
 const getSystem = () => db.query('SELECT min(id) AS id FROM organizations;');
 
 
-const getOrCreateEducationDepartment = ({ author }) => (
-	Promise.all([
-		getSystem(),
-		Recipient.find({ email: educationDepartment.email }),
-	])
-		.then(([system, rcpt]) => {
-			educationDepartment.parentId = system.id;
+const getOrCreateOrg = (org, parent, author) => (
+	db.query('SELECT * FROM get_or_create_rcpt($1, $2)', [org, author.id])
+		.then((rcpt) => {
+			org.parentId = parent.id;
+			org.id = rcpt.id;
 
-			if(rcpt) {
-				if(rcpt.type !== 'org') {
-					throw new Error('Education department is not an org.');
+			switch (rcpt.type) {
+				case 'org': {
+					console.log(`Loading '${org.info.label}'`);
+					return db.query('SELECT * FROM get_org($1)', [org.id]);
 				}
-				console.log('Education department is loaded from db.');
-				educationDepartment.id = rcpt.id;
-				return educationDepartment;
+				case 'rcpt': {
+					console.log(`Creating '${org.info.label}'`);
+					return db.query('SELECT * FROM create_org($1, $2);', [org, author.id]);
+				}
+				default: throw new Error(`Unexpected rcpt_type of '${org.info.label}'.`);
 			}
-			console.log('Creating Education department...');
-			return educationDepartment.save(author.id);
 		})
 );
 
 
-const getOrCreateIMC = ({ author }) => {
-	imc.conversion = {}; // for user, form, response ids migration
-	imc.parentId = educationDepartment.id;
-
-	return Recipient.find({ email: imc.email })
-		.then((rcpt) => {
-			if(rcpt) {
-				if(rcpt.type !== 'org') throw new Error('IMC is not an org.');
-				console.log('IMC is loaded from db.');
-				imc.id = rcpt.id;
-				return imc;
-			}
-
-			console.log('Creating IMC...');
-			return imc.save(author.id);
-		})
-};
-
-
-const createIMCOrgs = ({ author }) => {
+const createIMCOrgs = (author) => {
 	console.log('\nCreating IMC subordinate organizations...')
 	let chain = Promise.resolve();
 
 	imc.orgs.forEach(([label, fullName,,,, email]) => {
 		chain = chain.then(() => {
-			return new Org({
+			const org = {
 				email,
 				info: { label, fullName },
 				parentId: imc.id,
 				authorId: author.id,
-			})
-				.save(author.id)
-				.then(() => { console.log(`${label}: ok`); })
+			};
+
+			return getOrCreateOrg(org, imc, author);
 		})
 	})
 	return chain.catch(console.error);
 };
 
 
-const getOrCreateIMCUsers = ({ author }) => {
+const getOrCreateIMCUsers = (author) => {
 	console.log('\nCreating IMC users...')
 	imc.conversion.users = {};
-	let chain = Promise.resolve();
 
-	imc.users.forEach((record) => {
-		chain = chain
-			.then(() => User.findByEmail(record.email))
-			.then((user) => {
-				if(user) {
-					if(user.orgId !== imc.id) {
-						throw new Error(`User (${user.email}) is not in IMC.`)
-					}
-					return user;
+	return db.queryAll(
+		`SELECT rcpt.* FROM json_array_elements($1::json) user_data,
+			LATERAL get_or_create_rcpt(user_data, $2) rcpt;`,
+		[JSON.stringify(imc.users), author.id],
+	)
+		.then((recipients) => {
+			const newUsers = [];
+			let oldId;
+
+			imc.users.forEach((user, i) => {
+				oldId = user.id;
+				user.id = recipients[i].id;
+				imc.conversion.users[oldId] = user.id;
+
+				if(recipients[i].type === 'rcpt') {
+					console.log(`new user: ${oldId} -> ${user.id} (${user.email})`);
+					user.org_id = imc.id;
+					newUsers.push(user);
+				} else {
+					console.log(`stored: ${oldId} -> ${user.id} (${user.email})`);
 				}
+			})
 
-				record.orgId = imc.id;
-				return new User(record).save(author.id);
-			})
-			.then((user) => {
-				imc.conversion.users[record.id] = user.id;
-				console.log(`${record.id} -> ${user.id} (${user.email}): ok`)
-			})
-	})
-	return chain.then(() => {
-		console.log(`${imc.users.length} users were exported`);
-	});
+			return db.queryAll(
+				`SELECT usr.id FROM json_array_elements($1::json) user_data,
+					LATERAL create_user(user_data, $2) usr;`,
+				[JSON.stringify(newUsers), author.id],
+			)
+		})
+		.then(() => {
+			console.log(`${imc.users.length} users were exported`);
+		});
 };
 
 
-const getOrCreateIMCForms = ({ author }) => {
+const getOrCreateIMCForms = (author) => {
 	console.log('\nCreating IMC forms...')
 	imc.conversion.forms = {};
 	let chain = Promise.resolve();
@@ -170,53 +156,52 @@ const getOrCreateIMCForms = ({ author }) => {
 };
 
 
-const getOrCreateIMCResponses = ({ author }) => {
+const getOrCreateIMCResponses = (author) => {
 	console.log('\nCreating IMC responses...')
-	imc.conversion.responses = {};
+	// imc.conversion.responses = {};
+	const { responses } = imc;
+	responses.forEach((rspn) => {
+		rspn.form_id = imc.conversion.forms[rspn.form_id];
+	})
 
-	return Promise.all(imc.responses.map((record) => (
-		db.query(
-			'SELECT id FROM responses WHERE created = $1',
-			[record.created]
+	return db.queryAll(
+		`WITH _merged AS (
+			SELECT responses.id, props
+			FROM json_array_elements($1::json) props
+			LEFT JOIN responses
+			ON (props->>'created')::timestamptz = responses.created
 		)
-			.then((response) => {
-				if(response) return response;
-
-				// replace form id with corresponding new id
-				record.form_id = imc.conversion.forms[record.form_id];
-				return db.query(
-					'SELECT id FROM create_response($1::json, $2::int)',
-					[record, author.id],
-				);
-			})
-			.then((response) => {
-				imc.conversion.responses[record.id] = response.id;
-			})
-	)))
-		.then(() => {
-			console.log(`${imc.responses.length} responses were exported`);
+		SELECT created.id
+		FROM _merged,
+		LATERAL create_response(_merged.props, $2) created
+		WHERE _merged.id IS NULL;`,
+		[JSON.stringify(responses), author.id],
+	)
+		.then((created) => {
+			console.log(`new responses: ${created.length}/${responses.length}`);
 		});
 };
 
-
-const educationDepartment = new Org({
+// education department
+const eDep = {
 	email: 'roo@tumos.gov.spb.ru',
 	info: {
 		label: 'Отдел образования Московского района Санкт-Петербурга',
 		shortName: '?',
 		fullName: '?',
 	},
-});
+};
 
 
-const imc = new Org({
+const imc = {
 	email: 'info@imc-mosk.ru',
 	info: {
 		label: 'ИМЦ Московского района',
 		shortName: 'ГБУ ДППО ЦПКС ИМЦ Московского района Санкт-Петербурга',
 		fullName: 'Государственное бюджетное учреждение дополнительного профессионального педагогического образования центр повышения квалификации специалистов «Информационно-методический центр» Московского района Санкт-Петербурга',
 	},
-});
+	conversion: {},
+};
 
 
 const run = () => {
@@ -226,14 +211,15 @@ const run = () => {
 		.then(data => Object.assign(imc, data))
 		// load first user and first org - root of organization tree
 		.then(getBot)
-		.then((bot) => { author = new User(bot); })
-		.then(() => getOrCreateEducationDepartment({ author }))
+		.then((bot) => { author = bot; })
+		.then(() => getSystem())
+		.then((system) => getOrCreateOrg(eDep, system, author))
 		// .then(() => createEducationDepartmentUsers())
-		.then(() => getOrCreateIMC({ author }))
-		.then(() => createIMCOrgs({ author }))
-		.then(() => getOrCreateIMCUsers({ author }))
-		.then(() => getOrCreateIMCForms({ author }))
-		.then(() => getOrCreateIMCResponses({ author }))
+		.then(() => getOrCreateOrg(imc, eDep, author))
+		.then(() => createIMCOrgs(author))
+		.then(() => getOrCreateIMCUsers(author))
+		.then(() => getOrCreateIMCForms(author))
+		.then(() => getOrCreateIMCResponses(author))
 		.then(() => console.log('\nSuccess!\nGood luck with this trash!'))
 		.catch(console.error);
 };
