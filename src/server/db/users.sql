@@ -136,7 +136,7 @@ CREATE OR REPLACE FUNCTION get_user(
 	_mode varchar(255) DEFAULT NULL
 ) RETURNS user_with_rcpt AS
 $$
-	SELECT usr.* FROM get_rcpt(_email) rcpt, get_user(rcpt.id, 'auth') usr;
+	SELECT usr.* FROM get_rcpt(_email) rcpt, get_user(rcpt.id, _mode) usr;
 $$
 LANGUAGE SQL STABLE;
 
@@ -187,7 +187,7 @@ BEGIN
 	WHERE usr.id = _id;
 
 	-- log user _changes
-	_changes := jsonb_strip_nulls(row_to_json(_new));
+	_changes := json_strip_nulls(row_to_json(_new));
 	IF _changes::text != '{}' THEN
 		PERFORM log('U', 'user', _id, _changes, _author_id);
 	END IF;
