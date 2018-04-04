@@ -2,62 +2,91 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { DropTarget } from 'react-dnd';
 import { SAMPLE, BLOCK } from '../utils/dndTypes';
-import { getSample } from '../utils/samples';
-import FormItemSample from './FormItemSample';
-import FormItemBlock from './FormItemBlock';
+import getDefaultInputScheme from '../utils/getDefaultInputScheme';
+import { locales as inputTypeLocales} from 'shared/form/utils/inputTypes';
+import CollectionSample from './CollectionSample';
+import InputItem from './InputItem';
 
 const propTypes = {
-  addItem: PropTypes.func.isRequired,
+  order: PropTypes.array.isRequired,
+  // form DnD
   canDrop: PropTypes.bool,
   connectDropTarget: PropTypes.func.isRequired,
   dragItemId: PropTypes.string,
   dragItemType: PropTypes.string,
-  findItem: PropTypes.func.isRequired,
-  getItem: PropTypes.func.isRequired,
-  inwardDragIndex: PropTypes.number,
   isOver: PropTypes.bool,
-  order: PropTypes.array.isRequired,
-  setInwardDragIndex: PropTypes.func.isRequired,
-  swapItems: PropTypes.func.isRequired,
 };
 
 const defaultProps = {
   canDrop: false,
   dragItemId: null,
   dragItemType: null,
-  inwardDragIndex: -1,
   isOver: false,
 };
 
+const contextTypes = {
+  addItem: PropTypes.func.isRequired,
+  duplicateItem: PropTypes.func.isRequired,
+  findItem: PropTypes.func.isRequired,
+  getItem: PropTypes.func.isRequired,
+  removeItem: PropTypes.func.isRequired,
+  selectItem: PropTypes.func.isRequired,
+  swapItems: PropTypes.func.isRequired,
+};
+
 class SortableList extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = { inwardDragIndex: -1 };
+
+    this.getInwardDragIndex = this.getInwardDragIndex.bind(this);
+    this.setInwardDragIndex = this.setInwardDragIndex.bind(this);
+  }
+
   componentWillReceiveProps(nextProps) {
     if (nextProps.canDrop
       && nextProps.dragItemType === SAMPLE
       && this.props.isOver
       && !nextProps.isOver) {
       // when dragged SAMPLE leave container
-      nextProps.setInwardDragIndex(-1);
+      this.setInwardDragIndex(-1);
     }
+  }
+
+  getInwardDragIndex() {
+    return this.state.inwardDragIndex;
+  }
+
+  setInwardDragIndex(index = -1) {
+    this.setState(() => ({
+      inwardDragIndex: index,
+    }));
   }
 
   renderItems(items) {
     const {
+      duplicateItem,
       findItem,
       getItem,
-      inwardDragIndex,
-      setInwardDragIndex,
+      removeItem,
+      selectItem,
       swapItems,
-    } = this.props;
+    } = this.context;
 
     return items.map(itemId => (
-      <FormItemBlock
+      <InputItem
         key={itemId}
         id={itemId}
+        index={findItem(itemId) + 1}
         item={getItem(itemId)}
-        inwardDragIndex={inwardDragIndex}
         findItem={findItem}
         swapItems={swapItems}
-        setInwardDragIndex={setInwardDragIndex}
+        onSelect={selectItem}
+        onDuplicate={duplicateItem}
+        onRemove={removeItem}
+        getInwardDragIndex={this.getInwardDragIndex}
+        setInwardDragIndex={this.setInwardDragIndex}
       />
     ));
   }
@@ -67,18 +96,18 @@ class SortableList extends Component {
       canDrop,
       connectDropTarget,
       dragItemId,
-      inwardDragIndex,
       order,
     } = this.props;
+    const { inwardDragIndex } = this.state;
 
     if (canDrop && dragItemId && inwardDragIndex > -1) {
       return connectDropTarget(
         <div className="form-generator-working-pane">
           {this.renderItems(order.slice(0, inwardDragIndex))}
-          <FormItemSample
+          <CollectionSample
             id={dragItemId}
             key={dragItemId}
-            item={getSample(dragItemId)}
+            title={inputTypeLocales[dragItemId]}
             dragging
           />
           {this.renderItems(order.slice(inwardDragIndex))}
@@ -96,16 +125,21 @@ class SortableList extends Component {
 
 SortableList.propTypes = propTypes;
 SortableList.defaultProps = defaultProps;
+SortableList.contextTypes = contextTypes;
 
 const allowedSources = [SAMPLE, BLOCK];
 
 const target = {
-  drop(props, monitor) {
-    const { inwardDragIndex } = props;
+  drop(props, monitor, component) {
+    const { inwardDragIndex } = component.state;
 
     if (inwardDragIndex > -1) {
       const dragId = monitor.getItem().id;
-      props.addItem(getSample(dragId), inwardDragIndex);
+      component.context.addItem(
+        getDefaultInputScheme(dragId),
+        inwardDragIndex,
+      );
+      component.setInwardDragIndex(-1);
     }
   },
 };

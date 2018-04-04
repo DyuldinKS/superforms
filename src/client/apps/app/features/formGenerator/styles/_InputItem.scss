@@ -1,0 +1,48 @@
+.input-item {
+  display: flex;
+  align-items: middle;
+  height: 40px;
+  margin: 10px auto;
+  padding: 5px 10px;
+  border: 1px solid $card-border-color;
+
+  &.draggable {
+    cursor: grab;
+
+    &:hover {
+      transform: scale(1.01);
+      background-color: rgb(240,248,255);
+    }
+  }
+
+  &.dragging {
+    cursor: grabbing;
+    transform: scale(1.01);
+    background-color: rgb(240,248,255);
+  }
+}
+
+.input-item-title {
+  flex-grow: 1;
+}
+
+.input-item-type {
+
+}
+
+.input-item-options {
+  display: flex;
+  padding: 5px;
+  margin-left: 5px;
+  border-left: 1px solid $card-border-color;
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}

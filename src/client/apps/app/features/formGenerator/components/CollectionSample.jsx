@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import makeSortableInwardItem from './makeSortableInwardItem';
 
 const propTypes = {
-  item: PropTypes.object.isRequired,
+  title: PropTypes.string.isRequired,
   draggable: PropTypes.bool,
   dragging: PropTypes.bool,
 };
@@ -14,12 +14,12 @@ const defaultProps = {
   dragging: false,
 };
 
-function FormItemSample(props) {
+function CollectionSample(props) {
   const {
     connectDragSource,
     draggable,
     dragging,
-    item,
+    title,
   } = props;
 
   const className = classNames({
@@ -30,12 +30,12 @@ function FormItemSample(props) {
 
   return connectDragSource(
     <div className={className}>
-      {item.name}
+      {title}
     </div>
   );
 }
 
-FormItemSample.propTypes = propTypes;
-FormItemSample.defaultProps = defaultProps;
+CollectionSample.propTypes = propTypes;
+CollectionSample.defaultProps = defaultProps;
 
-export default makeSortableInwardItem(FormItemSample);
+export default makeSortableInwardItem(CollectionSample);

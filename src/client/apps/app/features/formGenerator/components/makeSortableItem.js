@@ -35,7 +35,7 @@ const target = {
     // When dragging upwards, only move when the cursor is above 50%
 
     if (type === SAMPLE) {
-      const { inwardDragIndex } = props;
+      const inwardDragIndex = props.getInwardDragIndex();
 
       if ((inwardDragIndex < 0 || inwardDragIndex <= hoverIndex)
         && hoverClientY >= hoverMiddleY) {
@@ -82,12 +82,10 @@ const source = {
 };
 
 function collectSource(connect, monitor) {
-  const item = monitor.getItem() || {};
-
   return {
     connectDragSource: connect.dragSource(),
     draggable: monitor.canDrag(),
-    dragItemId: item.id,
+    dragging: monitor.isDragging(),
   };
 }
 
