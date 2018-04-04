@@ -37,7 +37,7 @@ export default (req, res, next) => {
 			if(!instance) {
 				throw new HTTPError(404, `${key} not found`);
 			}
-			req.loaded[key] = instance;
+			req.loaded = { [key]: instance };
 			next();
 		})
 		.catch(next);
