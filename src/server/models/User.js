@@ -91,26 +91,26 @@ class User extends Recipient {
 	}
 
 
-	resetPassword({ password, authorId }) {
+	resetPassword({ password, author }) {
 		this.password = password || passwordGenerator(8);
 
 		return User.encrypt(this.password)
-			.then(hash => this.update({ hash }, authorId))
+			.then(hash => this.update({ props: { hash }, author }))
 			.then(() => this.deleteToken())
 			.then(() => this);
 	}
 
 
 	// @implements
-	save(authorId) {
+	save({ author }) {
 		const rcpt = new Recipient(this);
-		return rcpt.saveIfNotExists(authorId)
+		return rcpt.saveIfNotExists({ author })
 			.then(() => {
 				if(!rcpt.active || rcpt.type !== 'rcpt') {
 					throw new HTTPError(403, 'This email is not available');
 				}
 				this.id = rcpt.id;
-				return super.save(authorId);
+				return super.save({ author });
 			})
 			.then(user => this.assign(user));
 	}
@@ -137,6 +137,7 @@ const props = {
 	...Recipient.prototype.props,
 	id: { writable: true, enumerable: true },
 	orgId: { writable: true, enumerable: true },
+	org: { writable: false, enumerable: false },
 	info: { writable: true, enumerable: true },
 	role: { writable: true, enumerable: true },
 	token: { writable: false, enumerable: false },

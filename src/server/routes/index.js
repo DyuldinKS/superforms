@@ -1,5 +1,4 @@
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
 import sessions from './sessions';
 import recipients from './recipients';
 import users from './users';
@@ -18,7 +17,7 @@ const router = (app) => {
 		'/',
 		isActive,
 		(req, res, next) => {
-			const user = req.loaded.self;
+			const user = req.author;
 			// console.log(req.loaded);
 			Org.findById(user.orgId)
 				.then((org) => {

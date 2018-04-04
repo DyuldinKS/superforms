@@ -1,7 +1,7 @@
 import { isActive } from '../middleware/users';
 import loadInstance from '../middleware/loadInstance';
 import Org from '../models/Org';
-import { HTTPError, SMTPError, PgError } from '../errors';
+import { HTTPError } from '../errors';
 
 
 export default (app) => {
@@ -10,12 +10,13 @@ export default (app) => {
 		'/api/v1/org',
 		isActive,
 		(req, res, next) => {
-			const { self } = req.loaded;
+			const { author } = req;
 			const org = new Org({ ...req.body });
 
-			if(!org.email) return next(new HTTPError(400, 'Missing email'));
+			if(!org.email) return next(new Error('Missing email'));
 
-			return org.save(self.id)
+			org.email = null;
+			return org.save({ author })
 				.then(() => res.json(org))
 				.catch(next);
 		},
@@ -42,9 +43,9 @@ export default (app) => {
 				return res.json({ orgs });
 			}
 
-			Org.findById(org.parentId)
-				.then((chiefOrg) => {
-					Object.assign(orgs, { [chiefOrg.id]: chiefOrg });
+			return Org.findById(org.parentId)
+				.then((parent) => {
+					if(parent) orgs[parent.id] = parent;
 					res.json({ orgs });
 				})
 				.catch(next);
@@ -59,9 +60,7 @@ export default (app) => {
 			const options = req.query;
 
 			org.findAllOrgs(options)
-				.then((result) => {
-					res.json(result);
-				})
+				.then(orgs => res.json(orgs))
 				.catch(next);
 		},
 	);
@@ -74,9 +73,7 @@ export default (app) => {
 			const options = req.query;
 
 			org.findAllUsers(options)
-				.then((result) => {
-					res.json(result);
-				})
+				.then(users => res.json(users))
 				.catch(next);
 		},
 	);
@@ -85,10 +82,11 @@ export default (app) => {
 	app.patch(
 		'/api/v1/org/:id',
 		(req, res, next) => {
-			const { org, self } = req.loaded;
-			const params = req.body;
+			const { author } = req;
+			const { org } = req.loaded;
+			const props = req.body;
 
-			org.update(params, self.id)
+			org.update({ props, author })
 				.then(() => res.json(org))
 				.catch(next);
 		},

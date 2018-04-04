@@ -54,21 +54,21 @@ class Recipient extends AbstractModel {
 	}
 
 
-	saveIfNotExists(authorId) {
+	saveIfNotExists({ author }) {
 		return db.query(
 			'SELECT (_rcpt::rcpt_full).* FROM get_or_create_rcpt($1, $2) _rcpt',
-			[this, authorId],
+			[this, author.id],
 		)
 			.then(rcpt => this.assign(rcpt));
 	}
 
 
-	update(params, authorId) {
-		if('email' in params && !params.email) {
+	update({ props, author }) {
+		if('email' in props && !props.email) {
 			throw new HTTPError(400, 'Bad email address');
 		}
 
-		return super.update(params, authorId);
+		return super.update({ props, author });
 	}
 
 

@@ -3,12 +3,12 @@ import { HTTPError } from '../errors';
 
 
 const deserializeUser = (req, res, next) => {
-	req.loaded = {};
 	const { user } = req.session;
 	if(!user) return next();
-	User.findById(user.id)
-		.then((self) => {
-			req.loaded.self = self;
+
+	return User.findById(user.id)
+		.then((found) => {
+			req.author = found;
 			return next();
 		})
 		.catch(next);
@@ -16,13 +16,15 @@ const deserializeUser = (req, res, next) => {
 
 
 const isActive = (req, res, next) => {
-	const { self } = req.loaded;
-	if(self instanceof User === false) {
+	const { author } = req;
+	if(author instanceof User === false) {
 		return next(new HTTPError(403, 'Not authenticated'));
 	}
-	if(!self.isActive()) {
+
+	if(!author.isActive()) {
 		return next(new HTTPError(403, 'Your account has been locked'));
 	}
+
 	return next();
 };
 

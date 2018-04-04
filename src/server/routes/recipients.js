@@ -80,11 +80,11 @@ export default (app) => {
 		'/api/v1/recipient',
 		isActive,
 		(req, res, next) => {
-			const { self } = req.loaded;
+			const { author } = req;
 			const { email } = req.body;
 			const rcpt = new Recipient({ email });
 
-			rcpt.save(self.id)
+			rcpt.save({ author })
 				.then(() => res.json(rcpt))
 				.catch((err) => {
 					if(err instanceof PgError) {
@@ -106,10 +106,11 @@ export default (app) => {
 		isActive,
 		loadInstance,
 		(req, res, next) => {
-			const { rcpt, self } = req.loaded;
-			const params = req.body;
+			const { author } = req;
+			const { rcpt } = req.loaded;
+			const props = req.body;
 
-			rcpt.update(params, self.id)
+			rcpt.update({ props, author })
 				.then(() => res.json(rcpt))
 				.catch(next);
 		},

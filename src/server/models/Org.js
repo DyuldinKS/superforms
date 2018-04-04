@@ -15,15 +15,15 @@ class Org extends Recipient {
 	}
 
 	// @implements
-	save(authorId) {
+	save({ author }) {
 		const rcpt = new Recipient(this);
-		return rcpt.saveIfNotExists(authorId)
+		return rcpt.saveIfNotExists({ author })
 			.then(() => {
 				if(rcpt.type !== 'rcpt' || !rcpt.active || rcpt.deleted) {
 					throw new HTTPError(403, 'This email is not available');
 				}
 				this.id = rcpt.id;
-				return super.save(authorId);
+				return super.save({ author });
 			})
 			.then(org => this.assign(org));
 	}
