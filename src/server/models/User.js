@@ -3,6 +3,7 @@ import uuidv4 from 'uuid/v4';
 import config from '../config';
 import db from '../db/index';
 import Recipient from './Recipient';
+import Org from './Org';
 import passwordGenerator from '../libs/passwordGenerator';
 import { HTTPError } from '../errors';
 
@@ -55,6 +56,18 @@ class User extends Recipient {
 
 
 	// ***************** INSTANCE METHODS ***************** //
+
+	getScope() {
+		if(this.org) return Promise.resolve(this.org);
+		if(!this.orgId) throw new Error('orgId is not specified');
+
+		return Org.findById(this.orgId)
+			.then((org) => {
+				this.org = org;
+				return org;
+			});
+	}
+
 
 	authenticate(password) {
 		return bcrypt.compare(password, this.hash)
