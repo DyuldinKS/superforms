@@ -146,7 +146,7 @@ class User extends Recipient {
 User.prototype.tableName = 'users';
 User.prototype.entityName = 'user';
 
-const props = {
+User.prototype.props = {
 	...Recipient.prototype.props,
 	id: { writable: true, enumerable: true },
 	orgId: { writable: true, enumerable: true },
@@ -157,9 +157,6 @@ const props = {
 	password: { writable: false, enumerable: false },
 	hash: { writable: true, enumerable: false },
 };
-
-User.prototype.props = props;
-User.prototype.dict = User.buildPropsDictionary(props);
 
 Object.freeze(User);
 

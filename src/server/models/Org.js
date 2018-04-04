@@ -93,15 +93,12 @@ Org.prototype.tableName = 'organizations';
 
 Org.prototype.entityName = 'org';
 
-const props = {
+Org.prototype.props = {
 	...Recipient.prototype.props,
 	id: { writable: true, enumerable: true },
 	parentId: { writable: true, enumerable: true },
 	info: { writable: true, enumerable: true },
 };
-
-Org.prototype.props = props;
-Org.prototype.dict = Org.buildPropsDictionary(props);
 
 Object.freeze(Org);
 
