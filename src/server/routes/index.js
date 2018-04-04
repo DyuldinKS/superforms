@@ -18,31 +18,20 @@ const router = (app) => {
 		isActive,
 		(req, res, next) => {
 			const user = req.author;
-			// console.log(req.loaded);
-			Org.findById(user.orgId)
-				.then((org) => {
-					if(!org) {
-						throw new HTTPError(404, 'Organization of the user is not found');
-					}
-					const session = { userId: String(user.id), orgId: String(org.id) };
 
-					store.dispatch(routerModule.actions.init(req.url, req.query));
-					store.dispatch(sessionModule.actions.init(session));
-					store.dispatch(entitiesModule.actions.add({
-						users: {
-							[user.id]: {
-								...user,
-								...user.info,
-							},
-						},
-						orgs: {
-							[org.id]: org,
-						},
-					}));
+			const session = {
+				userId: `${user.id}`,
+				orgId: `${user.org.id}`,
+			};
 
-					res.send(ssr.app(store));
-				})
-				.catch(next);
+			store.dispatch(routerModule.actions.init(req.url, req.query));
+			store.dispatch(sessionModule.actions.init(session));
+			store.dispatch(entitiesModule.actions.add({
+				users: user.toStore,
+				orgs: user.org.toStore,
+			}));
+
+			res.send(ssr.app(store));
 		},
 	);
 

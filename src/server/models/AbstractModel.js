@@ -65,6 +65,11 @@ class AbstractModel {
 	toJSON() {
 		return this.filterProps(this, 'enumerable');
 	}
+
+
+	toStore() {
+		return { [this.id]: this.toJSON() };
+	}
 }
 
 
