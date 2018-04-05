@@ -142,6 +142,7 @@ LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION create_user(
+	_rcpt_id integer,
 	_props json,
 	_author_id integer,
 	OUT _inserted user_with_rcpt
@@ -151,14 +152,15 @@ $$
 		_new users;
 	BEGIN
 		_new := _props::users;
+		_new.id := _rcpt_id;
 
 		INSERT INTO users SELECT _new.*;
 
 		-- log changes
-		PERFORM log('I', 'user', _new.id, row_to_json(_new), _author_id);
-		PERFORM update_rcpt(_new.id, '{"type":"user"}'::json, _author_id);
+		PERFORM log('I', 'user', _rcpt_id, row_to_json(_new), _author_id);
+		PERFORM update_rcpt(_rcpt_id, '{"type":"user"}'::json, _author_id);
 
-		SELECT * FROM get_user(_new.id) INTO _inserted;
+		SELECT * FROM get_user(_rcpt_id) INTO _inserted;
 	END;
 $$
 LANGUAGE plpgsql;

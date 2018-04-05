@@ -52,7 +52,6 @@ describe('User model', () => {
 		const user = new User({ id: 13 });
 		// props that can be updated
 		const writable = {
-			id: 14,
 			email: 'w@mc.com',
 			role: 'root',
 			info: { firstName: 'W', lastName: 'MC' },
@@ -62,6 +61,7 @@ describe('User model', () => {
 		};
 		// props that can not be updated
 		const unwritable = {
+			id: 14,
 			type: 'rcpt',
 			password: 'aborted',
 			created: new Date(),

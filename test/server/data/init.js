@@ -56,7 +56,10 @@ const getOrCreateOrg = (org, parent, author) => (
 				}
 				case 'rcpt': {
 					console.log(`Creating '${org.info.label}'`);
-					return db.query('SELECT * FROM create_org($1, $2);', [org, author.id]);
+					return db.query(
+						'SELECT * FROM create_org($1::int, $2::json, $3::int);',
+						[org.id, org, author.id],
+					);
 				}
 				default: throw new Error(`Unexpected rcpt_type of '${org.info.label}'.`);
 			}
@@ -113,7 +116,7 @@ const getOrCreateIMCUsers = (author) => {
 
 			return db.queryAll(
 				`SELECT usr.id FROM json_array_elements($1::json) user_data,
-					LATERAL create_user(user_data, $2) usr;`,
+					LATERAL create_user((user_data->>'id')::int, user_data, $2) usr;`,
 				[JSON.stringify(newUsers), author.id],
 			)
 		})

@@ -57,14 +57,14 @@ class Recipient extends AbstractModel {
 	saveIfNotExists({ author }) {
 		return Promise.resolve()
 			.then(() => {
-				if(!this.email) throw new HTTPError('Missing email');
+				if(!this.email) throw new HTTPError(400, 'Missing email');
 
 				return db.query(
 					'SELECT (_rcpt::rcpt_full).* FROM get_or_create_rcpt($1, $2) _rcpt',
 					[this, author.id],
 				);
 			})
-			.then(rcpt => this.assign(rcpt));
+			.then(rcpt => this.assign(rcpt))
 	}
 
 

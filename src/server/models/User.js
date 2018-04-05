@@ -129,8 +129,13 @@ class User extends Recipient {
 				if(!rcpt.active || rcpt.type !== 'rcpt') {
 					throw new HTTPError(403, 'This email is not available');
 				}
-				this.id = rcpt.id;
-				return super.save({ author });
+
+				const writableProps = this.filterProps(this, 'writable');
+				return db.query(
+					`SELECT (_new::user_full).*
+					FROM create_user($1::int, $2::json, $3::int) _new`,
+					[rcpt.id, writableProps, author.id],
+				);
 			})
 			.then(user => this.assign(user));
 	}
@@ -155,7 +160,7 @@ User.prototype.entityName = 'user';
 
 User.prototype.props = {
 	...Recipient.prototype.props,
-	id: { writable: true, enumerable: true },
+	id: { writable: false, enumerable: true },
 	orgId: { writable: true, enumerable: true },
 	org: { writable: false, enumerable: false },
 	info: { writable: true, enumerable: true },

@@ -50,7 +50,6 @@ describe('Org model', () => {
 		const org = new Org({ id: 13 });
 		// props that can be updated
 		const writable = {
-			id: 14,
 			email: 'w@mc.com',
 			info: { fullName: 'Massachusetts Institute of Technology', label: 'MIT' },
 			active: false,
@@ -59,6 +58,7 @@ describe('Org model', () => {
 		};
 		// props that can not be updated
 		const unwritable = {
+			id: 14,
 			type: 'rcpt',
 		};
 

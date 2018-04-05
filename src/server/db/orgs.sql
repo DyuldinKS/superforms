@@ -154,6 +154,7 @@ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION create_org(
+	_rcpt_id integer,
 	_props json,
 	_author_id integer,
 	OUT _inserted org_with_rcpt
@@ -164,17 +165,18 @@ $$
 		_links org_links;
 	BEGIN
 		_new := _props::organizations;
+		_new.id := _rcpt_id;
 
 		INSERT INTO organizations SELECT _new.*;
 
 		-- log changes
-		PERFORM log('I', 'org', _new.id, row_to_json(_new), _author_id);
-		PERFORM update_rcpt(_new.id, '{"type":"org"}'::json, _author_id);
+		PERFORM log('I', 'org', _rcpt_id, row_to_json(_new), _author_id);
+		PERFORM update_rcpt(_rcpt_id, '{"type":"org"}'::json, _author_id);
 
 		_links := _props::org_links;
-		PERFORM set_org_parent(_links.org_id, _links.parent_id, _author_id);
+		PERFORM set_org_parent(_rcpt_id, _links.parent_id, _author_id);
 
-		SELECT * FROM get_org(_new.id) INTO _inserted;
+		SELECT * FROM get_org(_rcpt_id) INTO _inserted;
 	END;
 $$
 LANGUAGE plpgsql;
@@ -193,6 +195,7 @@ DECLARE
 	_links org_links;
 BEGIN
 	_new := _props::organizations;
+	_new.id := null;
 
 	-- udpate org
 	IF _new.info IS NOT NULL THEN

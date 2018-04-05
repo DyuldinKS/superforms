@@ -17,15 +17,21 @@ class Org extends Recipient {
 	// @implements
 	save({ author }) {
 		const rcpt = new Recipient(this);
+
 		return rcpt.saveIfNotExists({ author })
 			.then(() => {
 				if(rcpt.type !== 'rcpt' || !rcpt.active || rcpt.deleted) {
 					throw new HTTPError(403, 'This email is not available');
 				}
-				this.id = rcpt.id;
-				return super.save({ author });
+
+				const writableProps = this.filterProps(this, 'writable');
+				return db.query(
+					`SELECT (_new::org_full).*
+					FROM create_org($1::int, $2::json, $3::int) _new`,
+					[rcpt.id, writableProps, author.id],
+				);
 			})
-			.then(org => this.assign(org));
+			.then(user => this.assign(user));
 	}
 
 
@@ -95,7 +101,7 @@ Org.prototype.entityName = 'org';
 
 Org.prototype.props = {
 	...Recipient.prototype.props,
-	id: { writable: true, enumerable: true },
+	id: { writable: false, enumerable: true },
 	parentId: { writable: true, enumerable: true },
 	info: { writable: true, enumerable: true },
 };

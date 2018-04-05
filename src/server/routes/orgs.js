@@ -13,7 +13,6 @@ export default (app) => {
 			const { author } = req;
 			const org = new Org({ ...req.body });
 
-			org.email = null;
 			return org.save({ author })
 				.then(() => res.json(org))
 				.catch(next);
