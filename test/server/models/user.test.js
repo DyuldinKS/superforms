@@ -71,16 +71,17 @@ describe('User model', () => {
 
 		// pass all props
 		const props = { ...writable, ...unwritable };
-		user.update({ props, author });
+		return user.update({ props, author })
+			.then(() => {
+				assert(db.query.calledOnce);
+				const [query, [id, updatedProps, authorId]] = db.query.firstCall.args;
 
-		assert(db.query.calledOnce);
-		const [query, [id, updatedProps, authorId]] = db.query.firstCall.args;
+				assert(query.includes('update_user'));
+				assert(id === 13);
+				assert(authorId === author.id);
 
-		assert(query.includes('update_user'));
-		assert(id === 13);
-		assert(authorId === author.id);
-
-		assert.deepStrictEqual(updatedProps, writable);
+				assert.deepStrictEqual(updatedProps, writable);
+			});
 	});
 
 

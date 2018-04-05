@@ -64,17 +64,19 @@ describe('Org model', () => {
 
 		// pass all props
 		const props = { ...writable, ...unwritable };
-		org.update({ props, author });
+		return org.update({ props, author })
+			.then(() => {
+				assert(db.query.calledOnce === true);
 
-		assert(db.query.calledOnce);
+				const [query, [id, updated, authorId]] = db.query.firstCall.args;
 
-		const [query, [id, updated, authorId]] = db.query.firstCall.args;
-		assert(query.includes('update_org'));
-		assert(id === 13);
-		assert(authorId === author.id);
+				assert(query.includes('update_org'));
+				assert(id === 13);
+				assert(authorId === author.id);
 
-		const result = { ...writable };
-		assert.deepStrictEqual(updated, result);
+				const result = { ...writable };
+				assert.deepStrictEqual(updated, result);
+			});
 	});
 
 
