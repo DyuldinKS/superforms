@@ -8,7 +8,7 @@ export default function getDefaultInputScheme(inputType) {
     : inputTypes.TEXT;
 
   return {
-    itemType: 'question',
+    itemType: 'input',
     title: 'Новый вопрос',
     type,
   };

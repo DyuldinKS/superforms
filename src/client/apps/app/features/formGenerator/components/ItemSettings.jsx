@@ -44,7 +44,6 @@ class ItemSettings extends Component {
       itemIndex,
       onClose,
     } = this.props;
-    const { title } = item;
 
     return (
       <div className="form-generator-side-bar item-settings">
