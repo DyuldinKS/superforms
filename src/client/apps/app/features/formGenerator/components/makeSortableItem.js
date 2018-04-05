@@ -10,66 +10,53 @@ const target = {
   hover(props, monitor, component) {
     const dragId = monitor.getItem().id;
     const hoverId = props.id;
-    const dragIndex = props.findItem(dragId);
-    const hoverIndex = props.findItem(hoverId);
-    const type = monitor.getItemType();
 
     if (dragId === hoverId) {
       return;
     }
 
-    // Determine rectangle on screen
-    const hoverBoundingRect = findDOMNode(component).getBoundingClientRect();
-
-    // Get vertical middle
-    const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-    // Determine mouse position
+    const hoverRect = findDOMNode(component).getBoundingClientRect();
+    const hoverMiddleY = (hoverRect.bottom - hoverRect.top) / 2;
     const clientOffset = monitor.getClientOffset();
+    const hoverClientY = clientOffset.y - hoverRect.top;
 
-    // Get pixels to the top
-    const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+    const dragIndex = props.getDragIndex();
+    const hoverIndex = props.findItem(hoverId);
+    const dragType = monitor.getItemType();
+    let trueHoverIndex = hoverIndex;
 
-    // Only perform the move when the mouse has crossed half of the items height
-    // When dragging downwards, only move when the cursor is below 50%
-    // When dragging upwards, only move when the cursor is above 50%
+    if (dragType === BLOCK) {
+      // Imitate that dragged item pulled from array
+      const pullIndex = monitor.getItem().index;
 
-    if (type === SAMPLE) {
-      const inwardDragIndex = props.getInwardDragIndex();
+      if (hoverIndex > pullIndex) {
+        trueHoverIndex = hoverIndex - 1;
+      }
+    }
 
-      if ((inwardDragIndex < 0 || inwardDragIndex <= hoverIndex)
-        && hoverClientY >= hoverMiddleY) {
-        props.setInwardDragIndex(hoverIndex + 1);
+    if (dragIndex > -1) {
+      // Not crossed lower half of right sibling
+      if (dragIndex === trueHoverIndex && hoverClientY < hoverMiddleY) {
         return;
       }
 
-      if ((inwardDragIndex < 0 || inwardDragIndex > hoverIndex)
-        && hoverClientY <= hoverMiddleY) {
-        props.setInwardDragIndex(hoverIndex);
+      // Not crossed lower half of left sibling
+      if (dragIndex - 1 === trueHoverIndex && hoverClientY >= hoverMiddleY) {
         return;
       }
-
-      return;
     }
 
-    // Dragging downwards
-    if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-      return;
+    if (hoverClientY >= hoverMiddleY) {
+      props.setDragIndex(trueHoverIndex + 1);
+    } else {
+      props.setDragIndex(trueHoverIndex);
     }
-
-    // Dragging upwards
-    if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-      return;
-    }
-
-    props.swapItems(dragIndex, hoverIndex);
   },
 };
 
 function collectTarget(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver(),
   };
 }
 
@@ -77,7 +64,12 @@ const source = {
   beginDrag(props) {
     return {
       id: props.id,
+      index: props.findItem(props.id),
     };
+  },
+
+  isDragging(props, monitor) {
+    return props.id === monitor.getItem().id;
   },
 };
 
@@ -93,4 +85,3 @@ export default function makeSortableItem(Component) {
   const Draggable = DragSource(BLOCK, source, collectSource)(Component);
   return DropTarget(allowedSources, target, collectTarget)(Draggable);
 }
-

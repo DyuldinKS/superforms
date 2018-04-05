@@ -8,22 +8,31 @@ const propTypes = {
   id: PropTypes.string.isRequired,
   index: PropTypes.number.isRequired,
   item: PropTypes.object.isRequired,
-  onSelect: PropTypes.func.isRequired,
-  onDuplicate: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
+  onSelect: PropTypes.func,
+  onDuplicate: PropTypes.func,
+  onRemove: PropTypes.func,
+  reordering: PropTypes.bool,
   // from dnd
-  connectDragSource: PropTypes.func.isRequired,
-  connectDropTarget: PropTypes.func.isRequired,
+  connectDragSource: PropTypes.func,
+  connectDropTarget: PropTypes.func,
   draggable: PropTypes.bool,
   dragging: PropTypes.bool,
 };
 
 const defaultProps = {
+  onSelect: () => {},
+  onDuplicate: () => {},
+  onRemove: () => {},
+  reordering: false,
+  // from DnD
+  connectDragSource: n => n,
+  connectDropTarget: n => n,
   draggable: false,
   dragging: false,
+  dndConnected: false,
 };
 
-class InputItem extends PureComponent {
+export class InputItem extends PureComponent {
   constructor(props) {
     super(props);
 
@@ -51,16 +60,21 @@ class InputItem extends PureComponent {
 
   render() {
     const {
+      index,
+      item,
+      reordering,
+      // from DnD
       connectDragSource,
       connectDropTarget,
       draggable,
       dragging,
-      index,
     } = this.props;
-    const { title, type } = this.props.item;
+    const { title, type } = item;
 
+    const hidden = reordering && dragging;
     const className = classNames({
       'input-item': true,
+      hidden,
       draggable,
       dragging,
     });

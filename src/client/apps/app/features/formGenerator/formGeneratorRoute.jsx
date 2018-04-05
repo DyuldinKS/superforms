@@ -46,8 +46,8 @@ const childContextTypes = {
   findItem: PropTypes.func.isRequired,
   getItem: PropTypes.func.isRequired,
   removeItem: PropTypes.func.isRequired,
+  reorderItem: PropTypes.func.isRequired,
   selectItem: PropTypes.func.isRequired,
-  swapItems: PropTypes.func.isRequired,
 };
 
 class FormGeneratorRoute extends Component {
@@ -61,7 +61,7 @@ class FormGeneratorRoute extends Component {
     this.findItem = this.findItem.bind(this);
     this.getItem = this.getItem.bind(this);
     this.removeItem = this.removeItem.bind(this);
-    this.swapItems = this.swapItems.bind(this);
+    this.reorderItem = this.reorderItem.bind(this);
     this.updateItem = this.updateItem.bind(this);
 
     this.selectItem = this.selectItem.bind(this);
@@ -75,8 +75,8 @@ class FormGeneratorRoute extends Component {
       findItem: this.findItem,
       getItem: this.getItem,
       removeItem: this.removeItem,
+      reorderItem: this.reorderItem,
       selectItem: this.selectItem,
-      swapItems: this.swapItems,
     };
   }
 
@@ -121,14 +121,25 @@ class FormGeneratorRoute extends Component {
       const { items, order } = state;
       const index = order.indexOf(id);
       if (index < 0) return state;
-      return ({
+      return {
         ...state,
         items: deleteMapProp(items, id),
         order: [
           ...order.slice(0, index),
           ...order.slice(index + 1),
         ],
-      });
+      };
+    });
+  }
+
+  reorderItem(id, index) {
+    this.setState((state) => {
+      const newOrder = state.order.filter(itemId => itemId !== id);
+      newOrder.splice(index, 0, id);
+      return {
+        ...state,
+        order: newOrder,
+      };
     });
   }
 
@@ -144,19 +155,6 @@ class FormGeneratorRoute extends Component {
       ...state,
       selectedItem: null,
     }));
-  }
-
-  swapItems(a, b) {
-    this.setState((state) => {
-      const { order } = state;
-      const newOrder = order.slice();
-      [newOrder[a], newOrder[b]] = [newOrder[b], newOrder[a]];
-
-      return {
-        ...state,
-        order: newOrder,
-      };
-    });
   }
 
   updateItem(id, prop, value) {

@@ -20,6 +20,11 @@
     transform: scale(1.01);
     background-color: rgb(240,248,255);
   }
+
+  &.hidden {
+    display: none;
+    visibility: hidden;
+  }
 }
 
 .input-item-title {
