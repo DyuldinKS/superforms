@@ -221,3 +221,18 @@ $$
 	RETURNING *;
 $$
 LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION jsonb_object_merge(a jsonb, b jsonb)
+	RETURNS jsonb AS
+$$
+	SELECT a || b;
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
+CREATE AGGREGATE jsonb_object_merge_agg(jsonb) (
+	sfunc = jsonb_object_merge,
+	stype = jsonb,
+	initcond = '{}'
+);
