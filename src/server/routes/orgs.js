@@ -13,8 +13,6 @@ export default (app) => {
 			const { author } = req;
 			const org = new Org({ ...req.body });
 
-			if(!org.email) return next(new Error('Missing email'));
-
 			org.email = null;
 			return org.save({ author })
 				.then(() => res.json(org))

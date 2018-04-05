@@ -58,13 +58,16 @@ class User extends Recipient {
 	// ***************** INSTANCE METHODS ***************** //
 
 	getScope() {
-		if(this.org) return Promise.resolve(this.org);
-		if(!this.orgId) throw new Error('orgId is not specified');
+		return Promise.resolve()
+			.then(() => {
+				if(this.org) return this.org;
+				if(!this.orgId) throw new Error('orgId is not specified');
 
-		return Org.findById(this.orgId)
-			.then((org) => {
-				this.org = org;
-				return org;
+				return Org.findById(this.orgId)
+					.then((org) => {
+						this.org = org;
+						return org;
+					});
 			});
 	}
 
@@ -116,9 +119,13 @@ class User extends Recipient {
 
 	// @implements
 	save({ author }) {
-		const rcpt = new Recipient(this);
-		return rcpt.saveIfNotExists({ author })
+		return Promise.resolve()
 			.then(() => {
+				if(!this.role) throw new HTTPError(400, 'Missing user role');
+
+				return new Recipient(this).saveIfNotExists({ author });
+			})
+			.then((rcpt) => {
 				if(!rcpt.active || rcpt.type !== 'rcpt') {
 					throw new HTTPError(403, 'This email is not available');
 				}

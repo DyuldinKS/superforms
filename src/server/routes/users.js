@@ -4,7 +4,7 @@ import loadInstance from '../middleware/loadInstance';
 import User from '../models/User';
 import Org from '../models/Org';
 import mailer from '../libs/mailer';
-import { HTTPError, SMTPError, PgError } from '../errors';
+import { HTTPError } from '../errors';
 import ssr from '../templates/ssr';
 
 
@@ -83,9 +83,6 @@ export default (app) => {
 			const { author } = req;
 			const user = new User({ ...req.body });
 
-			if(!user.email) return next(new HTTPError(400, 'Missing email'));
-			if(!user.role) return next(new HTTPError(400, 'Missing user role'));
-
 			return user.save({ author })
 				.then(() => user.resetPassword({ author }))
 				.then(() => mailer.sendRegistrationEmail(user))
@@ -103,10 +100,9 @@ export default (app) => {
 
 			Org.findById(user.orgId)
 				.then((org) => {
-					if(!org) throw new HTTPError(404, 'Organization of the user is not found');
 					res.json({
-						users: { [user.id]: user },
-						orgs: { [org.id]: org },
+						users: user.toStore(),
+						orgs: org.toStore(),
 					});
 				})
 				.catch(next);
