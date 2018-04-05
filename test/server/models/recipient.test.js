@@ -58,14 +58,15 @@ describe('Recipient model', () => {
 
 		// pass all props
 		const props = { ...writable, ...unwritable };
-		rcpt.update({ props, author });
-
-		assert(db.query.calledOnce);
-		const [query, [id, updated, authorId]] = db.query.firstCall.args;
-		assert(query.includes('update_rcpt'));
-		assert(id === 13);
-		assert(authorId === author.id);
-		assert.deepStrictEqual(updated, writable);
+		rcpt.update({ props, author })
+			.then(() => {
+				assert(db.query.calledOnce);
+				const [query, [id, updated, authorId]] = db.query.firstCall.args;
+				assert(query.includes('update_rcpt'));
+				assert(id === 13);
+				assert(authorId === author.id);
+				assert.deepStrictEqual(updated, writable);
+			});		
 	});
 
 
