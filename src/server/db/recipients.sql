@@ -82,6 +82,7 @@ LANGUAGE SQL STABLE;
 CREATE OR REPLACE FUNCTION create_rcpt(
 	_props json,
 	_author_id integer,
+	_time timestamptz DEFAULT now(),
 	OUT _inserted recipients
 ) AS
 $$
@@ -91,12 +92,12 @@ $$
 		_inserted.id = nextval('recipients_id_seq');
 		_inserted.type = coalesce(_inserted.type, 'rcpt');
 		_inserted.active = coalesce(_inserted.active, true);
-		_inserted.created = coalesce(_inserted.created, now());
+		_inserted.created = coalesce(_inserted.created, _time);
 		_inserted.author_id = _author_id;
 
 		INSERT INTO recipients SELECT _inserted.*;
 
-		PERFORM log('I', 'rcpt', _inserted.id, row_to_json(_inserted), _author_id);
+		PERFORM log('I', 'rcpt', _inserted.id, row_to_json(_inserted), _author_id, _time);
 	END;
 $$
 LANGUAGE plpgsql;
@@ -119,6 +120,7 @@ CREATE OR REPLACE FUNCTION update_rcpt(
 	_id integer,
 	_props json,
 	_author_id integer,
+	_time timestamptz DEFAULT now(),
 	OUT _updated recipients
 ) AS
 $$
@@ -128,7 +130,7 @@ $$
 	BEGIN
 		_new := _props::recipients;
 		_new.id := null;
-		_new.updated = now();
+		_new.updated = _time;
 		_new.author_id = _author_id;
 
 		UPDATE recipients rcpt
@@ -143,7 +145,7 @@ $$
 		RETURNING * INTO _updated;
 
 		_changes := json_strip_nulls(row_to_json(_new));
-		PERFORM log('U', 'rcpt', _id, _changes, _author_id);
+		PERFORM log('U', 'rcpt', _id, _changes, _author_id, _time);
 	END;
 $$
 LANGUAGE plpgsql;

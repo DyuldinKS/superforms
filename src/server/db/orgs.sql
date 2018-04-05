@@ -133,6 +133,7 @@ CREATE OR REPLACE FUNCTION set_org_parent(
 	_org_id integer,
 	_parent_id integer,
 	_author_id integer,
+	_time timestamptz DEFAULT now(),
 	OUT _link org_links
 ) AS
 $$
@@ -147,7 +148,7 @@ $$
 		RETURNING * INTO _link;
 
 		-- log last changes
-		PERFORM log('I', 'link', _org_id, row_to_json(_link), _author_id);
+		PERFORM log('I', 'link', _org_id, row_to_json(_link), _author_id, _time);
 	END;
 $$
 LANGUAGE plpgsql;
@@ -157,6 +158,7 @@ CREATE OR REPLACE FUNCTION create_org(
 	_rcpt_id integer,
 	_props json,
 	_author_id integer,
+	_time timestamptz DEFAULT now(),
 	OUT _inserted org_with_rcpt
 ) AS
 $$
@@ -170,8 +172,8 @@ $$
 		INSERT INTO organizations SELECT _new.*;
 
 		-- log changes
-		PERFORM log('I', 'org', _rcpt_id, row_to_json(_new), _author_id);
-		PERFORM update_rcpt(_rcpt_id, '{"type":"org"}'::json, _author_id);
+		PERFORM log('I', 'org', _rcpt_id, row_to_json(_new), _author_id, _time);
+		PERFORM update_rcpt(_rcpt_id, '{"type":"org"}'::json, _author_id, _time);
 
 		_links := _props::org_links;
 		PERFORM set_org_parent(_rcpt_id, _links.parent_id, _author_id);
@@ -186,6 +188,7 @@ CREATE OR REPLACE FUNCTION update_org(
 	_id integer,
 	_props json,
 	_author_id integer,
+	_time timestamptz DEFAULT now(),
 	OUT _updated org_with_rcpt
 ) AS
 $$
@@ -202,17 +205,17 @@ BEGIN
 		UPDATE organizations org SET info = _new.info WHERE org.id = _id;
 		-- log org changes
 		_changes := json_build_object('info', _new.info);
-		PERFORM log('U', 'org', _id, _changes, _author_id);
+		PERFORM log('U', 'org', _id, _changes, _author_id, _time);
 	END IF;
 
 	-- update parent org and log
 	_links := _props::org_links;
 	IF _links.parent_id IS NOT NULL
-	THEN PERFORM set_org_parent(_id, _links.parent_id, _author_id);
+	THEN PERFORM set_org_parent(_id, _links.parent_id, _author_id, _time);
 	END IF;
 
 	-- update rcpt and log
-	PERFORM update_rcpt(_id, _props, _author_id);
+	PERFORM update_rcpt(_id, _props, _author_id, _time);
 
 	SELECT * FROM get_org(_id) INTO _updated;
 END;

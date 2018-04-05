@@ -145,6 +145,7 @@ CREATE OR REPLACE FUNCTION create_user(
 	_rcpt_id integer,
 	_props json,
 	_author_id integer,
+	_time timestamptz DEFAULT now(),
 	OUT _inserted user_with_rcpt
 ) AS
 $$
@@ -157,8 +158,8 @@ $$
 		INSERT INTO users SELECT _new.*;
 
 		-- log changes
-		PERFORM log('I', 'user', _rcpt_id, row_to_json(_new), _author_id);
-		PERFORM update_rcpt(_rcpt_id, '{"type":"user"}'::json, _author_id);
+		PERFORM log('I', 'user', _rcpt_id, row_to_json(_new), _author_id, _time);
+		PERFORM update_rcpt(_rcpt_id, '{"type":"user"}'::json, _author_id, _time);
 
 		SELECT * FROM get_user(_rcpt_id) INTO _inserted;
 	END;
@@ -170,6 +171,7 @@ CREATE OR REPLACE FUNCTION update_user(
 	_id integer,
 	_params json,
 	_author_id integer,
+	_time timestamptz DEFAULT now(),
 	OUT _updated user_with_rcpt
 ) AS
 $$
@@ -188,12 +190,12 @@ BEGIN
 		hash = coalesce(_new.hash, usr.hash)
 	WHERE usr.id = _id;
 
-	-- log user _changes
+	-- log user changes
 	_changes := json_strip_nulls(row_to_json(_new));
 	IF _changes::text != '{}' THEN
-		PERFORM log('U', 'user', _id, _changes, _author_id);
+		PERFORM log('U', 'user', _id, _changes, _author_id, _time);
 	END IF;
-	PERFORM update_rcpt(_id, _params, _author_id);
+	PERFORM update_rcpt(_id, _params, _author_id, _time);
 
 	SELECT * FROM get_user(_id) INTO _updated;
 END;

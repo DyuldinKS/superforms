@@ -203,16 +203,21 @@ $$
 LANGUAGE SQL STABLE;
 
 
+
+/***********************************  LOGS  ***********************************/
+
+
 CREATE OR REPLACE FUNCTION log(
 	_operation char(1),
 	_entity char(4),
 	_entity_id integer,
 	_changes json,
-	_author_id integer
+	_author_id integer,
+	_time timestamptz DEFAULT now()
 ) RETURNS logs AS
 $$
-	INSERT INTO logs(operation, entity, entity_id, changes, author_id)
-	VALUES(_operation, _entity, _entity_id, _changes, _author_id)
+	INSERT INTO logs(operation, entity, entity_id, changes, author_id, time)
+	VALUES(_operation, _entity, _entity_id, _changes, _author_id, _time)
 	RETURNING *;
 $$
 LANGUAGE SQL;

@@ -164,6 +164,7 @@ LANGUAGE SQL STABLE;
 CREATE OR REPLACE FUNCTION create_form(
 	_props json,
 	_author_id integer,
+	_time timestamptz DEFAULT now(),
 	OUT _form form_extra
 ) AS
 $$
@@ -172,13 +173,13 @@ $$
 	BEGIN
 		_inserted := _props::forms;
 		_inserted.id = nextval('forms_id_seq');
-		_inserted.created = coalesce(_inserted.created, now());
+		_inserted.created = coalesce(_inserted.created, _time);
 		_inserted.author_id = _author_id;
 
 		INSERT INTO forms SELECT _inserted.*;
 
 		-- log changes
-		PERFORM log('I', 'form', _inserted.id, row_to_json(_inserted), _author_id);
+		PERFORM log('I', 'form', _inserted.id, row_to_json(_inserted), _author_id, _time);
 
 		_form := _inserted::form_extra;
 	END;
