@@ -7,32 +7,31 @@ class Org extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
 	static findById(id) {
-		return db.query('SELECT * FROM get_org($1::int)', [id])
-			.then((found) => {
-				if(!found) return null;
-				return new Org(found);
-			});
+		return db.query(
+			'SELECT (_found::org_full).* FROM get_org($1::int) _found;',
+			[id],
+		)
+			.then(found => (found ? new Org(found) : null));
 	}
 
 	// @implements
-	save(authorId) {
+	save({ author }) {
 		const rcpt = new Recipient(this);
-		return rcpt.saveIfNotExists(authorId)
+
+		return rcpt.saveIfNotExists({ author })
 			.then(() => {
-				if(!rcpt.active || rcpt.type !== 'rcpt') {
+				if(rcpt.type !== 'rcpt' || !rcpt.active || rcpt.deleted) {
 					throw new HTTPError(403, 'This email is not available');
 				}
+
+				const writableProps = this.filterProps(this, 'writable');
 				return db.query(
-					'SELECT * FROM create_org($1::int, $2::jsonb, $3::int, $4::int)',
-					[
-						rcpt.id,
-						this.info,
-						this.parentId,
-						authorId,
-					],
+					`SELECT (_new::org_full).*
+					FROM create_org($1::int, $2::json, $3::int) _new`,
+					[rcpt.id, writableProps, author.id],
 				);
 			})
-			.then(org => this.assign(org));
+			.then(user => this.assign(user));
 	}
 
 
@@ -83,9 +82,12 @@ class Org extends Recipient {
 
 
 	findAllUsers(options = {}) {
+		const filter = Org.buildFilter(options);
+		if('minDepth' in filter === false) filter.minDepth = 0;
+
 		return db.query(
 			'SELECT * FROM find_users_of_subordinate_orgs($1::int, $2::jsonb)',
-			[this.id, Org.buildFilter(options)],
+			[this.id, filter],
 		);
 	}
 }
@@ -97,14 +99,12 @@ Org.prototype.tableName = 'organizations';
 
 Org.prototype.entityName = 'org';
 
-const props = {
+Org.prototype.props = {
 	...Recipient.prototype.props,
+	id: { writable: false, enumerable: true },
 	parentId: { writable: true, enumerable: true },
 	info: { writable: true, enumerable: true },
 };
-
-Org.prototype.props = props;
-Org.prototype.dict = Org.buildPropsDictionary(props);
 
 Object.freeze(Org);
 

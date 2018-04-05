@@ -25,6 +25,7 @@ LANGUAGE SQL STABLE;
 CREATE OR REPLACE FUNCTION create_response(
 	_props json,
 	_author_id integer,
+	_time timestamptz DEFAULT now(),
 	OUT _response response
 ) AS
 $$
@@ -35,7 +36,7 @@ $$
 
 		-- set default values
 		_inserted.id = nextval('responses_id_seq');
-		_inserted.created = coalesce(_inserted.created, now());
+		_inserted.created = coalesce(_inserted.created, _time);
 		_inserted.author_id = coalesce(_author_id, get_bot_id());
 
 		INSERT INTO responses
@@ -43,7 +44,7 @@ $$
 		RETURNING * INTO _inserted;
 
 		-- log changes
-		PERFORM log('I', 'rspn', _inserted.id, row_to_json(_inserted), _author_id);
+		PERFORM log('I', 'rspn', _inserted.id, row_to_json(_inserted), _author_id, _time);
 
 		SELECT * FROM get_response(_inserted.id) INTO _response;
 	END;

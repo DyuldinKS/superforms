@@ -4,7 +4,7 @@ import loadInstance from '../middleware/loadInstance';
 import User from '../models/User';
 import Org from '../models/Org';
 import mailer from '../libs/mailer';
-import { HTTPError, SMTPError, PgError } from '../errors';
+import { HTTPError } from '../errors';
 import ssr from '../templates/ssr';
 
 
@@ -47,7 +47,7 @@ export default (app) => {
 			User.findByToken(token)
 				.then((user) => {
 					if(!user) throw new HTTPError(404, 'Not Found');
-					return user.resetPassword({ authorId: user.id });
+					return user.resetPassword({ author: user });
 				})
 				.then((user) => {
 					mailer.sendPasswordResetEmail(user);
@@ -80,14 +80,11 @@ export default (app) => {
 		'/api/v1/user',
 		isActive,
 		(req, res, next) => {
-			const { self } = req.loaded;
+			const { author } = req;
 			const user = new User({ ...req.body });
 
-			if(!user.email) return next(new HTTPError(400, 'Missing email'));
-			if(!user.role) return next(new HTTPError(400, 'Missing user role'));
-
-			return user.save(self.id)
-				.then(() => user.resetPassword({ authorId: self.id }))
+			return user.save({ author })
+				.then(() => user.resetPassword({ author }))
 				.then(() => mailer.sendRegistrationEmail(user))
 				.then(() => res.json(user))
 				.catch(next);
@@ -103,10 +100,9 @@ export default (app) => {
 
 			Org.findById(user.orgId)
 				.then((org) => {
-					if(!org) throw new HTTPError(404, 'Organization of the user is not found');
 					res.json({
-						users: { [user.id]: user },
-						orgs: { [org.id]: org },
+						users: user.toStore(),
+						orgs: org.toStore(),
 					});
 				})
 				.catch(next);
@@ -118,19 +114,20 @@ export default (app) => {
 	app.patch(
 		'/api/v1/user/:id',
 		(req, res, next) => {
-			const { user, self } = req.loaded;
-			const params = req.body;
+			const { author } = req;
+			const { user } = req.loaded;
+			const props = req.body;
 
 			let updateChain = Promise.resolve();
-			const { password } = params;
+			const { password } = props;
 			if(password) {
 				updateChain = updateChain
 					.then(() => User.encrypt(password))
-					.then((hash) => { params.hash = hash; });
+					.then((hash) => { props.hash = hash; });
 			}
 
 			updateChain
-				.then(() => user.update(params, self.id))
+				.then(() => user.update({ props, author }))
 				.then(() => res.send(user))
 				.catch(next);
 		},

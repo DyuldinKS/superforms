@@ -10,6 +10,12 @@ const { expect } = chai;
 
 
 describe('Org model', () => {
+	const author = { id: 1 };
+
+	before(() => sinon.stub(db, 'query').resolves({}));
+
+	after(() => db.query.restore());
+
 	it('should be instance of Org, Recipient and AbstractModel', () => {
 		const org = new Org();
 		assert(org instanceof Org);
@@ -39,20 +45,8 @@ describe('Org model', () => {
 		assert.deepStrictEqual({ ...org }, PROPS);
 	});
 
-
-	it('should rename snake cased props', () => {
-		const org = new Org({
-			parent_id: 287,
-			some_info: 'aborted',
-			author_id: 1,
-		});
-		assert.deepStrictEqual({ ...org }, { parentId: 287, authorId: 1 });
-	});
-
 	
 	it('should update only writable props', () => {
-		sinon.stub(db, 'query').resolves({});
-
 		const org = new Org({ id: 13 });
 		// props that can be updated
 		const writable = {
@@ -69,20 +63,21 @@ describe('Org model', () => {
 		};
 
 		// pass all props
-		org.update({ ...writable, ...unwritable }, 1);
+		const props = { ...writable, ...unwritable };
 
-		assert(db.query.calledOnce);
+		return org.update({ props, author })
+			.then(() => {
+				assert(db.query.calledOnce === true);
 
-		const [query, [id, updated, authorId]] = db.query.firstCall.args;
-		assert(query.includes('update_org'));
-		assert(id === 13);
-		assert(authorId === 1);
+				const [query, [id, updated, authorId]] = db.query.firstCall.args;
 
-		const result = { ...writable, parent_id: writable.parentId };
-		delete result.parentId;
-		assert.deepStrictEqual(updated, result);
+				assert(query.includes('update_org'));
+				assert(id === 13);
+				assert(authorId === author.id);
 
-		db.query.restore();
+				const result = { ...writable };
+				assert.deepStrictEqual(updated, result);
+			});
 	});
 
 

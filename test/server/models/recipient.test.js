@@ -9,6 +9,12 @@ const { expect } = chai;
 
 
 describe('Recipient model', () => {
+	const author = { id: 1 };
+
+	before(() => sinon.stub(db, 'query').resolves({}));
+
+	after(() => db.query.restore());
+
 	it('should be instance of Recipient and AbstractModel', () => {
 		const rcpt = new Recipient();
 		assert(rcpt instanceof Recipient);
@@ -33,19 +39,15 @@ describe('Recipient model', () => {
 		assert.deepStrictEqual({ ...rcpt }, PROPS);
 	});
 
-
-	it('should rename snake cased props', () => {
-		const rcpt = new Recipient({ author_id: 1, some_info: 'aborted' });
-		assert.deepStrictEqual({ ...rcpt }, { authorId: 1 });
-	});
-
 	
 	it('should update only writable props', () => {
-		sinon.stub(db, 'query').resolves({});
-
 		const rcpt = new Recipient({ id: 13 });
 		// props that can be updated
-		const writable = { email: 'e@mail', active: true, deleted: false };
+		const writable = {
+			email: 'e@mail',
+			active: true,
+			deleted: false,
+		};
 		// props that can not be updated
 		const unwritable = {
 			id: 14,
@@ -55,16 +57,16 @@ describe('Recipient model', () => {
 		};
 
 		// pass all props
-		rcpt.update({ ...writable, ...unwritable }, 1);
-
-		assert(db.query.calledOnce);
-		const [query, [id, updated, authorId]] = db.query.firstCall.args;
-		assert(query.includes('update_rcpt'));
-		assert(id === 13);
-		assert(authorId === 1);
-		assert.deepStrictEqual(updated, writable);
-
-		db.query.restore();
+		const props = { ...writable, ...unwritable };
+		rcpt.update({ props, author })
+			.then(() => {
+				assert(db.query.calledOnce);
+				const [query, [id, updated, authorId]] = db.query.firstCall.args;
+				assert(query.includes('update_rcpt'));
+				assert(id === 13);
+				assert(authorId === author.id);
+				assert.deepStrictEqual(updated, writable);
+			});		
 	});
 
 

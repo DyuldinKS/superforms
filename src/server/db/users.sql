@@ -1,15 +1,38 @@
+/**********************************  INDEXES **********************************/
+
+
 CREATE INDEX users_info_idx ON users
 USING gin(to_tsvector('russian', info));
 
 
-CREATE TYPE usr AS (
+
+/***********************************  TYPES ***********************************/
+
+-- snake cased
+CREATE TYPE user_with_rcpt AS (
 	id integer,
+	org_id integer,
+	info jsonb,
+	role_id integer,
+	hash varchar(255),
 	email varchar(255),
+	type rcpt_type,
+	active boolean,
+	created timestamptz,
+	updated timestamptz,
+	deleted timestamptz,
+	author_id integer
+);
+
+-- camel cased
+CREATE TYPE user_full AS (
+	id integer,
+	"orgId" integer,
 	info jsonb,
 	role varchar(255),
-	active boolean,
-	"orgId" integer,
 	hash varchar(255),
+	email varchar(255),
+	active boolean,
 	created timestamptz,
 	updated timestamptz,
 	deleted timestamptz,
@@ -17,66 +40,171 @@ CREATE TYPE usr AS (
 );
 
 
+CREATE TYPE user_short AS (
+	id integer,
+	"orgId" integer,
+	info jsonb,
+	role varchar(255),
+	active boolean
+);
+
+
+CREATE OR REPLACE FUNCTION to_users(
+	_props json,
+	OUT _record users
+) AS
+$$
+	DECLARE
+		_user user_full;
+	BEGIN
+		_record := json_populate_record(null::users, _props);
+		_user := json_populate_record(null::user_full, _props);
+
+		_record.org_id = coalesce(_record.org_id, _user."orgId");
+		_record.role_id = coalesce(_record.role_id, get_role_id(_user.role));
+	END;
+$$
+LANGUAGE plpgsql IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION to_user_full(_record user_with_rcpt)
+	RETURNS user_full AS
+$$
+	SELECT _record.id,
+		_record.org_id,
+		_record.info,
+		get_role_name(_record.role_id),
+		_record.hash,
+		_record.email,
+		_record.active,
+		_record.created,
+		_record.updated,
+		_record.deleted,
+		_record.author_id;
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION to_user_short(_record user_with_rcpt)
+	RETURNS user_short AS
+$$
+	SELECT _record.id,
+		_record.org_id,
+		_record.info,
+		get_role_name(_record.role_id),
+		_record.active;
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
+CREATE CAST (json AS users)
+WITH FUNCTION to_users(json);
+
+
+CREATE CAST (user_with_rcpt AS user_full)
+WITH FUNCTION to_user_full(user_with_rcpt);
+
+
+CREATE CAST (user_with_rcpt AS user_short)
+WITH FUNCTION to_user_short(user_with_rcpt);
+
+
+
+/*******************************  CRUD METHODS ********************************/
+
+
 CREATE OR REPLACE FUNCTION get_user(
 	_id integer,
-	mode varchar(255) DEFAULT NULL
-)
-	RETURNS usr AS
+	_mode varchar(255) DEFAULT '',
+	OUT _user user_with_rcpt
+) AS
 $$
-	SELECT usr.id,
-		rcpt.email,
-		usr.info,
-		get_role_name(usr.role_id),
-		rcpt.active,
-		usr.org_id,
-		CASE WHEN mode = 'auth' THEN usr.hash ELSE NULL END,
-		rcpt.created,
-		rcpt.updated,
-		rcpt.deleted,
-		rcpt.author_id
-	FROM users usr
-	JOIN recipients rcpt ON usr.id = _id
-		AND usr.id = rcpt.id;
+	BEGIN
+		SELECT * FROM users
+		JOIN recipients USING (id)
+		WHERE users.id = _id
+		INTO _user;
+
+		IF _mode != 'auth' THEN _user.hash := null; END IF;
+	END;
 $$
-LANGUAGE SQL STABLE;
+LANGUAGE plpgsql STABLE;
 
 
-CREATE OR REPLACE FUNCTION get_user_by_email(_email varchar(255))
-	RETURNS usr AS
+CREATE OR REPLACE FUNCTION get_user(
+	_email varchar(255),
+	_mode varchar(255) DEFAULT NULL
+) RETURNS user_with_rcpt AS
 $$
-	SELECT * FROM get_user(
-		(SELECT id FROM recipients WHERE email = _email),
-		'auth'
-	);
+	SELECT usr.* FROM get_rcpt(_email) rcpt, get_user(rcpt.id, _mode) usr;
 $$
 LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION create_user(
 	_rcpt_id integer,
-	_org_id integer,
-	_info jsonb,
-	_role varchar(255),
-	_hash varchar(255),
+	_props json,
 	_author_id integer,
-	OUT _user usr
+	_time timestamptz DEFAULT now(),
+	OUT _inserted user_with_rcpt
 ) AS
 $$
 	DECLARE
-		_inserted users;
+		_new users;
 	BEGIN
-		INSERT INTO users(id, org_id, info, role_id, hash)
-		VALUES (_rcpt_id, _org_id, _info, get_role_id(_role), _hash)
-		RETURNING * INTO _inserted;
+		_new := _props::users;
+		_new.id := _rcpt_id;
+
+		INSERT INTO users SELECT _new.*;
 
 		-- log changes
-		PERFORM log('I', 'user', _rcpt_id, row_to_json(_inserted), _author_id);
-		PERFORM update_rcpt(_rcpt_id, json_build_object('type', 'user'), _author_id);
+		PERFORM log('I', 'user', _rcpt_id, row_to_json(_new), _author_id, _time);
+		PERFORM update_rcpt(_rcpt_id, '{"type":"user"}'::json, _author_id, _time);
 
-		SELECT * FROM get_user(_rcpt_id) INTO _user;
+		SELECT * FROM get_user(_rcpt_id) INTO _inserted;
 	END;
 $$
 LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION update_user(
+	_id integer,
+	_params json,
+	_author_id integer,
+	_time timestamptz DEFAULT now(),
+	OUT _updated user_with_rcpt
+) AS
+$$
+DECLARE
+	_new users;
+	_changes json;
+BEGIN
+	_new := _params::users;
+	_new.id := null;
+
+	-- update user
+	UPDATE users usr
+	SET info = coalesce(_new.info, usr.info),
+		org_id = coalesce(_new.org_id, usr.org_id),
+		role_id = coalesce(_new.role_id, usr.role_id),
+		hash = coalesce(_new.hash, usr.hash)
+	WHERE usr.id = _id;
+
+	-- log user changes
+	_changes := json_strip_nulls(row_to_json(_new));
+	IF _changes::text != '{}' THEN
+		PERFORM log('U', 'user', _id, _changes, _author_id, _time);
+	END IF;
+	PERFORM update_rcpt(_id, _params, _author_id, _time);
+
+	SELECT * FROM get_user(_id) INTO _updated;
+END;
+$$
+LANGUAGE plpgsql;
+
+
+
+/***********************************  SEARCH **********************************/
 
 
 CREATE OR REPLACE FUNCTION get_user_org_id(_user_id integer)
@@ -106,46 +234,11 @@ $$
 	-- build organizations object
 	SELECT json_build_object(
 			'users',
-			build_entities_object('users', _users_ids.list),
+			build_entities_object('users', _users_ids.list, 'user_short'),
 			'orgs',
-			build_entities_object('orgs', _orgs_ids.list)
+			build_entities_object('orgs', _orgs_ids.list, 'org_short')
 		) AS entities,
 		build_list_object(_users_ids.list) AS list
 	FROM _users_ids, _orgs_ids;
 $$
 LANGUAGE SQL STABLE;
-
-
-CREATE OR REPLACE FUNCTION update_user(
-	_id integer,
-	_params json,
-	_author_id integer,
-	OUT _updated usr
-) AS
-$$
-DECLARE
-	_new users;
-	_changes json;
-BEGIN
-	SELECT * FROM json_populate_record(null::users, _params) INTO _new;
-
-	_new.role_id = get_role_id(_params->>'role');
-
-	-- update user
-	UPDATE users usr
-	SET info = coalesce(_new.info, usr.info),
-		role_id = coalesce(_new.role_id, usr.role_id),
-		hash = coalesce(_new.hash, usr.hash)
-	WHERE usr.id = _id;
-
-	-- log user _changes
-	_changes := json_strip_nulls(row_to_json(_new));
-	IF _changes::text != '{}' THEN
-		PERFORM log('U', 'user', _id, _changes, _author_id);
-	END IF;
-	PERFORM update_rcpt(_id, _params, _author_id);
-
-	SELECT * FROM get_user(_id) INTO _updated;
-END;
-$$
-LANGUAGE plpgsql;

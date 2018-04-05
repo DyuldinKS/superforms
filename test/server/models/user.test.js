@@ -10,6 +10,13 @@ const { expect } = chai;
 
 
 describe('User model', () => {
+	const author = { id: 1 };
+
+	before(() => sinon.stub(db, 'query').resolves({}));
+
+	after(() => db.query.restore());
+
+
 	it('should be instance of User, Recipient and AbstractModel', () => {
 		const user = new User();
 		assert(user instanceof User);
@@ -40,20 +47,8 @@ describe('User model', () => {
 		assert.deepStrictEqual({ ...user }, PROPS);
 	});
 
-
-	it('should rename snake cased props', () => {
-		const user = new User({
-			org_id: 287,
-			some_info: 'aborted',
-			author_id: 1,
-		});
-		assert.deepStrictEqual({ ...user }, { orgId: 287, authorId: 1 });
-	});
-
 	
 	it('should update only writable props', () => {
-		sinon.stub(db, 'query').resolves({});
-
 		const user = new User({ id: 13 });
 		// props that can be updated
 		const writable = {
@@ -61,29 +56,32 @@ describe('User model', () => {
 			role: 'root',
 			info: { firstName: 'W', lastName: 'MC' },
 			hash: '$2a$10$6gWKeAoLc6B3wwx4Oao3TePNf0lXpBXW9OtFw7RFNSDSfeMo7csXO',
+			deleted: true,
+			orgId: 13,
 		};
 		// props that can not be updated
 		const unwritable = {
 			id: 14,
 			type: 'rcpt',
 			password: 'aborted',
+			created: new Date(),
+			updated: new Date(),
 			authorId: null,
-			orgId: 13,
 		};
 
 		// pass all props
-		user.update({ ...writable, ...unwritable }, 1);
+		const props = { ...writable, ...unwritable };
+		return user.update({ props, author })
+			.then(() => {
+				assert(db.query.calledOnce);
+				const [query, [id, updatedProps, authorId]] = db.query.firstCall.args;
 
-		assert(db.query.calledOnce);
-		const [query, [id, updated, authorId]] = db.query.firstCall.args;
+				assert(query.includes('update_user'));
+				assert(id === 13);
+				assert(authorId === author.id);
 
-		assert(query.includes('update_user'));
-		assert(id === 13);
-		assert(authorId === 1);
-
-		assert.deepStrictEqual(updated, writable);
-
-		db.query.restore();
+				assert.deepStrictEqual(updatedProps, writable);
+			});
 	});
 
 

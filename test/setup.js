@@ -13,10 +13,8 @@ const sequences = {};
 // get the last id of the each sequence from db
 before(() => (
 	Promise.all(tables.map((table) => (
-		db.query(`SELECT last_value AS "lastValue" FROM ${table}_id_seq;`)
-			.then(seq => {
-				sequences[table] = seq.lastValue;
-			})
+		db.query(`SELECT * FROM ${table}_id_seq;`)
+			.then(seq => { sequences[table] = seq; })
 	)))
 		.then(() => { console.log('Start:', new Date()); })
 ));
@@ -30,18 +28,23 @@ after(() => {
 	let chain = Promise.resolve();
 
 	tables.forEach((table) => {
+		const { is_called: isCalled, last_value } = sequences[table];
+		const lastValue = +last_value;
+		const more = isCalled ? '>' : '>=';
+		const restartVal = isCalled ? lastValue + 1 : lastValue;
+
 		chain = chain.then(() => (
 			db.query(
 				table !== 'recipients' 
-					? `DELETE FROM ${table} WHERE id >= $1`
+					? `DELETE FROM ${table} WHERE id ${more} $1;`
 					// delete users, orgs, recipients in one transaction
-					: `WITH deleted_users AS (DELETE FROM users WHERE id > $1 RETURNING *),
-						deleted_orgs AS (DELETE FROM organizations WHERE id > $1 RETURNING *)
-					DELETE FROM recipients WHERE id > $1 RETURNING *;`,
-				[sequences[table]],
+					: `WITH deleted_users AS (DELETE FROM users WHERE id ${more} $1 RETURNING *),
+						deleted_orgs AS (DELETE FROM organizations WHERE id ${more} $1 RETURNING *)
+					DELETE FROM recipients WHERE id ${more} $1 RETURNING *;`,
+				[lastValue],
 			)
 				.then(() => (
-					db.query(`ALTER SEQUENCE ${table}_id_seq RESTART WITH ${sequences[table]};`)
+					db.query(`ALTER SEQUENCE ${table}_id_seq RESTART WITH ${restartVal};`)
 				))
 				// if error occured do not prevent deleting data in other tables
 				.catch(console.error)

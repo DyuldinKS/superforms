@@ -33,15 +33,13 @@ LANGUAGE SQL STABLE;
 
 /*********************************  ENTITIES  *********************************/
 
-
+-- common attributes of org and user necessary
+-- for the following search and sort
 CREATE TYPE entity AS (
 	id integer,
 	email varchar(255),
 	info jsonb,
-	created timestamptz,
-	updated timestamptz,
-	deleted timestamptz,
-	author_id integer
+	created timestamptz
 );
 
 
@@ -57,8 +55,7 @@ $$
 		_deleted boolean := (_filter->>'deleted')::boolean;
 	BEGIN
 		RETURN QUERY
-			SELECT org.id, rcpt.email, org.info, rcpt.created,
-				rcpt.updated, rcpt.deleted, rcpt.author_id
+			SELECT org.id, rcpt.email, org.info, rcpt.created
 			FROM organizations org
 			JOIN recipients rcpt ON rcpt.id = org.id
 			JOIN org_links links ON links.parent_id = _org_id
@@ -83,18 +80,14 @@ $$
 		_active boolean := (_filter->>'active')::boolean;
 		_role_id integer := get_role_id(_filter->>'role');
 		_deleted boolean := (_filter->>'deleted')::boolean;
+		_org_filter jsonb := _filter - 'active' - 'deleted' - 'role';
 	BEGIN
-		IF _filter->'minDepth' IS NULL THEN
-			_filter := jsonb_set(_filter, '{minDepth}', '0');
-		END IF;
-
 		RETURN QUERY
-			SELECT usr.id, rcpt.email, usr.info, rcpt.created,
-				rcpt.updated, rcpt.deleted, rcpt.author_id
+			SELECT usr.id, rcpt.email, usr.info, rcpt.created
 			FROM users usr
 			JOIN recipients rcpt ON rcpt.id = usr.id
 			WHERE usr.org_id IN (
-				SELECT id FROM get_subordinate_orgs(_org_id, _filter - 'active')
+				SELECT id FROM get_subordinate_orgs(_org_id, _org_filter)
 			)
 				AND (_active IS NULL OR rcpt.active = _active)
 				AND (_role_id IS NULL OR usr.role_id = _role_id)
@@ -165,11 +158,12 @@ LANGUAGE plpgsql STABLE;
 CREATE OR REPLACE FUNCTION build_entities_object(
 	_table varchar(255),
 	_ids integer[],
+	_type varchar(255),
 	OUT entities json
 ) AS
 $$
 	DECLARE
-		_func_name varchar(255) := CASE _table
+		_getter varchar(255) := CASE _table
 			WHEN 'users' THEN 'get_user'
 			WHEN 'orgs' THEN 'get_org'
 		END;
@@ -179,14 +173,14 @@ $$
 				(
 					SELECT json_object_agg(
 						entity_id,
-						info || (row_to_json(entity_record)::jsonb - ''info'')
+						info || (row_to_json(entity_record::%s)::jsonb - ''info'')
 					)
 					FROM unnest($1) entity_id,
 						LATERAL %s(entity_id) entity_record
 				),
 			''{}''
 			);',
-			_func_name
+			_type, _getter
 		)
 		USING _ids
 		INTO entities;
@@ -209,16 +203,36 @@ $$
 LANGUAGE SQL STABLE;
 
 
+
+/***********************************  LOGS  ***********************************/
+
+
 CREATE OR REPLACE FUNCTION log(
 	_operation char(1),
 	_entity char(4),
 	_entity_id integer,
 	_changes json,
-	_author_id integer
+	_author_id integer,
+	_time timestamptz DEFAULT now()
 ) RETURNS logs AS
 $$
-	INSERT INTO logs(operation, entity, entity_id, changes, author_id)
-	VALUES(_operation, _entity, _entity_id, _changes, _author_id)
+	INSERT INTO logs(operation, entity, entity_id, changes, author_id, time)
+	VALUES(_operation, _entity, _entity_id, _changes, _author_id, _time)
 	RETURNING *;
 $$
 LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION jsonb_object_merge(a jsonb, b jsonb)
+	RETURNS jsonb AS
+$$
+	SELECT a || b;
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
+CREATE AGGREGATE jsonb_object_merge_agg(jsonb) (
+	sfunc = jsonb_object_merge,
+	stype = jsonb,
+	initcond = '{}'
+);

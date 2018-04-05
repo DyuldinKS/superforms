@@ -3,6 +3,7 @@ import uuidv4 from 'uuid/v4';
 import config from '../config';
 import db from '../db/index';
 import Recipient from './Recipient';
+import Org from './Org';
 import passwordGenerator from '../libs/passwordGenerator';
 import { HTTPError } from '../errors';
 
@@ -11,20 +12,20 @@ class User extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
 	static findById(id) {
-		return db.query('SELECT * FROM get_user($1);', [id])
-			.then((found) => {
-				if(!found) return null;
-				return new User(found);
-			});
+		return db.query(
+			'SELECT (_found::user_full).* FROM get_user($1::int) _found;',
+			[id],
+		)
+			.then(found => (found ? new User(found) : null));
 	}
 
 	// for authentication or password recovery
-	static findByEmail(email) {
-		return db.query('SELECT * FROM get_user_by_email($1)', [email])
-			.then((found) => {
-				if(!found) return null;
-				return new User(found);
-			});
+	static findByEmail(email, mode = null) {
+		return db.query(
+			'SELECT (_found::user_full).* FROM get_user($1::text, $2) _found;',
+			[email, mode],
+		)
+			.then(found => (found ? new User(found) : null));
 	}
 
 
@@ -37,10 +38,15 @@ class User extends Recipient {
 				AND now() - ut.created < interval '1 day';`,
 			[token],
 		)
-			.then((user) => {
-				if(!user) return null;
-				return new User(user);
-			});
+			.then(found => (found ? new User(found) : null));
+	}
+
+
+	static find({ id, email, token }) {
+		if(id !== undefined) return User.findById(id);
+		if(email !== undefined) return User.findByEmail(email);
+		if(token !== undefined) return User.findByToken(token);
+		throw new Error('No search attributes specified');
 	}
 
 
@@ -51,8 +57,22 @@ class User extends Recipient {
 
 	// ***************** INSTANCE METHODS ***************** //
 
+	getScope() {
+		return Promise.resolve()
+			.then(() => {
+				if(this.org) return this.org;
+				if(!this.orgId) throw new Error('orgId is not specified');
+
+				return Org.findById(this.orgId)
+					.then((org) => {
+						this.org = org;
+						return org;
+					});
+			});
+	}
+
+
 	authenticate(password) {
-		console.log(this);
 		return bcrypt.compare(password, this.hash)
 			.then((isPassValid) => {
 				this.isAuthenticated = isPassValid;
@@ -87,33 +107,34 @@ class User extends Recipient {
 	}
 
 
-	resetPassword({ password, authorId }) {
+	resetPassword({ password, author }) {
 		this.password = password || passwordGenerator(8);
+
 		return User.encrypt(this.password)
-			.then(hash => this.update({ hash }, authorId))
+			.then(hash => this.update({ props: { hash }, author }))
 			.then(() => this.deleteToken())
 			.then(() => this);
 	}
 
 
 	// @implements
-	save(authorId) {
-		const rcpt = new Recipient(this);
-		return rcpt.saveIfNotExists(authorId)
+	save({ author }) {
+		return Promise.resolve()
 			.then(() => {
+				if(!this.role) throw new HTTPError(400, 'Missing user role');
+
+				return new Recipient(this).saveIfNotExists({ author });
+			})
+			.then((rcpt) => {
 				if(!rcpt.active || rcpt.type !== 'rcpt') {
 					throw new HTTPError(403, 'This email is not available');
 				}
+
+				const writableProps = this.filterProps(this, 'writable');
 				return db.query(
-					'SELECT * FROM create_user($1, $2, $3, $4, $5, $6)',
-					[
-						rcpt.id,
-						this.orgId,
-						this.info,
-						this.role,
-						this.hash,
-						authorId,
-					],
+					`SELECT (_new::user_full).*
+					FROM create_user($1::int, $2::json, $3::int) _new`,
+					[rcpt.id, writableProps, author.id],
 				);
 			})
 			.then(user => this.assign(user));
@@ -137,18 +158,17 @@ class User extends Recipient {
 User.prototype.tableName = 'users';
 User.prototype.entityName = 'user';
 
-const props = {
+User.prototype.props = {
 	...Recipient.prototype.props,
-	orgId: { writable: false, enumerable: true },
+	id: { writable: false, enumerable: true },
+	orgId: { writable: true, enumerable: true },
+	org: { writable: false, enumerable: false },
 	info: { writable: true, enumerable: true },
 	role: { writable: true, enumerable: true },
 	token: { writable: false, enumerable: false },
 	password: { writable: false, enumerable: false },
 	hash: { writable: true, enumerable: false },
 };
-
-User.prototype.props = props;
-User.prototype.dict = User.buildPropsDictionary(props);
 
 Object.freeze(User);
 
