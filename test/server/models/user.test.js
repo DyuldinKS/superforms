@@ -71,7 +71,7 @@ describe('User model', () => {
 
 		// pass all props
 		const props = { ...writable, ...unwritable };
-		user.update({ props, author })
+		return user.update({ props, author })
 			.then(() => {
 				assert(db.query.calledOnce);
 				const [query, [id, updatedProps, authorId]] = db.query.firstCall.args;

@@ -64,7 +64,8 @@ describe('Org model', () => {
 
 		// pass all props
 		const props = { ...writable, ...unwritable };
-		org.update({ props, author })
+
+		return org.update({ props, author })
 			.then(() => {
 				assert(db.query.calledOnce === true);
 
