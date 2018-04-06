@@ -39,6 +39,14 @@ $$
 LANGUAGE SQL STABLE;
 
 
+CREATE OR REPLACE FUNCTION count_questions(_scheme json)
+	RETURNS integer AS
+$$
+	SELECT count(*)::int FROM get_ordered_questions(_scheme);
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION count_responses(_form_id integer)
 	RETURNS integer AS
 $$
@@ -62,6 +70,7 @@ CREATE TYPE form_extra AS (
 	updated timestamptz,
 	deleted timestamptz,
 	author_id integer,
+	question_count integer,
 	response_count integer
 );
 
@@ -77,7 +86,8 @@ CREATE TYPE form_full AS (
 	updated timestamptz,
 	deleted timestamptz,
 	"authorId" integer,
-	"recponseCount" integer
+	"questionCount" integer,
+	"responseCount" integer
 );
 
 
@@ -85,10 +95,11 @@ CREATE TYPE form_short AS (
 	id integer,
 	title text,
 	description text,
+	sent json,
 	"ownerId" integer,
 	created timestamptz,
 	"questionCount" integer,
-	"recponseCount" integer
+	"responseCount" integer
 );
 
 
@@ -113,7 +124,9 @@ LANGUAGE plpgsql IMMUTABLE;
 CREATE OR REPLACE FUNCTION to_form_extra(_form forms)
 	RETURNS form_extra AS
 $$
-	SELECT _form.*, count_responses(_form.id) AS count_responses
+	SELECT _form.*,
+		count_questions(_form.scheme),
+		count_responses(_form.id)
 $$
 LANGUAGE SQL STABLE;
 
@@ -124,10 +137,11 @@ $$
 	SELECT _form.id,
 		_form.title,
 		_form.description,
+		_form.sent,
 		_form.owner_id,
 		_form.created,
-		_form.response_count,
-		(SELECT count(*)::int FROM get_ordered_questions(_form.scheme))
+		_form.question_count,
+		_form.response_count
 $$
 LANGUAGE SQL STABLE;
 
@@ -182,6 +196,45 @@ $$
 		PERFORM log('I', 'form', _inserted.id, row_to_json(_inserted), _author_id, _time);
 
 		_form := _inserted::form_extra;
+	END;
+$$
+LANGUAGE plpgsql;
+
+
+
+CREATE OR REPLACE FUNCTION update_form(
+	_id integer,
+	_props json,
+	_author_id integer,
+	_time timestamptz DEFAULT now(),
+	OUT _updated form_extra
+) AS
+$$
+	DECLARE
+		_new forms;
+		_changes json;
+	BEGIN
+		_new := _props::forms;
+		_new.id := null;
+		_new.updated = _time;
+		_new.author_id = _author_id;
+
+		UPDATE forms form
+		SET title = coalesce(_new.title, form.title),
+			description = coalesce(_new.description, form.description),
+			scheme = coalesce(_new.scheme, form.scheme),
+			sent = coalesce(_new.sent, form.sent),
+			owner_id = coalesce(_new.owner_id, form.owner_id),
+			created = coalesce(_new.created, form.created),
+			updated = _new.updated,
+			deleted = coalesce(_new.deleted, form.deleted),
+			author_id = _new.author_id
+		WHERE form.id = _id;
+
+		_changes := json_strip_nulls(row_to_json(_new));
+		PERFORM log('U', 'form', _id, _changes, _author_id, _time);
+
+		SELECT * FROM get_form(_id) INTO _updated;
 	END;
 $$
 LANGUAGE plpgsql;
