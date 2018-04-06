@@ -6,6 +6,8 @@ import {
   Label,
 } from 'reactstrap';
 import * as inputTypes from 'shared/form/utils/inputTypes';
+import ItemSettingsTogglers from './ItemSettingsTogglers';
+import getTogglers from '../utils/getTogglers';
 
 const propTypes = {
   id: PropTypes.string.isRequired,
@@ -25,11 +27,22 @@ class ItemSettings extends Component {
   constructor(props) {
     super(props);
 
+    this.getValue = this.getValue.bind(this);
     this.handleChange = this.handleChange.bind(this);
+
+    this.togglers = getTogglers(props.item);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.item.type !== nextProps.item.type) {
+      this.togglers = getTogglers(nextProps.item);
+    }
   }
 
   handleChange(event) {
-    const { name, value } = event.target;
+    const { target } = event;
+    const { name } = target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
     const { id, updateItem } = this.props;
     updateItem(id, name, value);
   }
@@ -40,7 +53,6 @@ class ItemSettings extends Component {
 
   render() {
     const {
-      item,
       itemIndex,
       onClose,
     } = this.props;
@@ -89,12 +101,18 @@ class ItemSettings extends Component {
             <Input
               bsSize="sm"
               type="text"
-              name="desc"
-              value={this.getValue('desc')}
+              name="description"
+              value={this.getValue('description')}
               onChange={this.handleChange}
             />
           </FormGroup>
         </div>
+
+        <ItemSettingsTogglers
+          togglers={this.togglers}
+          getValue={this.getValue}
+          onChange={this.handleChange}
+        />
       </div>
     );
   }

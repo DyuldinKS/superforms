@@ -4,4 +4,13 @@
     align-items: baseline;
     justify-content: space-between;
   }
+
+  .item-settings-section {
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid $card-border-color;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
 }
