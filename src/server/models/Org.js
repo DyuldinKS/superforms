@@ -75,7 +75,7 @@ class Org extends Recipient {
 	findAllOrgs(options = {}) {
 		// const searchPattern = search ? `${search}:*` : null;
 		return db.query(
-			'SELECT * FROM find_subordinate_orgs_with_parents($1::int, $2::jsonb)',
+			'SELECT * FROM find_orgs_in_subtree($1::int, $2::jsonb)',
 			[this.id, Org.buildFilter(options)],
 		);
 	}
@@ -86,7 +86,7 @@ class Org extends Recipient {
 		if('minDepth' in filter === false) filter.minDepth = 0;
 
 		return db.query(
-			'SELECT * FROM find_users_of_subordinate_orgs($1::int, $2::jsonb)',
+			'SELECT * FROM find_users_in_subtree($1::int, $2::jsonb)',
 			[this.id, filter],
 		);
 	}

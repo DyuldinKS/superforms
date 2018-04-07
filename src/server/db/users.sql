@@ -215,30 +215,70 @@ $$
 LANGUAGE SQL STABLE;
 
 
-CREATE OR REPLACE FUNCTION find_users_of_subordinate_orgs(
+CREATE OR REPLACE FUNCTION filter_users_in_orgs(
+	_orgs integer[],
+	_filter jsonb DEFAULT NULL
+) RETURNS TABLE (
+	user_id integer,
+	org_id integer
+) AS
+$$
+	DECLARE
+		_info text := _filter->>'info';
+		_email text := _filter->>'email';
+		_active boolean := (_filter->>'active')::boolean;
+		_role_id integer := get_role_id(_filter->>'role');
+		_deleted boolean := (_filter->>'deleted')::boolean;
+	BEGIN
+		RETURN QUERY
+			SELECT usr.id, usr.org_id
+			FROM users usr JOIN recipients rcpt USING (id),
+				to_tsvector('russian', usr.info) document
+			WHERE (_orgs IS NULL OR usr.org_id = ANY (_orgs))
+				AND (_info IS NULL OR document @@ to_tsquery('russian', _info))
+				AND (_email IS NULL OR email ILIKE _email)
+				AND (_active IS NULL OR rcpt.active = _active)
+				AND (_role_id IS NULL OR usr.role_id = _role_id)
+				AND (_deleted IS NULL
+					OR (_deleted IS false AND rcpt.deleted IS NULL)
+					OR (_deleted IS true AND rcpt.deleted IS NOT NULL))
+			ORDER BY usr.id;
+	END;
+$$
+LANGUAGE plpgsql STABLE;
+
+
+CREATE OR REPLACE FUNCTION find_users_in_subtree(
 	_org_id integer,
 	_filter jsonb DEFAULT NULL
 ) RETURNS TABLE(entities json, list json) AS
 $$
 	WITH
+		_subtree AS (
+			SELECT id FROM get_org_subtree(
+				_org_id,
+				(_filter->>'minDepth')::int,
+				(_filter->>'maxDepth')::int
+			) id
+		),
 		_filtered_users AS (
-			SELECT find_subordinate('users', _org_id, _filter) id
+			SELECT * FROM filter_users_in_orgs(
+				(SELECT array_agg(id) FROM _subtree),
+				_filter
+			)
 		),
-		_users_orgs AS (
-			SELECT DISTINCT p_id AS id
-			FROM _filtered_users org, LATERAL get_user_org_id(org.id) p_id
-			WHERE p_id IS NOT NULL
-		),
-		_users_ids AS (SELECT array_agg(id) AS list FROM _filtered_users),
-		_orgs_ids AS (SELECT array_agg(id) AS list FROM _users_orgs)
+		_arrays AS (
+			SELECT array_agg(user_id) AS users, array_agg(DISTINCT org_id) AS orgs
+			FROM _filtered_users
+		)
 	-- build organizations object
 	SELECT json_build_object(
 			'users',
-			build_entities_object('users', _users_ids.list, 'user_short'),
+			build_entities_object('users', users, 'user_short'),
 			'orgs',
-			build_entities_object('orgs', _orgs_ids.list, 'org_short')
+			build_entities_object('orgs', orgs, 'org_short')
 		) AS entities,
-		build_list_object(_users_ids.list) AS list
-	FROM _users_ids, _orgs_ids;
+		build_list_object(users) AS list
+	FROM _arrays;
 $$
 LANGUAGE SQL STABLE;

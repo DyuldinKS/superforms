@@ -236,36 +236,88 @@ $$
 LANGUAGE SQL STABLE;
 
 
+CREATE OR REPLACE FUNCTION get_org_subtree(
+	_root integer,
+	_min_depth integer DEFAULT null,
+	_max_depth integer DEFAULT null
+) RETURNS SETOF integer AS
+$$
+	SELECT org.id
+	FROM organizations org
+	JOIN org_links links ON links.org_id = org.id
+	WHERE links.parent_id = _root
+		AND (_min_depth IS NULL OR links.distance >= _min_depth)
+		AND (_max_depth IS NULL OR links.distance <= _max_depth);
+$$
+LANGUAGE SQL STABLE;
 
-CREATE OR REPLACE FUNCTION find_subordinate_orgs_with_parents(
+
+CREATE OR REPLACE FUNCTION filter_orgs(
+	_orgs integer[],
+	_filter jsonb DEFAULT NULL
+) RETURNS TABLE (
+	org_id integer,
+	parent_id integer
+) AS
+$$
+	DECLARE
+		_info text := _filter->>'info';
+		_email text := _filter->>'email';
+		_active boolean := (_filter->>'active')::boolean;
+		_deleted boolean := (_filter->>'deleted')::boolean;
+	BEGIN
+		RETURN QUERY
+			SELECT org.id, links.parent_id
+			FROM organizations org JOIN recipients rcpt USING (id)
+			LEFT JOIN org_links links ON links.org_id = org.id AND distance = 1,
+				to_tsvector('russian', org.info) document
+			WHERE org.id = ANY (_orgs)
+				AND (_info IS NULL OR document @@ to_tsquery('russian', _info))
+				AND (_email IS NULL OR email ILIKE _email)
+				AND (_active IS NULL OR rcpt.active = _active)
+				AND (_deleted IS NULL
+					OR (_deleted IS false AND rcpt.deleted IS NULL)
+					OR (_deleted IS true AND rcpt.deleted IS NOT NULL))
+			ORDER BY org.id;
+	END;
+$$
+LANGUAGE plpgsql STABLE;
+
+
+CREATE OR REPLACE FUNCTION find_orgs_in_subtree(
 	_org_id integer,
 	_filter jsonb DEFAULT NULL
 ) RETURNS TABLE(entities json, list json) AS
 $$
 	WITH
+		_subtree AS (
+			SELECT id FROM get_org_subtree(
+				_org_id,
+				(_filter->>'minDepth')::int,
+				(_filter->>'maxDepth')::int
+			) id
+		),
 		_filtered_orgs AS (
-			SELECT find_subordinate('orgs', _org_id, _filter) id
+			SELECT * FROM filter_orgs(
+				(SELECT array_agg(id) FROM _subtree),
+				_filter
+			)
 		),
-		_parent_orgs AS (
-			SELECT p_id
-			FROM _filtered_orgs org, LATERAL get_parent_org_id(org.id) p_id
-			WHERE p_id IS NOT NULL
-		),
-		_orgs_ids AS (SELECT array_agg(id) AS list FROM _filtered_orgs),
-		_orgs_and_parents_ids AS (
-			SELECT array_agg(id) AS list FROM (
-				SELECT id from _filtered_orgs
-				UNION
-				SELECT p_id from _parent_orgs
-			) AS orgs_and_parents
+		_orgs_and_parents AS (
+			SELECT org_id AS id FROM _filtered_orgs
+			UNION
+			SELECT parent_id FROM _filtered_orgs
+			WHERE parent_id IS NOT NULL
 		)
 	-- build organizations object
 	SELECT json_build_object(
 			'orgs',
-			build_entities_object('orgs', _orgs_and_parents_ids.list, 'org_short')
+			build_entities_object(
+				'orgs',
+				(SELECT array_agg(id) FROM _orgs_and_parents),
+				'org_short')
 		) AS entities,
-		build_list_object(_orgs_ids.list) AS list
-	FROM _orgs_ids, _orgs_and_parents_ids;
+		build_list_object((SELECT array_agg(org_id) FROM _filtered_orgs)) AS list;
 $$
 LANGUAGE SQL STABLE;
 
