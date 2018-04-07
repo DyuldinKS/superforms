@@ -136,7 +136,9 @@ CREATE OR REPLACE FUNCTION get_user(
 	_mode varchar(255) DEFAULT NULL
 ) RETURNS user_with_rcpt AS
 $$
-	SELECT usr.* FROM get_rcpt(_email) rcpt, get_user(rcpt.id, _mode) usr;
+	SELECT usr.* FROM recipients rcpt,
+		LATERAL get_user(rcpt.id, _mode) usr
+	WHERE rcpt.email = _email;
 $$
 LANGUAGE SQL STABLE;
 
