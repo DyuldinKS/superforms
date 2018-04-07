@@ -29,7 +29,7 @@ function ItemSettingsTogglers(props) {
               <Input
                 type="checkbox"
                 name={name}
-                checked={getValue(name)}
+                checked={getValue(name) || false}
                 onChange={onChange}
               />
               {title}

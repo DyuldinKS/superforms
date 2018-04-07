@@ -7,6 +7,7 @@ import {
 } from 'reactstrap';
 import * as inputTypes from 'shared/form/utils/inputTypes';
 import ItemSettingsTogglers from './ItemSettingsTogglers';
+import ItemSettingsSelectOptions from './ItemSettingsSelectOptions';
 import getTogglers from '../utils/getTogglers';
 
 const propTypes = {
@@ -29,6 +30,7 @@ class ItemSettings extends Component {
 
     this.getValue = this.getValue.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.updateItemSelectOptions = this.updateItemSelectOptions.bind(this);
 
     this.togglers = getTogglers(props.item);
   }
@@ -48,13 +50,20 @@ class ItemSettings extends Component {
   }
 
   getValue(name) {
-    return this.props.item[name] || '';
+    return this.props.item[name];
+  }
+
+  updateItemSelectOptions(options) {
+    const { id, updateItem } = this.props;
+    updateItem(id, 'options', options);
   }
 
   render() {
     const {
+      id,
       itemIndex,
       onClose,
+      updateItem,
     } = this.props;
 
     return (
@@ -71,7 +80,7 @@ class ItemSettings extends Component {
               bsSize="sm"
               type="select"
               name="type"
-              value={this.getValue('type')}
+              value={this.getValue('type') || ''}
               onChange={this.handleChange}
             >
               {typeOptions.map(type => (
@@ -91,7 +100,7 @@ class ItemSettings extends Component {
               bsSize="sm"
               type="text"
               name="title"
-              value={this.getValue('title')}
+              value={this.getValue('title') || ''}
               onChange={this.handleChange}
             />
           </FormGroup>
@@ -102,11 +111,20 @@ class ItemSettings extends Component {
               bsSize="sm"
               type="text"
               name="description"
-              value={this.getValue('description')}
+              value={this.getValue('description') || ''}
               onChange={this.handleChange}
             />
           </FormGroup>
         </div>
+
+        {
+          this.getValue('type') === inputTypes.constants.SELECT
+          ? <ItemSettingsSelectOptions
+              options={this.getValue('options')}
+              updateOptions={this.updateItemSelectOptions}
+            />
+          : null
+        }
 
         <ItemSettingsTogglers
           togglers={this.togglers}
