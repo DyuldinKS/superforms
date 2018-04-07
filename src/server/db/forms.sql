@@ -26,7 +26,7 @@ $$
 	WHERE list.hash = each.key
 	ORDER BY list.i;
 $$
-LANGUAGE SQL STABLE;
+LANGUAGE SQL IMMUTABLE;
 
 
 CREATE OR REPLACE FUNCTION get_ordered_questions(_scheme json)
@@ -36,7 +36,7 @@ $$
 	FROM get_ordered_items(_scheme)
 	WHERE body->>'itemType' != 'delimeter';
 $$
-LANGUAGE SQL STABLE;
+LANGUAGE SQL IMMUTABLE;
 
 
 CREATE OR REPLACE FUNCTION count_questions(_scheme json)
@@ -121,16 +121,6 @@ $$
 LANGUAGE plpgsql IMMUTABLE;
 
 
-CREATE OR REPLACE FUNCTION to_form_extra(_form forms)
-	RETURNS form_extra AS
-$$
-	SELECT _form.*,
-		count_questions(_form.scheme),
-		count_responses(_form.id)
-$$
-LANGUAGE SQL STABLE;
-
-
 CREATE OR REPLACE FUNCTION to_form_short(_form form_extra)
 	RETURNS form_short AS
 $$
@@ -150,10 +140,6 @@ CREATE CAST (json AS forms)
 WITH FUNCTION to_forms(json);
 
 
-CREATE CAST (forms AS form_extra)
-WITH FUNCTION to_form_extra(forms);
-
-
 CREATE CAST (form_extra AS form_full)
 WITH INOUT;
 
@@ -169,7 +155,11 @@ WITH FUNCTION to_form_short(form_extra);
 CREATE OR REPLACE FUNCTION get_form(_id integer)
 	RETURNS form_extra AS
 $$
-	SELECT (form::form_extra).* FROM forms form WHERE id = _id;
+	SELECT *,
+		count_questions(scheme),
+		count_responses(id)
+		FROM forms
+		WHERE id = _id;
 $$
 LANGUAGE SQL STABLE;
 
@@ -195,7 +185,7 @@ $$
 		-- log changes
 		PERFORM log('I', 'form', _inserted.id, row_to_json(_inserted), _author_id, _time);
 
-		_form := _inserted::form_extra;
+		SELECT * FROM get_form(_inserted.id) INTO _form;
 	END;
 $$
 LANGUAGE plpgsql;
