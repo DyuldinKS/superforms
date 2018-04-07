@@ -323,10 +323,10 @@ describe('forms sql-functions test', () => {
 			author_id: form.authorId,
 		};
 
-		db.query('SELECT ($1::json::recipients).*;', [form])
+		return db.query('SELECT ($1::json::forms).*;', [form])
 			.then((actual) => {
 				assert.deepStrictEqual(expected, { ...actual });
-				return db.query('SELECT ($1::json::recipients).*;', [expected]);
+				return db.query('SELECT ($1::json::forms).*;', [expected]);
 			})
 			.then((actual) => {
 				assert.deepStrictEqual(expected, { ...actual });

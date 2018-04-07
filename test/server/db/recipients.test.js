@@ -296,7 +296,7 @@ describe('recipients sql-functions test', () => {
 			author_id: rcpt.authorId,
 		};
 
-		db.query('SELECT ($1::json::recipients).*;', [rcpt])
+		return db.query('SELECT ($1::json::recipients).*;', [rcpt])
 			.then((actual) => {
 				assert.deepStrictEqual(expected, { ...actual });
 				return db.query('SELECT ($1::json::recipients).*;', [expected]);
