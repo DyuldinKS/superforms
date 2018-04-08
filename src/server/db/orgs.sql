@@ -129,6 +129,21 @@ $$
 LANGUAGE SQL STABLE;
 
 
+CREATE OR REPLACE FUNCTION get_orgs(_ids integer[])
+	RETURNS SETOF org_with_rcpt AS
+$$
+	SELECT * FROM (
+		SELECT org.*, links.parent_id
+		FROM organizations org
+		LEFT JOIN org_links links ON org.id = links.org_id
+			AND links.distance = 1
+	) AS org
+	JOIN recipients USING (id)
+	WHERE org.id = ANY (_ids);
+$$
+LANGUAGE SQL STABLE;
+
+
 CREATE OR REPLACE FUNCTION set_org_parent(
 	_org_id integer,
 	_parent_id integer,
@@ -284,6 +299,18 @@ $$
 LANGUAGE plpgsql STABLE;
 
 
+CREATE OR REPLACE FUNCTION build_orgs_object(_ids integer[])
+	RETURNS json AS
+$$
+	SELECT json_object_agg(
+		org.id,
+		org.info || (row_to_json(org)::jsonb - 'info')
+	)
+	FROM get_orgs(_ids) org;
+$$
+LANGUAGE SQL STABLE;
+
+
 CREATE OR REPLACE FUNCTION find_orgs_in_subtree(
 	_org_id integer,
 	_filter jsonb DEFAULT NULL
@@ -308,16 +335,17 @@ $$
 			UNION
 			SELECT parent_id FROM _filtered_orgs
 			WHERE parent_id IS NOT NULL
+		),
+		_arrays AS (
+			SELECT
+				(SELECT array_agg(id) FROM _orgs_and_parents) AS with_parents,
+				(SELECT array_agg(org_id) FROM _filtered_orgs) AS filtered
 		)
 	-- build organizations object
-	SELECT json_build_object(
-			'orgs',
-			build_entities_object(
-				'orgs',
-				(SELECT array_agg(id) FROM _orgs_and_parents),
-				'org_short')
-		) AS entities,
-		build_list_object((SELECT array_agg(org_id) FROM _filtered_orgs)) AS list;
+	SELECT
+		json_build_object('orgs', build_orgs_object(with_parents)) AS entities,
+		build_list_object(filtered) AS list
+	FROM _arrays;
 $$
 LANGUAGE SQL STABLE;
 

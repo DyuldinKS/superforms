@@ -15,6 +15,7 @@ CREATE TYPE user_with_rcpt AS (
 	info jsonb,
 	role_id integer,
 	hash varchar(255),
+	role varchar(255),
 	email varchar(255),
 	type rcpt_type,
 	active boolean,
@@ -73,7 +74,7 @@ $$
 	SELECT _record.id,
 		_record.org_id,
 		_record.info,
-		get_role_name(_record.role_id),
+		_record.role,
 		_record.hash,
 		_record.email,
 		_record.active,
@@ -91,7 +92,7 @@ $$
 	SELECT _record.id,
 		_record.org_id,
 		_record.info,
-		get_role_name(_record.role_id),
+		_record.role,
 		_record.active;
 $$
 LANGUAGE SQL IMMUTABLE;
@@ -120,10 +121,7 @@ CREATE OR REPLACE FUNCTION get_user(
 ) AS
 $$
 	BEGIN
-		SELECT * FROM users
-		JOIN recipients USING (id)
-		WHERE users.id = _id
-		INTO _user;
+		SELECT * FROM get_users(array[_id]) INTO _user;
 
 		IF _mode != 'auth' THEN _user.hash := null; END IF;
 	END;
@@ -139,6 +137,22 @@ $$
 	SELECT usr.* FROM recipients rcpt,
 		LATERAL get_user(rcpt.id, _mode) usr
 	WHERE rcpt.email = _email;
+$$
+LANGUAGE SQL STABLE;
+
+
+CREATE OR REPLACE FUNCTION get_users(
+	_ids integer[],
+	_mode varchar(255) DEFAULT NULL
+) RETURNS SETOF user_with_rcpt AS
+$$
+	SELECT *
+	FROM (
+		SELECT *, get_role_name(id) AS role
+		FROM users
+	) usr
+	JOIN recipients rcpt USING (id)
+	WHERE usr.id = ANY (_ids);
 $$
 LANGUAGE SQL STABLE;
 
@@ -250,6 +264,18 @@ $$
 LANGUAGE plpgsql STABLE;
 
 
+CREATE OR REPLACE FUNCTION build_users_object(_ids integer[])
+	RETURNS json AS
+$$
+	SELECT json_object_agg(
+		usr.id,
+		usr.info || (row_to_json(usr)::jsonb - 'info')
+	)
+	FROM get_users(_ids) usr;
+$$
+LANGUAGE SQL STABLE;
+
+
 CREATE OR REPLACE FUNCTION find_users_in_subtree(
 	_org_id integer,
 	_filter jsonb DEFAULT NULL
@@ -275,10 +301,8 @@ $$
 		)
 	-- build organizations object
 	SELECT json_build_object(
-			'users',
-			build_entities_object('users', users, 'user_short'),
-			'orgs',
-			build_entities_object('orgs', orgs, 'org_short')
+			'users', build_users_object(users),
+			'orgs', build_orgs_object(orgs)
 		) AS entities,
 		build_list_object(users) AS list
 	FROM _arrays;
