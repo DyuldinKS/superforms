@@ -1,24 +1,8 @@
 .input-item {
-  display: flex;
-  align-items: middle;
-  height: 40px;
-  margin: 10px auto;
-  padding: 5px 10px;
-  border: 1px solid $card-border-color;
-
-  &.draggable {
-    cursor: grab;
-
-    &:hover {
-      transform: scale(1.01);
-      background-color: rgb(240,248,255);
-    }
-  }
+  @include generator-item;
 
   &.dragging {
-    cursor: grabbing;
-    transform: scale(1.01);
-    background-color: rgb(240,248,255);
+    @include generator-item-focused;
   }
 
   &.hidden {
@@ -37,7 +21,7 @@
 
 .input-item-options {
   display: flex;
-  padding: 5px;
+  padding: 5px 0 5px 5px;
   margin-left: 5px;
   border-left: 1px solid $card-border-color;
 

@@ -117,7 +117,7 @@ class SortableList extends Component {
       }
 
       return connectDropTarget(
-        <div className="form-generator-working-pane">
+        <div className="form-generator-items-list">
           {this.renderItems(order.slice(0, sliceIndex))}
           <InsertPreview
             id={dragItemId}
@@ -129,7 +129,7 @@ class SortableList extends Component {
     }
 
     return connectDropTarget(
-      <div className="form-generator-working-pane">
+      <div className="form-generator-items-list">
         {this.renderItems(order)}
       </div>
     );

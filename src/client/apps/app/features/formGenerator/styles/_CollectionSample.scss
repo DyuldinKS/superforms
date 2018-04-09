@@ -1,0 +1,12 @@
+.form-item-sample {
+  @include generator-item;
+
+  &.draggable {
+    cursor: grab;
+  }
+
+  &.dragging {
+    cursor: grabbing;
+    @include generator-item-focused;
+  }
+}

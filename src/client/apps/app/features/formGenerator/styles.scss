@@ -1,7 +1,13 @@
 @import
+  './styles/mixins/generator-item',
+  './styles/mixins/generator-item-focused';
+
+@import
+  './styles/Header',
   './styles/FormGenerator',
   './styles/Sidebar',
   './styles/WorkingPane',
   './styles/ItemSettings',
-  './styles/FormItemSample',
-  './styles/InputItem';
+  './styles/CollectionSample',
+  './styles/InputItem',
+  './styles/HeaderItem';
