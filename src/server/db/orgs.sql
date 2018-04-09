@@ -114,21 +114,6 @@ WITH FUNCTION to_org_short(org_with_rcpt);
 /*******************************  CRUD METHODS ********************************/
 
 
-CREATE OR REPLACE FUNCTION get_org(_id integer)
-	RETURNS org_with_rcpt AS
-$$
-	SELECT * FROM (
-		SELECT org.*, links.parent_id
-		FROM organizations org
-		LEFT JOIN org_links links ON org.id = links.org_id
-			AND links.distance = 1
-	) AS org
-	JOIN recipients USING (id)
-	WHERE org.id = _id;
-$$
-LANGUAGE SQL STABLE;
-
-
 CREATE OR REPLACE FUNCTION get_orgs(_ids integer[])
 	RETURNS SETOF org_with_rcpt AS
 $$
@@ -140,6 +125,14 @@ $$
 	) AS org
 	JOIN recipients USING (id)
 	WHERE org.id = ANY (_ids);
+$$
+LANGUAGE SQL STABLE;
+
+
+CREATE OR REPLACE FUNCTION get_org(_id integer)
+	RETURNS org_with_rcpt AS
+$$
+	SELECT * FROM get_orgs(array[_id]);
 $$
 LANGUAGE SQL STABLE;
 
@@ -304,9 +297,9 @@ CREATE OR REPLACE FUNCTION build_orgs_object(_ids integer[])
 $$
 	SELECT json_object_agg(
 		org.id,
-		org.info || (row_to_json(org::org_short)::jsonb - 'info')
+		org.info || (row_to_json(org_short)::jsonb - 'info')
 	)
-	FROM get_orgs(_ids) org;
+	FROM get_orgs(_ids) org, to_org_short(org) org_short;
 $$
 LANGUAGE SQL STABLE;
 

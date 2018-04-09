@@ -114,19 +114,36 @@ WITH FUNCTION to_user_short(user_with_rcpt);
 /*******************************  CRUD METHODS ********************************/
 
 
+CREATE OR REPLACE FUNCTION get_users(
+	_ids integer[],
+	_mode varchar(255) DEFAULT NULL
+) RETURNS SETOF user_with_rcpt AS
+$$
+	SELECT *
+	FROM (
+		SELECT users.id,
+			users.org_id,
+			users.info,
+			users.role_id,
+			CASE WHEN _mode = 'auth' THEN users.hash ELSE null::varchar(255) END,
+			roles.name AS role
+		FROM users
+		JOIN roles ON roles.id = users.role_id
+	) usr
+	JOIN recipients rcpt USING (id)
+	WHERE usr.id = ANY (_ids);
+$$
+LANGUAGE SQL STABLE;
+
+
 CREATE OR REPLACE FUNCTION get_user(
 	_id integer,
-	_mode varchar(255) DEFAULT '',
-	OUT _user user_with_rcpt
-) AS
+	_mode varchar(255) DEFAULT ''
+) RETURNS user_with_rcpt AS
 $$
-	BEGIN
-		SELECT * FROM get_users(array[_id]) INTO _user;
-
-		IF _mode != 'auth' THEN _user.hash := null; END IF;
-	END;
+	SELECT * FROM get_users(array[_id], _mode);
 $$
-LANGUAGE plpgsql STABLE;
+LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION get_user(
@@ -135,24 +152,8 @@ CREATE OR REPLACE FUNCTION get_user(
 ) RETURNS user_with_rcpt AS
 $$
 	SELECT usr.* FROM recipients rcpt,
-		LATERAL get_user(rcpt.id, _mode) usr
+		LATERAL get_users(array[rcpt.id], _mode) usr
 	WHERE rcpt.email = _email;
-$$
-LANGUAGE SQL STABLE;
-
-
-CREATE OR REPLACE FUNCTION get_users(
-	_ids integer[],
-	_mode varchar(255) DEFAULT NULL
-) RETURNS SETOF user_with_rcpt AS
-$$
-	SELECT *
-	FROM (
-		SELECT *, get_role_name(role_id) AS role
-		FROM users
-	) usr
-	JOIN recipients rcpt USING (id)
-	WHERE usr.id = ANY (_ids);
 $$
 LANGUAGE SQL STABLE;
 
@@ -269,9 +270,9 @@ CREATE OR REPLACE FUNCTION build_users_object(_ids integer[])
 $$
 	SELECT json_object_agg(
 		usr.id,
-		usr.info || (row_to_json(usr::user_short)::jsonb - 'info')
+		usr.info || (row_to_json(user_short)::jsonb - 'info')
 	)
-	FROM get_users(_ids) usr;
+	FROM get_users(_ids) usr, to_user_short(usr) user_short;
 $$
 LANGUAGE SQL STABLE;
 
