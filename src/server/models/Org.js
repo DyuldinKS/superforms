@@ -8,7 +8,7 @@ class Org extends Recipient {
 
 	static findById(id) {
 		return db.query(
-			'SELECT (_found::org_full).* FROM get_org($1::int) _found;',
+			'SELECT _org.* FROM to_org_full(get_org($1::int)) _org;',
 			[id],
 		)
 			.then(found => (found ? new Org(found) : null));
@@ -26,8 +26,9 @@ class Org extends Recipient {
 
 				const writableProps = this.filterProps(this, 'writable');
 				return db.query(
-					`SELECT (_new::org_full).*
-					FROM create_org($1::int, $2::json, $3::int) _new`,
+					`SELECT _new.* FROM to_org_full(
+						create_org($1::int, $2::json, $3::int)
+					) _new`,
 					[rcpt.id, writableProps, author.id],
 				);
 			})
@@ -73,10 +74,12 @@ class Org extends Recipient {
 
 
 	findAllOrgs(options = {}) {
-		// const searchPattern = search ? `${search}:*` : null;
+		const filter = Org.buildFilter(options);
+		if('minDepth' in filter === false) filter.minDepth = 1;
+
 		return db.query(
 			'SELECT * FROM find_orgs_in_subtree($1::int, $2::jsonb)',
-			[this.id, Org.buildFilter(options)],
+			[this.id, filter],
 		);
 	}
 

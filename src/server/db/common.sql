@@ -12,18 +12,16 @@ LANGUAGE SQL IMMUTABLE;
 /**********************************  ROLES  ***********************************/
 
 
-CREATE OR REPLACE FUNCTION get_role_name(
-	_role_id integer
-) RETURNS varchar(255) AS
+CREATE OR REPLACE FUNCTION get_role_name(_role_id integer)
+	RETURNS varchar(255) AS
 $$
 	SELECT name FROM roles WHERE id = _role_id;
 $$
 LANGUAGE SQL STABLE;
 
 
-CREATE OR REPLACE FUNCTION get_role_id(
-	_role varchar(255)
-) RETURNS integer AS
+CREATE OR REPLACE FUNCTION get_role_id(_role varchar(255))
+	RETURNS integer AS
 $$
 	SELECT id FROM roles WHERE name = _role;
 $$
@@ -34,47 +32,12 @@ LANGUAGE SQL STABLE;
 /*********************************  ENTITIES  *********************************/
 
 
-CREATE OR REPLACE FUNCTION build_entities_object(
-	_table varchar(255),
-	_ids integer[],
-	_type varchar(255),
-	OUT entities json
-) AS
-$$
-	DECLARE
-		_getter varchar(255) := CASE _table
-			WHEN 'users' THEN 'get_user'
-			WHEN 'orgs' THEN 'get_org'
-		END;
-	BEGIN
-		EXECUTE format(
-			'SELECT coalesce(
-				(
-					SELECT json_object_agg(
-						entity_id,
-						info || (row_to_json(entity_record::%s)::jsonb - ''info'')
-					)
-					FROM unnest($1) entity_id,
-						LATERAL %s(entity_id) entity_record
-				),
-			''{}''
-			);',
-			_type, _getter
-		)
-		USING _ids
-		INTO entities;
-	END;
-$$
-LANGUAGE plpgsql STABLE;
-
-
 CREATE OR REPLACE FUNCTION build_list_object(_ids integer[])
 	RETURNS json AS
 $$
 	SELECT json_build_object(
 		'entries',
 		(SELECT coalesce(array_to_json(_ids), '[]')),
-		-- full length of filtered organizations list
 		'count',
 		(SELECT coalesce(array_length(_ids, 1), 0))
 	);

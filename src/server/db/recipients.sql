@@ -34,6 +34,14 @@ $$
 LANGUAGE plpgsql IMMUTABLE;
 
 
+CREATE OR REPLACE FUNCTION to_rcpt_full(_record recipients)
+	RETURNS rcpt_full AS
+$$
+	SELECT _record.*;
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION to_rcpt_short(_record recipients)
 	RETURNS rcpt_short AS
 $$
