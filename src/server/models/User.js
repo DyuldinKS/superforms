@@ -13,7 +13,7 @@ class User extends Recipient {
 
 	static findById(id) {
 		return db.query(
-			'SELECT (_found::user_full).* FROM get_user($1::int) _found;',
+			'SELECT _user.* FROM to_user_full(get_user($1::int)) _user;',
 			[id],
 		)
 			.then(found => (found ? new User(found) : null));
@@ -22,7 +22,7 @@ class User extends Recipient {
 	// for authentication or password recovery
 	static findByEmail(email, mode = null) {
 		return db.query(
-			'SELECT (_found::user_full).* FROM get_user($1::text, $2) _found;',
+			'SELECT _user.* FROM to_user_full(get_user($1::text, $2)) _user;',
 			[email, mode],
 		)
 			.then(found => (found ? new User(found) : null));
@@ -132,8 +132,9 @@ class User extends Recipient {
 
 				const writableProps = this.filterProps(this, 'writable');
 				return db.query(
-					`SELECT (_new::user_full).*
-					FROM create_user($1::int, $2::json, $3::int) _new`,
+					`SELECT _new.* FROM to_user_full(
+						create_user($1::int, $2::json, $3::int)
+					) _new;`,
 					[rcpt.id, writableProps, author.id],
 				);
 			})

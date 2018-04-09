@@ -35,13 +35,14 @@ class AbstractModel {
 
 
 	save({ author }) {
-		const type = `${this.entityName}_full`;
+		const typeConverter = `to_${this.entityName}_full`;
 		const create = `create_${this.entityName}`;
 		const writableProps = this.filterProps(this, 'writable');
 
 		return db.query(
-			`SELECT (new::${type}).*
-			FROM ${create}($1::json, $2::int) new`,
+			`SELECT _new.* FROM ${typeConverter}(
+				${create}($1::json, $2::int)
+			) _new`,
 			[writableProps, author.id],
 		)
 			.then(res => this.assign(res));
@@ -49,13 +50,14 @@ class AbstractModel {
 
 
 	update({ props, author }) {
-		const type = `${this.entityName}_full`;
+		const typeConverter = `to_${this.entityName}_full`;
 		const update = `update_${this.entityName}`;
 		const writableProps = this.filterProps(props, 'writable');
 
 		return db.query(
-			`SELECT (_updated::${type}).*
-			FROM ${update}($1::int, $2::json, $3::int) _updated`,
+			`SELECT _updated.* FROM ${typeConverter}(
+				${update}($1::int, $2::json, $3::int)
+			) _updated`,
 			[this.id, writableProps, author.id],
 		)
 			.then(res => this.assign(res));
