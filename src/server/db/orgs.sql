@@ -304,7 +304,7 @@ CREATE OR REPLACE FUNCTION build_orgs_object(_ids integer[])
 $$
 	SELECT json_object_agg(
 		org.id,
-		org.info || (row_to_json(org)::jsonb - 'info')
+		org.info || (row_to_json(org::org_short)::jsonb - 'info')
 	)
 	FROM get_orgs(_ids) org;
 $$

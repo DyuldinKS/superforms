@@ -148,7 +148,7 @@ CREATE OR REPLACE FUNCTION get_users(
 $$
 	SELECT *
 	FROM (
-		SELECT *, get_role_name(id) AS role
+		SELECT *, get_role_name(role_id) AS role
 		FROM users
 	) usr
 	JOIN recipients rcpt USING (id)
@@ -269,7 +269,7 @@ CREATE OR REPLACE FUNCTION build_users_object(_ids integer[])
 $$
 	SELECT json_object_agg(
 		usr.id,
-		usr.info || (row_to_json(usr)::jsonb - 'info')
+		usr.info || (row_to_json(usr::user_short)::jsonb - 'info')
 	)
 	FROM get_users(_ids) usr;
 $$
