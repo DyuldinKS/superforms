@@ -2,7 +2,7 @@
 
 
 CREATE INDEX forms_content_idx ON forms
-USING gin((setweight(to_tsvector('russian', title),'A')
+USING gist((setweight(to_tsvector('russian', title),'A')
 	|| setweight(to_tsvector('russian', description), 'B')));
 
 
@@ -36,7 +36,7 @@ $$
 	FROM get_ordered_items(_scheme)
 	WHERE body->>'itemType' != 'delimeter';
 $$
-LANGUAGE SQL IMMUTABLE;
+	LANGUAGE SQL IMMUTABLE;
 
 
 CREATE OR REPLACE FUNCTION count_questions(_scheme json)
@@ -121,6 +121,14 @@ $$
 LANGUAGE plpgsql IMMUTABLE;
 
 
+CREATE OR REPLACE FUNCTION to_form_full(_form form_extra)
+	RETURNS form_full AS
+$$
+	SELECT _form.*;
+$$
+LANGUAGE SQL STABLE;
+
+
 CREATE OR REPLACE FUNCTION to_form_short(_form form_extra)
 	RETURNS form_short AS
 $$
@@ -163,6 +171,25 @@ $$
 $$
 LANGUAGE SQL STABLE;
 
+
+CREATE OR REPLACE FUNCTION get_forms(_ids integer[])
+	RETURNS SETOF form_extra AS
+$$
+	SELECT forms.*, questions.count, responses.count
+	FROM forms
+	LEFT JOIN (
+		SELECT form_id AS id, count(id)::int AS count
+		FROM responses
+		GROUP BY form_id
+	) responses USING (id),
+	LATERAL (
+		SELECT count(*)::int AS count
+		FROM json_each(scheme->'items')
+		WHERE value->>'itemType' != 'delimeter'
+	) questions
+	WHERE id = ANY (_ids);
+$$
+LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION create_form(
@@ -228,3 +255,76 @@ $$
 	END;
 $$
 LANGUAGE plpgsql;
+
+
+
+/***********************************  SEARCH **********************************/
+
+
+CREATE OR REPLACE FUNCTION filter_user_forms(
+	_users integer[],
+	_filter jsonb DEFAULT NULL
+) RETURNS TABLE (
+	form_id integer,
+	user_id integer
+) AS
+$$
+	DECLARE
+		_query tsquery := to_tsquery('russian', _filter->>'info');
+		_deleted boolean := (_filter->>'deleted')::boolean;
+	BEGIN
+		RETURN QUERY
+			SELECT id, owner_id
+			FROM forms
+			WHERE (_users IS NULL OR owner_id = ANY (_users))
+				AND (_query IS NULL OR (
+					(setweight(to_tsvector('russian', title),'A')
+						|| setweight(to_tsvector('russian', description), 'B')) @@ _query
+				))
+				AND (_deleted IS NULL
+					OR (_deleted IS false AND deleted IS NULL)
+					OR (_deleted IS true AND deleted IS NOT NULL))
+			ORDER BY id;
+	END;
+$$
+LANGUAGE plpgsql STABLE;
+
+
+CREATE OR REPLACE FUNCTION build_forms_object(_ids integer[])
+	RETURNS json AS
+$$
+	SELECT json_object_agg(form.id, row_to_json(form_short))
+	FROM get_forms(_ids) form, to_form_short(form) form_short;
+$$
+LANGUAGE SQL STABLE;
+
+
+CREATE OR REPLACE FUNCTION find_forms_in_org(
+	_org_id integer,
+	_filter jsonb DEFAULT NULL
+) RETURNS TABLE (entities json, list json) AS
+$$
+	WITH _filtered_forms AS (
+		SELECT forms.id AS form_id, forms.owner_id AS user_id
+		FROM filter_users_in_orgs(array[_org_id], _filter) filtered
+			JOIN forms ON filtered.user_id = forms.owner_id
+		UNION
+		SELECT * FROM filter_user_forms(
+			(SELECT array_agg(id) FROM users WHERE org_id = _org_id),
+			_filter
+		)
+	),
+	_arrays AS (
+		SELECT array_agg(form_id) AS forms, array_agg(user_id) AS users
+		FROM _filtered_forms
+	)
+	SELECT json_build_object(
+			'forms',
+			build_forms_object(forms),
+			'users',
+			build_users_object(users)
+		) AS entities,
+		build_list_object(forms) AS list
+	FROM _arrays;
+$$
+LANGUAGE SQL STABLE;
