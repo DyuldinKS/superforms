@@ -73,10 +73,12 @@ class Org extends Recipient {
 
 
 	findAllOrgs(options = {}) {
-		// const searchPattern = search ? `${search}:*` : null;
+		const filter = Org.buildFilter(options);
+		if('minDepth' in filter === false) filter.minDepth = 1;
+
 		return db.query(
 			'SELECT * FROM find_orgs_in_subtree($1::int, $2::jsonb)',
-			[this.id, Org.buildFilter(options)],
+			[this.id, filter],
 		);
 	}
 
