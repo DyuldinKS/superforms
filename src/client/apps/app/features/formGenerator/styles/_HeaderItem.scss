@@ -1,0 +1,4 @@
+.header-item {
+  @include generator-item;
+  justify-content: space-between;
+}
