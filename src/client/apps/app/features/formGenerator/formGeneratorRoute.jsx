@@ -7,6 +7,7 @@ import deleteMapProp from 'shared/form/utils/deleteMapProp';
 import Form from 'shared/form/components/Form';
 import Header from './components/Header';
 import ItemsCollection from './components/ItemsCollection';
+import HeaderSettings from './components/HeaderSettings';
 import ItemSettings from './components/ItemSettings';
 import WorkingPane from './components/WorkingPane';
 
@@ -15,6 +16,11 @@ const propTypes = {};
 const defaultProps = {};
 
 const initialState = {
+  selectedItem: null,
+  activeTab: 'generator',
+  // form
+  title: 'Тест',
+  description: 'Короткое описание',
   items: {
     abcd: {
       itemType: 'input',
@@ -39,8 +45,6 @@ const initialState = {
     },
   },
   order: ['abcd', 'qwer'],
-  selectedItem: null,
-  activeTab: 'generator',
 };
 
 const childContextTypes = {
@@ -59,6 +63,7 @@ class FormGeneratorRoute extends Component {
 
     this.state = initialState;
 
+    this.updateHeader = this.updateHeader.bind(this);
     this.addItem = this.addItem.bind(this);
     this.duplicateItem = this.duplicateItem.bind(this);
     this.findItem = this.findItem.bind(this);
@@ -83,6 +88,20 @@ class FormGeneratorRoute extends Component {
       reorderItem: this.reorderItem,
       selectItem: this.selectItem,
     };
+  }
+
+  updateHeader(prop, value) {
+    if (prop !== 'title' && prop !== 'description') {
+      return;
+    }
+
+    this.setState((state) => {
+      const nextState = !value
+        ? deleteMapProp(state, prop)
+        : { ...state, [prop]: value };
+
+      return nextState;
+    });
   }
 
   addItem(item, atIndex) {
@@ -186,8 +205,36 @@ class FormGeneratorRoute extends Component {
     }));
   }
 
+  renderGeneratorSettingsBar() {
+    const { selectedItem } = this.state;
+
+    if (selectedItem === 'header') {
+      const { title, description } = this.state;
+
+      return (
+        <HeaderSettings
+          title={title}
+          description={description}
+          onClose={this.clearSelectedItem}
+          updateHeader={this.updateHeader}
+        />
+      );
+    }
+
+    return (
+      <ItemSettings
+        id={selectedItem}
+        item={this.getItem(selectedItem)}
+        itemIndex={this.findItem(selectedItem) + 1}
+        onClose={this.clearSelectedItem}
+        updateItem={this.updateItem}
+      />
+    );
+  }
+
   renderGenerator() {
     const {
+      title,
       order,
       selectedItem,
     } = this.state;
@@ -195,17 +242,14 @@ class FormGeneratorRoute extends Component {
     return (
       <DragDropContextProvider backend={HTML5Backend}>
         <div className="form-generator">
-          <WorkingPane order={order} />
+          <WorkingPane
+            title={title}
+            order={order}
+          />
 
           {
             selectedItem
-            ? <ItemSettings
-                id={selectedItem}
-                item={this.getItem(selectedItem)}
-                itemIndex={this.findItem(selectedItem) + 1}
-                onClose={this.clearSelectedItem}
-                updateItem={this.updateItem}
-              />
+            ? this.renderGeneratorSettingsBar()
             : <ItemsCollection />
           }
         </div>
@@ -214,9 +258,9 @@ class FormGeneratorRoute extends Component {
   }
 
   renderForm() {
-    const { order, items } = this.state;
+    const { order, items, title, description } = this.state;
     const scheme = { order, items };
-    const form = { scheme };
+    const form = { scheme, title, description };
 
     return (
       <Form form={form} />

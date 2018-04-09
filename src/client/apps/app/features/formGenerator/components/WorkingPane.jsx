@@ -1,22 +1,34 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import HeaderItem from './HeaderItem';
 import SortableList from './SortableList';
 
 const propTypes = {
+  title: PropTypes.string,
   order: PropTypes.array,
 };
 
 const defaultProps = {
+  title: '',
   order: [],
 };
 
 function WorkingPane(props) {
-  const { order } = props;
+  const {
+    title,
+    order,
+  } = props;
 
   return (
-    <SortableList
-      order={order}
-    />
+    <div className="form-generator-working-pane">
+      <HeaderItem
+        title={title}
+      />
+
+      <SortableList
+        order={order}
+      />
+    </div>
   );
 }
 
