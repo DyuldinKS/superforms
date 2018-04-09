@@ -23,7 +23,7 @@ export default (app) => {
 		(req, res, next) => {
 			const { email, password } = req.body;
 
-			User.findByEmail(email)
+			User.findByEmail(email, 'auth')
 				.then((user) => {
 					if(!user) throw new HTTPError(403, 'Incorrect email or password');
 					if(!user.hash) throw new HTTPError(403, 'Please reset your password');
