@@ -151,6 +151,16 @@ class User extends Recipient {
 		}
 		return '';
 	}
+
+
+	findForms(options = {}) {
+		const filter = Org.buildFilter(options);
+
+		return db.query(
+			'SELECT * FROM find_user_forms($1::int, $2::jsonb)',
+			[this.id, filter],
+		);
+	}
 }
 
 

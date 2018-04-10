@@ -14,27 +14,6 @@ class Org extends Recipient {
 			.then(found => (found ? new Org(found) : null));
 	}
 
-	// @implements
-	save({ author }) {
-		const rcpt = new Recipient(this);
-
-		return rcpt.saveIfNotExists({ author })
-			.then(() => {
-				if(rcpt.type !== 'rcpt' || !rcpt.active || rcpt.deleted) {
-					throw new HTTPError(403, 'This email is not available');
-				}
-
-				const writableProps = this.filterProps(this, 'writable');
-				return db.query(
-					`SELECT _new.* FROM to_org_full(
-						create_org($1::int, $2::json, $3::int)
-					) _new`,
-					[rcpt.id, writableProps, author.id],
-				);
-			})
-			.then(user => this.assign(user));
-	}
-
 
 	static buildSearchTemplate(text) {
 		if(text && typeof text === 'string') {
@@ -70,6 +49,30 @@ class Org extends Recipient {
 		);
 		Object.assign(filter, Org.buildSearchTemplate(search));
 		return filter;
+	}
+
+
+	// ***************** INSTANCE METHODS ***************** //
+
+	// @implements
+	save({ author }) {
+		const rcpt = new Recipient(this);
+
+		return rcpt.saveIfNotExists({ author })
+			.then(() => {
+				if(rcpt.type !== 'rcpt' || !rcpt.active || rcpt.deleted) {
+					throw new HTTPError(403, 'This email is not available');
+				}
+
+				const writableProps = this.filterProps(this, 'writable');
+				return db.query(
+					`SELECT _new.* FROM to_org_full(
+						create_org($1::int, $2::json, $3::int)
+					) _new`,
+					[rcpt.id, writableProps, author.id],
+				);
+			})
+			.then(user => this.assign(user));
 	}
 
 

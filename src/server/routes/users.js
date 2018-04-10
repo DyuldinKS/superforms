@@ -65,16 +65,6 @@ export default (app) => {
 	);
 
 
-	app.use(
-		[
-			/\/api\/v\d{1,2}\/user\/\d{1,8}$/, // api
-			/\/user\/\d{1,8}$/, // ssr
-		],
-		isActive,
-		loadInstance,
-	);
-
-
 	// create user
 	app.post(
 		'/api/v1/user',
@@ -92,6 +82,16 @@ export default (app) => {
 	);
 
 
+	app.use(
+		[
+			/\/api\/v\d{1,2}\/user\/\d{1,8}(\/\w{1,12})?$/, // api
+			/\/user\/\d{1,8}(\/\w{1,12})?$/, // ssr
+		],
+		isActive,
+		loadInstance,
+	);
+
+
 	// get user
 	app.get(
 		'/api/v1/user/:id',
@@ -105,6 +105,21 @@ export default (app) => {
 						orgs: org.toStore(),
 					});
 				})
+				.catch(next);
+		},
+	);
+
+
+	// find forms of specified user
+	app.get(
+		'/api/v1/user/:id/forms',
+		(req, res, next) => {
+			console.log(req.loaded)
+			const { user } = req.loaded;
+			const options = req.query;
+
+			user.findForms(options)
+				.then(forms => res.json(forms))
 				.catch(next);
 		},
 	);

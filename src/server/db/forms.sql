@@ -1,7 +1,7 @@
 /**********************************  INDEXES **********************************/
 
 
-CREATE INDEX CONCURRENTLY forms_info_tsvector_idx
+CREATE INDEX CONCURRENTLY form_info_tsvector_idx
 ON form_info USING gist(tsvector);
 
 
@@ -298,19 +298,16 @@ $$
 LANGUAGE SQL STABLE;
 
 
-CREATE OR REPLACE FUNCTION find_forms_in_org(
-	_org_id integer,
+CREATE OR REPLACE FUNCTION find_user_forms(
+	_users integer[],
 	_filter jsonb DEFAULT NULL
 ) RETURNS TABLE (entities json, list json) AS
 $$
 	WITH _filtered_forms AS (
-		SELECT * FROM filter_user_forms(
-			(SELECT array_agg(id) FROM users WHERE org_id = _org_id),
-			_filter
-		)
+		SELECT * FROM filter_user_forms(_users, _filter)
 	),
 	_arrays AS (
-		SELECT array_agg(form_id) AS forms, array_agg(user_id) AS users
+		SELECT array_agg(form_id) AS forms, array_agg(DISTINCT user_id) AS users
 		FROM _filtered_forms
 	)
 	SELECT json_build_object(
@@ -321,6 +318,29 @@ $$
 		) AS entities,
 		build_list_object(forms) AS list
 	FROM _arrays;
+$$
+LANGUAGE SQL STABLE;
+
+
+CREATE OR REPLACE FUNCTION find_user_forms(
+	_user_id integer,
+	_filter jsonb DEFAULT NULL
+) RETURNS TABLE (entities json, list json) AS
+$$
+	SELECT * FROM find_user_forms(array[_user_id], _filter);
+$$
+LANGUAGE SQL STABLE;
+
+
+CREATE OR REPLACE FUNCTION find_forms_in_org(
+	_org_id integer,
+	_filter jsonb DEFAULT NULL
+) RETURNS TABLE (entities json, list json) AS
+$$
+	SELECT * FROM find_user_forms(
+		(SELECT array_agg(id) FROM users WHERE org_id = _org_id),
+		_filter
+	);
 $$
 LANGUAGE SQL STABLE;
 
