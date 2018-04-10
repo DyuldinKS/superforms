@@ -29,7 +29,7 @@ Form.prototype.tableName = 'forms';
 
 Form.prototype.entityName = 'form';
 
-const props = {
+Form.prototype.props = {
 	id: { writable: false, enumerable: true },
 	title: { writable: true, enumerable: true },
 	description: { writable: true, enumerable: true },
@@ -40,10 +40,9 @@ const props = {
 	updated: { writable: false, enumerable: true },
 	deleted: { writable: true, enumerable: true },
 	authorId: { writable: false, enumerable: true },
+	questionCount: { writable: false, enumerable: true },
+	responseCount: { writable: false, enumerable: true },
 };
-
-Form.prototype.props = props;
-Form.prototype.dict = Form.buildPropsDictionary(props);
 
 Object.freeze(Form);
 

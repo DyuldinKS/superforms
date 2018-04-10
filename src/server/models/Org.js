@@ -73,7 +73,7 @@ class Org extends Recipient {
 	}
 
 
-	findAllOrgs(options = {}) {
+	findOrgsInSubtree(options = {}) {
 		const filter = Org.buildFilter(options);
 		if('minDepth' in filter === false) filter.minDepth = 1;
 
@@ -84,12 +84,22 @@ class Org extends Recipient {
 	}
 
 
-	findAllUsers(options = {}) {
+	findUsersInSubtree(options = {}) {
 		const filter = Org.buildFilter(options);
 		if('minDepth' in filter === false) filter.minDepth = 0;
 
 		return db.query(
 			'SELECT * FROM find_users_in_subtree($1::int, $2::jsonb)',
+			[this.id, filter],
+		);
+	}
+
+
+	findForms(options = {}) {
+		const filter = Org.buildFilter(options);
+
+		return db.query(
+			'SELECT * FROM find_forms_in_org($1::int, $2::jsonb)',
 			[this.id, filter],
 		);
 	}

@@ -49,28 +49,41 @@ export default (app) => {
 		},
 	);
 
-	// get all orgs
+	// find orgs in organization subtree
 	app.get(
 		'/api/v1/org/:id/orgs',
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const options = req.query;
 
-			org.findAllOrgs(options)
+			org.findOrgsInSubtree(options)
 				.then(orgs => res.json(orgs))
 				.catch(next);
 		},
 	);
 
-	// get all users
+	// find users in organization subtree
 	app.get(
 		'/api/v1/org/:id/users',
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const options = req.query;
 
-			org.findAllUsers(options)
+			org.findUsersInSubtree(options)
 				.then(users => res.json(users))
+				.catch(next);
+		},
+	);
+
+	// find forms in specified organization
+	app.get(
+		'/api/v1/org/:id/forms',
+		(req, res, next) => {
+			const { org } = req.loaded;
+			const options = req.query;
+
+			org.findForms(options)
+				.then(forms => res.json(forms))
 				.catch(next);
 		},
 	);
