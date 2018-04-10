@@ -1,9 +1,8 @@
 /**********************************  INDEXES **********************************/
 
 
-CREATE INDEX forms_content_idx ON forms
-USING gist((setweight(to_tsvector('russian', title),'A')
-	|| setweight(to_tsvector('russian', description), 'B')));
+CREATE INDEX CONCURRENTLY forms_info_tsvector_idx
+ON form_info USING gist(tsvector);
 
 
 
@@ -276,15 +275,15 @@ $$
 		RETURN QUERY
 			SELECT id, owner_id
 			FROM forms
+			JOIN form_info USING (id)
 			WHERE (_users IS NULL OR owner_id = ANY (_users))
-				AND (_query IS NULL OR (
-					(setweight(to_tsvector('russian', title),'A')
-						|| setweight(to_tsvector('russian', description), 'B')) @@ _query
-				))
+				AND (_query IS NULL OR tsvector @@ _query)
 				AND (_deleted IS NULL
 					OR (_deleted IS false AND deleted IS NULL)
 					OR (_deleted IS true AND deleted IS NOT NULL))
-			ORDER BY id;
+			ORDER BY
+				CASE WHEN _query IS NOT NULL THEN ts_rank_cd(tsvector, _query) END DESC,
+				id DESC;
 	END;
 $$
 LANGUAGE plpgsql STABLE;
@@ -305,10 +304,6 @@ CREATE OR REPLACE FUNCTION find_forms_in_org(
 ) RETURNS TABLE (entities json, list json) AS
 $$
 	WITH _filtered_forms AS (
-		SELECT forms.id AS form_id, forms.owner_id AS user_id
-		FROM filter_users_in_orgs(array[_org_id], _filter) filtered
-			JOIN forms ON filtered.user_id = forms.owner_id
-		UNION
 		SELECT * FROM filter_user_forms(
 			(SELECT array_agg(id) FROM users WHERE org_id = _org_id),
 			_filter
@@ -328,3 +323,60 @@ $$
 	FROM _arrays;
 $$
 LANGUAGE SQL STABLE;
+
+
+
+/**********************************  TRIGGERS  *********************************/
+
+
+CREATE OR REPLACE FUNCTION forms_insert()
+	RETURNS TRIGGER AS
+$$
+	BEGIN
+		INSERT INTO form_info
+		SELECT new.id, build_form_info_tsvector(
+			new.title,
+			owner.info,
+			new.description
+		)
+		FROM (
+			SELECT info FROM users WHERE id = new.owner_id
+		) AS owner;
+		RETURN new;
+	END
+$$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION forms_update()
+	RETURNS TRIGGER AS
+$$
+	BEGIN
+		IF new.title <> old.title OR new.description <> old.description THEN
+			UPDATE form_info
+			SET tsvector = build_form_info_tsvector(
+				new.title,
+				owner.info,
+				new.description
+			)
+			FROM (
+				SELECT info FROM users WHERE id = new.owner_id
+			) AS owner
+			WHERE form_info.id = new.id;
+		END IF;
+		RETURN new;
+	END
+$$
+LANGUAGE plpgsql;
+
+
+CREATE TRIGGER forms_ai
+	AFTER INSERT ON forms
+	FOR EACH ROW
+	EXECUTE PROCEDURE forms_insert();
+
+
+CREATE TRIGGER forms_au
+	AFTER UPDATE ON forms
+	FOR EACH ROW
+	EXECUTE PROCEDURE forms_update();

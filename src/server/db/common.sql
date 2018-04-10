@@ -32,6 +32,19 @@ LANGUAGE SQL STABLE;
 /*********************************  ENTITIES  *********************************/
 
 
+CREATE OR REPLACE FUNCTION build_form_info_tsvector(
+	title text,
+	author jsonb,
+	description text
+) RETURNS tsvector AS
+$$
+	SELECT setweight(to_tsvector('russian', title),'A')
+		|| setweight(to_tsvector('russian', author), 'B')
+		|| setweight(to_tsvector('russian', coalesce(description, '')), 'C');
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION build_list_object(_ids integer[])
 	RETURNS json AS
 $$

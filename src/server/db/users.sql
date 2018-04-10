@@ -309,3 +309,36 @@ $$
 	FROM _arrays;
 $$
 LANGUAGE SQL STABLE;
+
+
+
+/**********************************  TRIGGERS  *********************************/
+
+
+CREATE OR REPLACE FUNCTION users_update()
+	RETURNS TRIGGER AS
+$$
+	BEGIN
+		IF new.info::text <> old.info::text THEN
+			UPDATE form_info
+			SET tsvector = build_form_info_tsvector(
+				user_form.title,
+				new.info,
+				user_form.description
+			)
+			FROM (
+				SELECT id, title, description FROM forms
+				WHERE owner_id = new.id
+			) AS user_form
+			WHERE form_info.id = user_form.id;
+		END IF;
+		RETURN new;
+	END
+$$
+LANGUAGE plpgsql;
+
+
+CREATE TRIGGER users_au
+	AFTER UPDATE ON users
+	FOR EACH ROW
+	EXECUTE PROCEDURE users_update();

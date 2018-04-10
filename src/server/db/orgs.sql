@@ -408,7 +408,7 @@ $org_links_bd$
 LANGUAGE plpgsql;
 
 
-CREATE TRIGGER link_to_itself_organizations_ai
+CREATE TRIGGER organizations_ai
 	AFTER INSERT ON organizations
 	FOR EACH ROW
 	EXECUTE PROCEDURE org_links_insert_link_to_itself();
