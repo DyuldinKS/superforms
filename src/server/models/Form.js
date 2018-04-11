@@ -5,22 +5,19 @@ import AbstractModel from './AbstractModel';
 class Form extends AbstractModel {
 	// ***************** STATIC METHODS ***************** //
 
-
 	static findById(id) {
-		return db.query('SELECT * FROM get_form($1)', [id]);
+		return db.query('SELECT * FROM to_form_full(get_form($1)) form;', [id])
+			.then(found => (found ? new Form(found) : null));
 	}
 
 
 	// ***************** INSTANCE METHODS ***************** //
 
-	save(authorId) {
-		this.ownerId = authorId;
+	// @implements
+	save({ author }) {
+		this.ownerId = author.id;
 
-		return db.query(
-			'SELECT * FROM create_form($1, $2)',
-			[super.convertToTableColumns(this), authorId],
-		)
-			.then(saved => this.assign(saved));
+		return super.save({ author });
 	}
 }
 

@@ -40,12 +40,27 @@ export default (app) => {
 		'/api/v1/form',
 		isActive,
 		(req, res, next) => {
-			const { self } = req.loaded;
+			const { author } = req;
 			const props = req.body;
 			const form = new Form(props);
 
-			form.save(self.id)
+			form.save({ props, author })
 				.then(() => {	res.send(form); })
+				.catch(next);
+		},
+	);
+
+
+	// update form
+	app.patch(
+		'/api/v1/form/:id',
+		(req, res, next) => {
+			const { author } = req;
+			const { form } = req.loaded;
+			const props = req.body;
+
+			form.update({ props, author })
+				.then(() => res.json(form))
 				.catch(next);
 		},
 	);
