@@ -276,7 +276,7 @@ $$
 			SELECT id, owner_id
 			FROM forms
 			JOIN form_info USING (id)
-			WHERE (_users IS NULL OR owner_id = ANY (_users))
+			WHERE owner_id = ANY (_users)
 				AND (_query IS NULL OR tsvector @@ _query)
 				AND (_deleted IS NULL
 					OR (_deleted IS false AND deleted IS NULL)
