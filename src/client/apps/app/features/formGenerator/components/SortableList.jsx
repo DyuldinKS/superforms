@@ -5,6 +5,7 @@ import { SAMPLE, BLOCK } from '../utils/dndTypes';
 import getDefaultInputScheme from '../utils/getDefaultInputScheme';
 import InsertPreview from './InsertPreview';
 import InputItem from './InputItem';
+import InsertZone from './InsertZone';
 
 const propTypes = {
   order: PropTypes.array.isRequired,
@@ -98,10 +99,9 @@ class SortableList extends Component {
     ));
   }
 
-  render() {
+  renderList() {
     const {
       canDrop,
-      connectDropTarget,
       dragItemId,
       dragInitialIndex,
       dragItemType,
@@ -116,21 +116,40 @@ class SortableList extends Component {
         sliceIndex = dragIndex + 1;
       }
 
-      return connectDropTarget(
-        <div className="form-generator-items-list">
+      return (
+        <React.Fragment>
           {this.renderItems(order.slice(0, sliceIndex))}
           <InsertPreview
             id={dragItemId}
             type={dragItemType}
           />
           {this.renderItems(order.slice(sliceIndex))}
-        </div>
+        </React.Fragment>
       );
     }
 
+    return this.renderItems(order);
+  }
+
+  render() {
+    const {
+      connectDropTarget,
+      order,
+    } = this.props;
+
     return connectDropTarget(
       <div className="form-generator-items-list">
-        {this.renderItems(order)}
+        {this.renderList()}
+
+        {
+          this.state.dragIndex > -1
+          ? null
+          : <InsertZone
+            insertIndex={order.length}
+            getDragIndex={this.getDragIndex}
+            setDragIndex={this.setDragIndex}
+          />
+        }
       </div>
     );
   }
