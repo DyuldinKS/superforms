@@ -37,7 +37,7 @@ function App() {
           component={OrgProfileRoute}
         />
         <Route
-          path="/form"
+          path="/form/:id"
           component={FormRoute}
         />
         <Route
