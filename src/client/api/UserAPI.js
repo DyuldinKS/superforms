@@ -23,7 +23,7 @@ class UserAPI {
     return data;
   }
 
-  static async getForms(id, options) {
+  static async getForms(id, options = {}) {
     const url = getURLFromParts({
       pathname: `/api/v1/user/${id}/forms`,
       search: {

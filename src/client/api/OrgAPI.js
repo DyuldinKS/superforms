@@ -48,7 +48,7 @@ class OrgAPI {
     return data;
   }
 
-  static async getForms(id, options) {
+  static async getForms(id, options = {}) {
     const url = getURLFromParts({
       pathname: `/api/v1/org/${id}/forms`,
       search: {

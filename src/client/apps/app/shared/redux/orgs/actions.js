@@ -9,6 +9,7 @@ import * as types from './actionTypes';
 import {
   getAffiliatedUsersListId,
   getAffiliatedOrgsListId,
+  getFormsListId,
 } from './utils';
 
 // Create
@@ -219,6 +220,25 @@ export function fetchAffiliatedOrgs(orgId, options) {
 
     try {
       const data = await OrgAPI.getAffiliatedOrgs(orgId, options);
+
+      dispatch(batchActions(
+        entities.add(data.entities),
+        list.fetchSuccess(listId, data.list),
+      ));
+    } catch (error) {
+      dispatch(list.fetchFailure(listId, error));
+    }
+  };
+}
+
+// Fetch forms by org
+export function fetchForms(orgId, options) {
+  return async (dispatch) => {
+    const listId = getFormsListId(orgId);
+    dispatch(list.fetchRequest(listId, options));
+
+    try {
+      const data = await OrgAPI.getForms(orgId, options);
 
       dispatch(batchActions(
         entities.add(data.entities),

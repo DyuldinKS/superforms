@@ -1,0 +1,44 @@
+.forms-list-container {
+  .entries-list-header,
+  .entries-list-item {
+    padding: 10px $card-spacer-x;
+    border-bottom: 1px solid $table-border-color;
+
+    > div {
+      padding-right: 10px;
+      padding-left: 10px;
+    }
+
+    > div:first-child {
+      padding-left: 0;
+    }
+
+    > div:last-child {
+      padding-right: 0;
+    }
+  }
+
+  .entries-list-item:last-child {
+    border-bottom: 0;
+  }
+
+  .entries-list-header {
+    padding-top: 7px;
+    padding-bottom: 7px;
+    color: $gray-600;
+  }
+
+  .card-header {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+.forms-list-search {
+  flex-grow: 1;
+  margin-right: 30px;
+}
+
+.forms-list-btn-add {
+
+}

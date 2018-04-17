@@ -1,0 +1,29 @@
+.forms-list-header-cell-id,
+.forms-list-item-cell-id {
+  width: 50px;
+}
+
+.forms-list-header-cell-title,
+.forms-list-item-cell-title {
+  width: 200px;
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.forms-list-header-cell-owner,
+.forms-list-item-cell-owner {
+  width: 200px;
+}
+
+.forms-list-header-cell-created,
+.forms-list-item-cell-created {
+  width: 140px;
+}
+
+.forms-list-header-cell-responses,
+.forms-list-item-cell-responses {
+  width: 75px;
+  text-align: right;
+}

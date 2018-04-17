@@ -9,6 +9,7 @@ import {
   OrgProfileHeader,
   OrgProfileInfo,
   OrgProfileNav,
+  OrgProfileFormsList,
   OrgProfileOrgsList,
   OrgProfileSettings,
   OrgProfileUsersList,
@@ -73,6 +74,11 @@ class OrgProfilePage extends Component {
               path={`${path}/users`}
               exact
               component={OrgProfileUsersList}
+            />
+            <Route
+              path={`${path}/forms`}
+              exact
+              component={OrgProfileFormsList}
             />
             <Route
               path={`${path}/settings`}

@@ -1,3 +1,4 @@
+import { actions as list } from 'shared/lists/list';
 import { actions as entity } from 'shared/entities/entity';
 import { actions as entities } from 'shared/entities';
 import { actions as router } from 'shared/router/redux';
@@ -5,6 +6,7 @@ import { batchActions } from 'shared/batch';
 import { UserAPI, RecipientAPI } from 'api/';
 import entityName from './constants';
 import * as types from './actionTypes';
+import { getFormsListId } from './utils';
 
 // Create
 export function createRequest(parentId, payload) {
@@ -223,6 +225,25 @@ export function fetchOne(id) {
       ));
     } catch (error) {
       dispatch(entity.fetchOneFailure(entityName, id, error));
+    }
+  };
+}
+
+// Fetch forms by user
+export function fetchForms(userId, options) {
+  return async (dispatch) => {
+    const listId = getFormsListId(userId);
+    dispatch(list.fetchRequest(listId, options));
+
+    try {
+      const data = await UserAPI.getForms(userId, options);
+
+      dispatch(batchActions(
+        entities.add(data.entities),
+        list.fetchSuccess(listId, data.list),
+      ));
+    } catch (error) {
+      dispatch(list.fetchFailure(listId, error));
     }
   };
 }

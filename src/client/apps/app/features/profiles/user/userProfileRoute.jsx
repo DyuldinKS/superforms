@@ -7,6 +7,7 @@ import { Switch, Route } from 'shared/router/components';
 import * as usersModule from 'apps/app/shared/redux/users';
 import * as orgsModule from 'apps/app/shared/redux/orgs';
 import {
+  UserProfileFormsList,
   UserProfileHeader,
   UserProfileInfo,
   UserProfileNav,
@@ -62,6 +63,11 @@ class UserProfilePage extends Component {
 
         <PageContent className="container app-profile-content">
           <Switch>
+            <Route
+              path={`${path}/forms`}
+              exact
+              component={UserProfileFormsList}
+            />
             <Route
               path={`${path}/settings`}
               exact

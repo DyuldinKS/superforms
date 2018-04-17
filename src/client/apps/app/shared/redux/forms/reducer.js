@@ -1,9 +1,5 @@
 import { initialState } from 'shared/entities/entity/reducer';
-import { data } from './fakeData';
-
-const id = 'fake';
-initialState.entities[id] = data;
-initialState.fetchStatus[id] = 'loaded';
+import * as types from './actionTypes';
 
 export default function (state = initialState, action) {
   switch (action.type) {
