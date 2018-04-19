@@ -29,7 +29,6 @@ const defaultProps = {
   connectDropTarget: n => n,
   draggable: false,
   dragging: false,
-  dndConnected: false,
 };
 
 export class InputItem extends PureComponent {

@@ -1,50 +1,39 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { DragDropContextProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import uuidv1 from 'uuid/v1';
+import * as formsModule from 'apps/app/shared/redux/forms';
 import deleteMapProp from 'shared/form/utils/deleteMapProp';
-import Form from 'shared/form/components/Form';
-import Header from './components/Header';
 import ItemsCollection from './components/ItemsCollection';
 import HeaderSettings from './components/HeaderSettings';
 import ItemSettings from './components/ItemSettings';
 import WorkingPane from './components/WorkingPane';
+import SavePanel from './components/SavePanel';
 
-const propTypes = {};
+const propTypes = {
+  id: PropTypes.string.isRequired,
+  // from Redux
+  description: PropTypes.string,
+  items: PropTypes.object,
+  order: PropTypes.array,
+  title: PropTypes.string,
+  updateForm: PropTypes.func.isRequired,
+  updating: PropTypes.bool,
+};
 
-const defaultProps = {};
+const defaultProps = {
+  // from Redux
+  description: '',
+  items: {},
+  order: [],
+  title: '',
+  updating: false,
+};
 
 const initialState = {
   selectedItem: null,
-  activeTab: 'generator',
-  // form
-  title: 'Тест',
-  description: 'Короткое описание',
-  items: {
-    abcd: {
-      itemType: 'input',
-      title: 'Любое число',
-      type: 'number',
-      required: true,
-      min: 0,
-      max: 15,
-    },
-    qwer: {
-      itemType: 'input',
-      title: 'Несколько из списка',
-      type: 'select',
-      multiple: true,
-      options: [
-        'Cookie',
-        'Banana',
-        'Ice-cream',
-      ],
-      optionOther: true,
-      required: true,
-    },
-  },
-  order: ['abcd', 'qwer'],
 };
 
 const childContextTypes = {
@@ -57,11 +46,31 @@ const childContextTypes = {
   selectItem: PropTypes.func.isRequired,
 };
 
-class FormGeneratorRoute extends Component {
+function checkFormPropsChange(before, after) {
+  return before.title !== after.title
+    || before.description !== after.description
+    || before.order !== after.order
+    || before.items !== after.items;
+}
+
+class FormGenerator extends Component {
   constructor(props) {
     super(props);
 
-    this.state = initialState;
+    const {
+      title,
+      description,
+      order,
+      items,
+    } = props;
+
+    this.state = {
+      title,
+      description,
+      order,
+      items,
+      ...initialState,
+    };
 
     this.updateHeader = this.updateHeader.bind(this);
     this.addItem = this.addItem.bind(this);
@@ -75,7 +84,7 @@ class FormGeneratorRoute extends Component {
     this.selectItem = this.selectItem.bind(this);
     this.clearSelectedItem = this.clearSelectedItem.bind(this);
 
-    this.changeTab = this.changeTab.bind(this);
+    this.postUpdates = this.postUpdates.bind(this);
   }
 
   getChildContext() {
@@ -88,6 +97,18 @@ class FormGeneratorRoute extends Component {
       reorderItem: this.reorderItem,
       selectItem: this.selectItem,
     };
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (checkFormPropsChange(this.props, nextProps)) {
+      this.setState(state => ({
+        ...state,
+        title: nextProps.title,
+        description: nextProps.description,
+        order: nextProps.order,
+        items: nextProps.items,
+      }));
+    }
   }
 
   updateHeader(prop, value) {
@@ -198,14 +219,18 @@ class FormGeneratorRoute extends Component {
     });
   }
 
-  changeTab(activeTab) {
-    this.setState(state => ({
-      ...state,
-      activeTab,
-    }));
+  postUpdates() {
+    const { updateForm, id } = this.props;
+    const {
+      title,
+      description,
+      order,
+      items,
+    } = this.state;
+    updateForm(id, { title, description, scheme: { order, items } });
   }
 
-  renderGeneratorSettingsBar() {
+  renderSettingsBar() {
     const { selectedItem } = this.state;
 
     if (selectedItem === 'header') {
@@ -232,62 +257,64 @@ class FormGeneratorRoute extends Component {
     );
   }
 
-  renderGenerator() {
-    const {
-      title,
-      order,
-      selectedItem,
-    } = this.state;
+  render() {
+    const { title, order, selectedItem } = this.state;
+    const { updating } = this.props;
 
     return (
       <DragDropContextProvider backend={HTML5Backend}>
         <div className="form-generator">
-          <WorkingPane
-            title={title}
-            order={order}
-          />
+          <div className="form-generator-content">
+            <WorkingPane
+              title={title}
+              order={order}
+            />
+
+            <SavePanel
+              hasUnsavedChanges={checkFormPropsChange(this.state, this.props)}
+              onSave={this.postUpdates}
+              updating={updating}
+            />
+          </div>
 
           {
             selectedItem
-            ? this.renderGeneratorSettingsBar()
+            ? this.renderSettingsBar()
             : <ItemsCollection />
           }
         </div>
       </DragDropContextProvider>
     );
   }
-
-  renderForm() {
-    const { order, items, title, description } = this.state;
-    const scheme = { order, items };
-    const form = { scheme, title, description };
-
-    return (
-      <Form form={form} />
-    );
-  }
-
-  render() {
-    const { activeTab } = this.state;
-
-    return (
-      <div className="app-form-generator">
-        <Header
-          activeTab={activeTab}
-          onChange={this.changeTab}
-        />
-        {
-          activeTab === 'generator'
-          ? this.renderGenerator()
-          : this.renderForm()
-        }
-      </div>
-    );
-  }
 }
 
-FormGeneratorRoute.propTypes = propTypes;
-FormGeneratorRoute.defaultProps = defaultProps;
-FormGeneratorRoute.childContextTypes = childContextTypes;
+FormGenerator.propTypes = propTypes;
+FormGenerator.defaultProps = defaultProps;
+FormGenerator.childContextTypes = childContextTypes;
 
-export default FormGeneratorRoute;
+function mapStateToProps(state, ownProps) {
+  const {
+    description,
+    scheme,
+    title,
+    updating,
+  } = formsModule.selectors.getFormEntity(state, ownProps.id);
+  const {
+    items,
+    order,
+  } = scheme;
+
+  return {
+    description,
+    items,
+    order,
+    title,
+    updating,
+  };
+}
+
+const mapDispatchToProps = {
+  updateForm: formsModule.actions.update,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(FormGenerator);

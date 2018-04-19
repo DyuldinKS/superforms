@@ -1,36 +1,85 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import Form from 'shared/form/components/Form';
+import { connect } from 'react-redux';
 import * as formsModule from 'apps/app/shared/redux/forms';
+import Header from './components/Header';
+import FormGenerator from './generator/generatorRoute';
+import FormPreview from './preview/previewRoute';
 
 const propTypes = {
+  // from Redux
   id: PropTypes.string.isRequired,
-  form: PropTypes.object,
+  isLoaded: PropTypes.bool,
   fetchForm: PropTypes.func.isRequired,
 };
 
 const defaultProps = {
-  form: {},
+  isLoaded: false,
+};
+
+const initialState = {
+  activeTab: 'generator',
 };
 
 class FormRoute extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = initialState;
+
+    this.changeTab = this.changeTab.bind(this);
+  }
+
   componentDidMount() {
-    const { fetchForm, id } = this.props;
+    const { id, fetchForm } = this.props;
     fetchForm(id);
   }
 
-  render() {
-    const { form } = this.props;
+  changeTab(activeTab) {
+    this.setState(state => ({
+      ...state,
+      activeTab,
+    }));
+  }
 
-    if (!form.scheme) {
-      return 'Загрузка...';
+  renderSpinner() {
+    return (
+      <div>Загрузка...</div>
+    );
+  }
+
+  renderTabContent() {
+    const { activeTab } = this.state;
+    const { id } = this.props;
+
+    if (activeTab === 'generator') {
+      return (
+        <FormGenerator id={id} />
+      );
     }
 
     return (
-      <Form
-        form={form}
-      />
+      <FormPreview id={id} />
+    );
+  }
+
+  render() {
+    const { activeTab } = this.state;
+    const { isLoaded } = this.props;
+
+    return (
+      <div className="app-form-generator">
+        <Header
+          activeTab={activeTab}
+          onChange={this.changeTab}
+        />
+
+        {
+          isLoaded
+          ? this.renderTabContent()
+          : this.renderSpinner()
+        }
+      </div>
     );
   }
 }
@@ -40,11 +89,12 @@ FormRoute.defaultProps = defaultProps;
 
 function mapStateToProps(state, ownProps) {
   const formId = ownProps.match.params.id;
-  const form = formsModule.selectors.getFormEntity(state, formId);
+  const { entity, fetchStatus } = formsModule.selectors.getForm(state, formId);
+  const { scheme } = entity;
 
   return {
-    form,
     id: formId,
+    isLoaded: fetchStatus === 'loaded' && !!scheme,
   };
 }
 

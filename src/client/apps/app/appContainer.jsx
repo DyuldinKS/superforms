@@ -10,7 +10,6 @@ import CreateOrgRoute from './features/creation/org/createOrgRoute';
 import UserProfileRoute from './features/profiles/user/userProfileRoute';
 import OrgProfileRoute from './features/profiles/org/orgProfileRoute';
 import FormRoute from './features/form/formRoute';
-import FormGeneratorRoute from './features/formGenerator/formGeneratorRoute';
 
 function App() {
   return (
@@ -39,10 +38,6 @@ function App() {
         <Route
           path="/form/:id"
           component={FormRoute}
-        />
-        <Route
-          path="/generator"
-          component={FormGeneratorRoute}
         />
       </Switch>
     </div>

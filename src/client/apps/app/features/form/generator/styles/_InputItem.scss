@@ -13,14 +13,18 @@
 
 .input-item-title {
   flex-grow: 1;
+  width: 1px;
 }
 
 .input-item-type {
-
+  width: 125px;
+  text-align: right;
 }
 
 .input-item-options {
   display: flex;
+  align-self: stretch;
+  align-items: center;
   padding: 5px 0 5px 5px;
   margin-left: 5px;
   border-left: 1px solid $card-border-color;

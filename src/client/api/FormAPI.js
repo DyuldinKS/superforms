@@ -15,7 +15,7 @@ class FormAPI {
   }
 
   static async update(id, payload = {}) {
-    const data = await fetch(`/api/v1/forms/${id}`, {
+    const data = await fetch(`/api/v1/form/${id}`, {
       method: 'PATCH',
       body: {
         action: 'update',
@@ -26,7 +26,7 @@ class FormAPI {
   }
 
   static async send(id, settings) {
-    const data = await fetch(`/api/v1/forms/${id}`, {
+    const data = await fetch(`/api/v1/form/${id}`, {
       method: 'PATCH',
       body: {
         action: 'send',
@@ -37,7 +37,7 @@ class FormAPI {
   }
 
   static async remove(id) {
-    const data = await fetch(`/api/v1/forms/${id}`, {
+    const data = await fetch(`/api/v1/form/${id}`, {
       method: 'PATCH',
       body: { action: 'delete' },
     });
