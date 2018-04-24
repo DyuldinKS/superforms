@@ -13,6 +13,22 @@ class Form extends AbstractModel {
 
 	// ***************** INSTANCE METHODS ***************** //
 
+	async loadDependincies() {
+		if(this.parentOrgIds) return;
+		if(!this.ownerId) throw new Error('form.ownerId is not specified');
+
+		const result = await db.query(
+			`SELECT json_agg(link.parent_id ORDER BY link.distance) AS "parentIds"
+			FROM users
+			JOIN org_links link ON link.org_id = users.org_id 
+			WHERE users.id = $1;`,
+			[this.ownerId],
+		);
+
+		this.parentOrgIds = result ? result.parentIds : null;
+	}
+
+
 	// @implements
 	save({ author }) {
 		this.ownerId = author.id;

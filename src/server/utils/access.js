@@ -1,8 +1,3 @@
-import Rights from './rights';
-import Role from './role';
-import Org from '../models/org';
-
-
 class Access {
 	constructor(user) {
 		this.subj = user;

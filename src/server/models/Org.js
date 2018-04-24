@@ -15,6 +15,15 @@ class Org extends Recipient {
 	}
 
 
+	static isParent(parentId, childId) {
+		return db.query(
+			'SELECT distance FROM org_links WHERE parent_id = $1 AND org_id = $2',
+			[parentId, childId],
+		)
+			.then(link => Boolean(link));
+	}
+
+
 	static buildSearchTemplate(text) {
 		if(text && typeof text === 'string') {
 			const str = text.trim();
@@ -53,6 +62,21 @@ class Org extends Recipient {
 
 
 	// ***************** INSTANCE METHODS ***************** //
+
+	async loadDependincies() {
+		if(this.parentOrgIds) return;
+		if(!this.id && !this.parent_id) throw new Error('org.id is not specified');
+
+		const result = await db.query(
+			`SELECT json_agg(parent_id ORDER BY distance) AS "parentIds"
+			FROM org_links
+			WHERE org_id = $1;`,
+			[this.id || this.parentId],
+		);
+
+		this.parentOrgIds = result ? result.parentIds : null;
+	}
+
 
 	// @implements
 	save({ author }) {

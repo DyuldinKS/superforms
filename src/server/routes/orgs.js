@@ -10,6 +10,9 @@ export default (app) => {
 		'/api/v1/org',
 		isActive,
 		(req, res, next) => {
+			
+		},
+		(req, res, next) => {
 			const { author } = req;
 			const org = new Org({ ...req.body });
 

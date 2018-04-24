@@ -57,18 +57,28 @@ class User extends Recipient {
 
 	// ***************** INSTANCE METHODS ***************** //
 
-	getScope() {
-		return Promise.resolve()
-			.then(() => {
-				if(this.org) return this.org;
-				if(!this.orgId) throw new Error('orgId is not specified');
+	async loadDependincies() {
+		if(this.parentOrgIds) return;
+		if(!this.orgId) throw new Error('user.orgId is not specified');
 
-				return Org.findById(this.orgId)
-					.then((org) => {
-						this.org = org;
-						return org;
-					});
-			});
+		const result = await db.query(
+			`SELECT json_agg(parent_id ORDER BY distance) AS "parentIds"
+			FROM org_links
+			WHERE org_id = $1;`,
+			[this.orgId],
+		);
+
+		this.parentOrgIds = result ? result.parentIds : null;
+	}
+
+
+	async loadOrg() {
+		if(this.org) return this.org;
+		if(!this.orgId) throw new Error('orgId is not specified');
+
+		const org = await Org.findById(this.orgId);
+		this.org = org;
+		return org;
 	}
 
 

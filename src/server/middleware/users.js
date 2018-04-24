@@ -25,7 +25,7 @@ const isActive = (req, res, next) => {
 		return next(new HTTPError(403, 'Your account has been locked'));
 	}
 
-	return author.getScope()
+	return author.loadOrg()
 		.then((org) => {
 			if(!org.isActive()) {
 				throw new HTTPError(403, 'Your organization has been locked');
