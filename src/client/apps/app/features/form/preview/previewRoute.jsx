@@ -5,8 +5,8 @@ import * as formsModule from 'apps/app/shared/redux/forms';
 import Form from 'shared/form/components/Form';
 
 const propTypes = {
-  id: PropTypes.string.isRequired,
   // from Redux
+  id: PropTypes.string.isRequired,
   form: PropTypes.object,
 };
 
@@ -30,9 +30,11 @@ FormPreview.propTypes = propTypes;
 FormPreview.defaultProps = defaultProps;
 
 function mapStateToProps(state, ownProps) {
-  const form = formsModule.selectors.getFormEntity(state, ownProps.id);
+  const { id } = ownProps.match.params;
+  const form = formsModule.selectors.getFormEntity(state, id);
 
   return {
+    id,
     form,
   };
 }

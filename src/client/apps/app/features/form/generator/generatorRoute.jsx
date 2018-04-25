@@ -14,8 +14,8 @@ import WorkingPane from './components/WorkingPane';
 import SavePanel from './components/SavePanel';
 
 const propTypes = {
-  id: PropTypes.string.isRequired,
   // from Redux
+  id: PropTypes.string.isRequired,
   description: PropTypes.string,
   items: PropTypes.object,
   order: PropTypes.array,
@@ -306,19 +306,21 @@ FormGenerator.defaultProps = defaultProps;
 FormGenerator.childContextTypes = childContextTypes;
 
 function mapStateToProps(state, ownProps) {
+  const { id } = ownProps.match.params;
   const {
     description,
     scheme,
     title,
     updated,
     updating,
-  } = formsModule.selectors.getFormEntity(state, ownProps.id);
+  } = formsModule.selectors.getFormEntity(state, id);
   const {
     items,
     order,
   } = scheme;
 
   return {
+    id,
     description,
     items,
     order,

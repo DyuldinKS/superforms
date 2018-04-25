@@ -2,11 +2,15 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import * as formsModule from 'apps/app/shared/redux/forms';
-import Header from './components/Header';
+import { Switch, Route } from 'shared/router/components';
+import getSubpath from 'shared/router/utils/getSubpath';
+import FormNav from './components/FormNav';
 import FormGenerator from './generator/generatorRoute';
 import FormPreview from './preview/previewRoute';
 
 const propTypes = {
+  match: PropTypes.object.isRequired,
+  location: PropTypes.object.isRequired,
   // from Redux
   id: PropTypes.string.isRequired,
   isLoaded: PropTypes.bool,
@@ -17,29 +21,10 @@ const defaultProps = {
   isLoaded: false,
 };
 
-const initialState = {
-  activeTab: 'generator',
-};
-
 class FormRoute extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = initialState;
-
-    this.changeTab = this.changeTab.bind(this);
-  }
-
   componentDidMount() {
     const { id, fetchForm } = this.props;
     fetchForm(id);
-  }
-
-  changeTab(activeTab) {
-    this.setState(state => ({
-      ...state,
-      activeTab,
-    }));
   }
 
   renderSpinner() {
@@ -49,29 +34,33 @@ class FormRoute extends Component {
   }
 
   renderTabContent() {
-    const { activeTab } = this.state;
-    const { id } = this.props;
-
-    if (activeTab === 'generator') {
-      return (
-        <FormGenerator id={id} />
-      );
-    }
+    const { match } = this.props;
+    const { path } = match;
 
     return (
-      <FormPreview id={id} />
+      <Switch>
+        <Route
+          path={`${path}/preview`}
+          exact
+          component={FormPreview}
+        />
+        <Route
+          path={`${path}`}
+          component={FormGenerator}
+        />
+      </Switch>
     );
   }
 
   render() {
-    const { activeTab } = this.state;
-    const { isLoaded } = this.props;
+    const { match, location, isLoaded } = this.props;
+    const subpath = getSubpath(location.pathname, match.url);
 
     return (
       <div className="app-form-generator">
-        <Header
-          activeTab={activeTab}
-          onChange={this.changeTab}
+        <FormNav
+          subpath={subpath}
+          baseUrl={match.url}
         />
 
         {
