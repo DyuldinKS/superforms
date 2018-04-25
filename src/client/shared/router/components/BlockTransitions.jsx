@@ -38,7 +38,7 @@ class BlockTransitions extends Component {
   }
 
   componentWillUnmount() {
-    this.disable();
+    if (this.props.when) this.disable();
   }
 
   enable() {
