@@ -7,6 +7,7 @@ import getSubpath from 'shared/router/utils/getSubpath';
 import FormNav from './components/FormNav';
 import FormGenerator from './generator/generatorRoute';
 import FormPreview from './preview/previewRoute';
+import DistributionRoute from './distribution/distributionRoute';
 
 const propTypes = {
   match: PropTypes.object.isRequired,
@@ -43,6 +44,10 @@ class FormRoute extends Component {
           path={`${path}/preview`}
           exact
           component={FormPreview}
+        />
+        <Route
+          path={`${path}/distribute`}
+          component={DistributionRoute}
         />
         <Route
           path={`${path}`}

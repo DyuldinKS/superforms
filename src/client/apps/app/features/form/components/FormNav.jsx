@@ -55,6 +55,22 @@ class FormNav extends Component {
               Предпросмотр
             </Link>
           </NavItem>
+          <NavItem>
+            <Link
+              className={this.getClassName('/distribute')}
+              to={`${baseUrl}/distribute`}
+            >
+              Сбор ответов
+            </Link>
+          </NavItem>
+          <NavItem>
+            <Link
+              className={this.getClassName('/responses')}
+              to={`${baseUrl}/responses`}
+            >
+              Результаты
+            </Link>
+          </NavItem>
         </Nav>
       </div>
     );
