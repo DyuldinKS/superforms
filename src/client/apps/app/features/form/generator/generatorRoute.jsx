@@ -6,6 +6,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 import uuidv1 from 'uuid/v1';
 import * as formsModule from 'apps/app/shared/redux/forms';
 import deleteMapProp from 'shared/form/utils/deleteMapProp';
+import { BlockTransitions } from 'shared/router/components';
 import ItemsCollection from './components/ItemsCollection';
 import HeaderSettings from './components/HeaderSettings';
 import ItemSettings from './components/ItemSettings';
@@ -21,6 +22,7 @@ const propTypes = {
   title: PropTypes.string,
   updateForm: PropTypes.func.isRequired,
   updating: PropTypes.bool,
+  updated: PropTypes.string,
 };
 
 const defaultProps = {
@@ -30,6 +32,7 @@ const defaultProps = {
   order: [],
   title: '',
   updating: false,
+  updated: '',
 };
 
 const initialState = {
@@ -101,13 +104,7 @@ class FormGenerator extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (checkFormPropsChange(this.props, nextProps)) {
-      this.setState(state => ({
-        ...state,
-        title: nextProps.title,
-        description: nextProps.description,
-        order: nextProps.order,
-        items: nextProps.items,
-      }));
+      this.syncStateWithProps(nextProps);
     }
   }
 
@@ -230,6 +227,16 @@ class FormGenerator extends Component {
     updateForm(id, { title, description, scheme: { order, items } });
   }
 
+  syncStateWithProps(props) {
+    this.setState(state => ({
+      ...state,
+      title: props.title,
+      description: props.description,
+      order: props.order,
+      items: props.items,
+    }));
+  }
+
   renderSettingsBar() {
     const { selectedItem } = this.state;
 
@@ -259,7 +266,8 @@ class FormGenerator extends Component {
 
   render() {
     const { title, order, selectedItem } = this.state;
-    const { updating } = this.props;
+    const { updated, updating } = this.props;
+    const hasUnsavedChanges = checkFormPropsChange(this.state, this.props);
 
     return (
       <DragDropContextProvider backend={HTML5Backend}>
@@ -270,8 +278,13 @@ class FormGenerator extends Component {
               order={order}
             />
 
+            <BlockTransitions
+              when={hasUnsavedChanges}
+            />
+
             <SavePanel
-              hasUnsavedChanges={checkFormPropsChange(this.state, this.props)}
+              hasUnsavedChanges={hasUnsavedChanges}
+              lastSave={updated}
               onSave={this.postUpdates}
               updating={updating}
             />
@@ -297,6 +310,7 @@ function mapStateToProps(state, ownProps) {
     description,
     scheme,
     title,
+    updated,
     updating,
   } = formsModule.selectors.getFormEntity(state, ownProps.id);
   const {
@@ -309,6 +323,7 @@ function mapStateToProps(state, ownProps) {
     items,
     order,
     title,
+    updated,
     updating,
   };
 }
