@@ -162,7 +162,7 @@ describe('forms sql-functions test', () => {
 			title: 'test6',
 			scheme: {},
 			owner_id: bot.id,
-			sent: { shareable: 'some-uuidv4' },
+			collecting: { shared: 'unique' },
 		};
 
 		return db.query(
@@ -174,7 +174,7 @@ describe('forms sql-functions test', () => {
 					id: actual.id,
 					title: form.title,
 					description: null,
-					sent: form.sent,
+					collecting: form.collecting,
 					ownerId: form.owner_id,
 					created: actual.created,
 					questionCount: 0,
@@ -203,7 +203,7 @@ describe('forms sql-functions test', () => {
 					title: form.title,
 					description: null,
 					scheme: {},
-					sent: null,
+					collecting: null,
 					ownerId: form.owner_id,
 					created: actual.created,
 					updated: null,
@@ -238,7 +238,7 @@ describe('forms sql-functions test', () => {
 				},
 				order: ['d', 'e', 'a', 'b', 'c'],
 			},
-			sent: { shareable: 'uuidv4' },
+			collecting: { shared: 'unique' },
 			created: new Date(null),
 			deleted: new Date(),
 		};
@@ -315,7 +315,7 @@ describe('forms sql-functions test', () => {
 			title: form.title,
 			description: null,
 			scheme: form.scheme,
-			sent: null,
+			collecting: null,
 			owner_id: form.ownerId,
 			created: null,
 			updated: null,
