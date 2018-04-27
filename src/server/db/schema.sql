@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS forms (
 	title text NOT NULL,
 	description text,
 	scheme json NOT NULL,
-	sent json,
+	collecting json,
 	owner_id integer NOT NULL REFERENCES users(id),
 	created timestamptz NOT NULL DEFAULT now(),
 	updated timestamptz,
