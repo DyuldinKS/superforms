@@ -42,7 +42,7 @@ describe('forms sql-functions test', () => {
 			title: 'test1',
 			description: 'it should create form',
 			scheme: { order: [], items: {} },
-			sent: null,
+			collecting: null,
 			owner_id: bot.id,
 			created: new Date('2016-08-26T16:02:46.274+03:00'),
 			updated: new Date('2016-08-29T14:48:58.049+03:00'),
@@ -79,7 +79,7 @@ describe('forms sql-functions test', () => {
 					...form,
 					id: actual.id,
 					description: null,
-					sent: null,
+					collecting: null,
 					created: actual.created,
 					updated: null,
 					deleted: null,
@@ -120,7 +120,7 @@ describe('forms sql-functions test', () => {
 				assert(log.operation === 'I') // insert
 
 				form.description = null;
-				form.sent = null;
+				form.collecting = null;
 				form.updated = null;
 				form.deleted = null;
 				form.author_id = bot.id;
