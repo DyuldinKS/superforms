@@ -91,12 +91,27 @@ $$
 					WHEN 'integer' THEN 'number'
 					WHEN 'float' THEN 'number'
 					WHEN 'financial' THEN 'number'
+					WHEN 'string' THEN 'text'
+					WHEN 'paragraph' THEN 'text'
+					WHEN 'datetime' THEN 'text'
 					ELSE _item->>'type'
 					END
 				),
 				'integer', (
 					CASE _item->>'type'
 					WHEN 'integer' THEN true
+					ELSE null
+					END
+				),
+				'multiline', (
+					CASE _item->>'type'
+					WHEN 'paragraph' THEN true
+					ELSE null
+					END
+				),
+				'datetime', (
+					CASE _item->>'type'
+					WHEN 'datetime' THEN true
 					ELSE null
 					END
 				),
