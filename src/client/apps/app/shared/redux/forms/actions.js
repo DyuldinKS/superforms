@@ -4,6 +4,8 @@ import { batchActions } from 'shared/batch';
 import { FormAPI } from 'api/';
 import entityName from './constants';
 import * as types from './actionTypes';
+import { getCollectingSettings } from './selectors';
+import generateSecret from '../../../../../../server/libs/passwordGenerator';
 
 // Fetch form entity
 export function fetch(id) {
@@ -51,6 +53,28 @@ export function update(id, payload) {
 
     try {
       const data = await FormAPI.update(id, payload);
+      dispatch(updateSuccess(id, data));
+    } catch (error) {
+      dispatch(updateFailure(id, error));
+    }
+  };
+}
+
+// Update form collect settings
+export function collectUpdate(id, updates) {
+  return async (dispatch, getState) => {
+    dispatch(updateRequest(id, updates));
+
+    const curSettings = getCollectingSettings(getState(), id) || {};
+
+    const settings = {
+      ...curSettings,
+      ...updates,
+    };
+
+    try {
+      const data = await FormAPI.collect(id, settings);
+      data.collecting = settings;
       dispatch(updateSuccess(id, data));
     } catch (error) {
       dispatch(updateFailure(id, error));
