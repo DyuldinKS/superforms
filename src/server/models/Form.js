@@ -31,7 +31,7 @@ Form.prototype.props = {
 	title: { writable: true, enumerable: true },
 	description: { writable: true, enumerable: true },
 	scheme: { writable: true, enumerable: true },
-	sent: { writable: true, enumerable: true },
+	collecting: { writable: true, enumerable: true },
 	ownerId: { writable: true, enumerable: true },
 	created: { writable: false, enumerable: true },
 	updated: { writable: false, enumerable: true },

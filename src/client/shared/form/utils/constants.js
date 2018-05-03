@@ -8,6 +8,6 @@ export const inputTypes = {
   NUMBER: 'number',
   PHONE: 'phone',
   SELECT: 'select',
-  TEXT: 'string',
+  TEXT: 'text',
   TIME: 'time',
 };

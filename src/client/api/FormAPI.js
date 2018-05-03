@@ -25,11 +25,11 @@ class FormAPI {
     return data;
   }
 
-  static async send(id, settings) {
+  static async collect(id, settings) {
     const data = await fetch(`/api/v1/form/${id}`, {
       method: 'PATCH',
       body: {
-        action: 'send',
+        action: 'collect',
         settings,
       },
     });

@@ -2,7 +2,7 @@ export const constants = {
   DATE:   'date',
   NUMBER: 'number',
   SELECT: 'select',
-  TEXT:   'string',
+  TEXT:   'text',
   TIME:   'time',
 };
 
