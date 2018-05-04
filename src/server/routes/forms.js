@@ -8,7 +8,7 @@ import ssr from '../templates/ssr';
 export default (app) => {
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/form\/\d{1,8}(responses)?$/, // api
+			/\/api\/v\d{1,2}\/form\/\d{1,8}(\/responses)?$/, // api
 			/\/form\/\d{1,8}$/, // ssr
 		],
 		isActive,
