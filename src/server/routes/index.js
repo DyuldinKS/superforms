@@ -4,6 +4,7 @@ import recipients from './recipients';
 import users from './users';
 import orgs from './orgs';
 import forms from './forms';
+import responses from './responses';
 import Org from '../models/Org';
 import { HTTPError } from '../errors';
 import store from '../../client/apps/app/boot/store';
@@ -36,7 +37,9 @@ const router = (app) => {
 		},
 	);
 
+	// ordered by the probable frequency of requests
 	forms(app);
+	responses(app);
 	recipients(app);
 	users(app);
 	orgs(app);
