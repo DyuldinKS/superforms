@@ -1,6 +1,6 @@
 CREATE TYPE response_full AS (
 	id integer,
-	"responseId" integer,
+	"formId" integer,
 	items json,
 	respondent json,
 	"recipientId" integer,
@@ -49,7 +49,9 @@ LANGUAGE SQL STABLE;
 CREATE OR REPLACE FUNCTION get_responses_by_form(_form_id integer)
 	RETURNS SETOF responses AS
 $$
-	SELECT * FROM responses WHERE form_id = _form_id;
+	SELECT * FROM responses
+	WHERE form_id = _form_id
+	ORDER BY created DESC;
 $$
 LANGUAGE SQL STABLE;
 
