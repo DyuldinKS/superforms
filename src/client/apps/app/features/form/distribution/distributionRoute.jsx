@@ -27,9 +27,6 @@ const defaultProps = {
   isCollecting: false,
 };
 
-const dateFormat = 'DD.MM.YYYY';
-const timeFormat = 'HH:mm';
-
 class DistributionRoute extends Component {
   constructor(props) {
     super(props);
@@ -46,7 +43,7 @@ class DistributionRoute extends Component {
   startCollecting() {
     const { collectUpdate, id } = this.props;
     const shared = generateSecret(8, 8, ['numbers', 'lowercase']);
-    collectUpdate(id, { active: true, shared });
+    collectUpdate(id, { shared });
     this.changeTab(constants.SETTINGS);
   }
 

@@ -52,9 +52,13 @@ function transformStateToPayload(state) {
     expireDate,
     ...payload
   } = state;
-  if (expires) {
+
+  if (expires && expireDate) {
     payload.expires = expireDate;
+  } else {
+    payload.expires = false;
   }
+
   return payload;
 }
 

@@ -5,7 +5,6 @@ import { FormAPI } from 'api/';
 import entityName from './constants';
 import * as types from './actionTypes';
 import { getCollectingSettings } from './selectors';
-import generateSecret from '../../../../../../server/libs/passwordGenerator';
 
 // Fetch form entity
 export function fetch(id) {
