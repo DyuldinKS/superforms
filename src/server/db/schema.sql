@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS responses (
 	id serial PRIMARY KEY,
 	form_id integer NOT NULL REFERENCES forms(id),
 	items json NOT NULL,
-	owner_id integer REFERENCES recipients(id),
+	respondent json NOT NULL,
 	recipient_id integer REFERENCES recipients(id),
 	created timestamptz DEFAULT now(),
 	updated timestamptz,

@@ -2,7 +2,7 @@ CREATE TYPE response_full AS (
 	id integer,
 	"responseId" integer,
 	items json,
-	"ownerId" integer,
+	respondent json,
 	"recipientId" integer,
 	created timestamptz,
 	updated timestamptz,
@@ -13,7 +13,7 @@ CREATE TYPE response_full AS (
 
 CREATE TYPE response_short AS (
 	id integer,
-	"ownerId" integer,
+	respondent json,
 	"recipientId" integer,
 	created timestamptz
 );
@@ -31,7 +31,7 @@ CREATE OR REPLACE FUNCTION to_response_short(_response responses)
 	RETURNS response_short AS
 $$
 	SELECT _response.id,
-		_response.owner_id,
+		_response.respondent,
 		_response.recipient_id,
 		_response.created;
 $$
@@ -39,7 +39,7 @@ LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION get_response(_id integer)
-	RETURNS response AS
+	RETURNS responses AS
 $$
 	SELECT * FROM responses WHERE id = _id;
 $$
@@ -58,7 +58,7 @@ CREATE OR REPLACE FUNCTION create_response(
 	_props json,
 	_author_id integer,
 	_time timestamptz DEFAULT now(),
-	OUT _response response
+	OUT _response responses
 ) AS
 $$
 	DECLARE
