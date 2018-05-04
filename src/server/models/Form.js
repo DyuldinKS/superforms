@@ -19,6 +19,15 @@ class Form extends AbstractModel {
 
 		return super.save({ author });
 	}
+
+
+	getResponses() {
+		return db.queryAll(
+			`SELECT resp_short.* FROM get_responses_by_form($1) resp,
+				to_response_short(resp) resp_short;`,
+			[this.id],
+		)
+	}
 }
 
 

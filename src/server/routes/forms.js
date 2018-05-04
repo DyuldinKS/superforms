@@ -36,6 +36,18 @@ export default (app) => {
 	);
 
 
+	app.get(
+		'/api/v1/form/:id/responses',
+		isActive,
+		loadInstance,
+		(req, res, next) => {
+			const { form } = req.loaded;
+			form.getResponses()
+				.then(responses => res.json(responses));
+		},
+	);
+
+
 	app.post(
 		'/api/v1/form',
 		isActive,

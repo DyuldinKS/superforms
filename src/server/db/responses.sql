@@ -1,6 +1,6 @@
-CREATE TYPE response AS (
+CREATE TYPE response_full AS (
 	id integer,
-	"formId" integer,
+	"responseId" integer,
 	items json,
 	"ownerId" integer,
 	"recipientId" integer,
@@ -11,13 +11,45 @@ CREATE TYPE response AS (
 );
 
 
+CREATE TYPE response_short AS (
+	id integer,
+	"ownerId" integer,
+	"recipientId" integer,
+	created timestamptz
+);
+
+
+CREATE OR REPLACE FUNCTION to_response_full(_response responses)
+	RETURNS response_full AS
+$$
+	SELECT _response.*;
+$$
+LANGUAGE SQL STABLE;
+
+
+CREATE OR REPLACE FUNCTION to_response_short(_response responses)
+	RETURNS response_short AS
+$$
+	SELECT _response.id,
+		_response.owner_id,
+		_response.recipient_id,
+		_response.created;
+$$
+LANGUAGE SQL STABLE;
+
+
 CREATE OR REPLACE FUNCTION get_response(_id integer)
 	RETURNS response AS
 $$
-	SELECT id, form_id, items, owner_id, recipient_id,
-		created, updated, deleted, author_id
-	FROM responses
-	WHERE id = _id;
+	SELECT * FROM responses WHERE id = _id;
+$$
+LANGUAGE SQL STABLE;
+
+
+CREATE OR REPLACE FUNCTION get_responses_by_form(_form_id integer)
+	RETURNS SETOF responses AS
+$$
+	SELECT * FROM responses WHERE form_id = _form_id;
 $$
 LANGUAGE SQL STABLE;
 
@@ -30,7 +62,7 @@ CREATE OR REPLACE FUNCTION create_response(
 ) AS
 $$
 	DECLARE
-		_inserted responses%ROWTYPE;
+		_inserted responses;
 	BEGIN
 		SELECT * FROM json_populate_record(null::responses, _props) INTO _inserted;
 
