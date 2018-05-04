@@ -8,27 +8,25 @@ import ssr from '../templates/ssr';
 export default (app) => {
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/form\/\d{1,8}$/, // api
+			/\/api\/v\d{1,2}\/form\/\d{1,8}(responses)?$/, // api
 			/\/form\/\d{1,8}$/, // ssr
 		],
 		isActive,
 		loadInstance,
 	);
 
+
 	app.get(
 		'/form/:id',
-		isActive,
-		loadInstance,
 		(req, res, next) => {
 			const { form } = req.loaded;
 			res.send(ssr.interview({ form }));
 		},
 	);
 
+
 	app.get(
 		'/api/v1/form/:id',
-		isActive,
-		loadInstance,
 		(req, res, next) => {
 			const { form } = req.loaded;
 			res.json(form);
@@ -38,8 +36,6 @@ export default (app) => {
 
 	app.get(
 		'/api/v1/form/:id/responses',
-		isActive,
-		loadInstance,
 		(req, res, next) => {
 			const { form } = req.loaded;
 			form.getResponses()
