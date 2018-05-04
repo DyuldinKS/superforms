@@ -1,0 +1,46 @@
+.form-responses-list {
+  border: 1px solid $card-border-color;
+  margin-bottom: 50px;
+}
+
+.form-responses-list-header,
+.form-responses-list-item {
+  display: flex;
+  padding: 10px $card-spacer-x;
+  border-bottom: 1px solid $card-border-color;
+
+  > div {
+    padding-right: 10px;
+    padding-left: 10px;
+
+    &:first-child {
+      padding-left: 0;
+    }
+
+    &:last-child {
+      padding-right: 0;
+    }
+  }
+
+  > div:nth-child(1) {
+    flex-basis: 100px;
+  }
+
+  > div:nth-child(2) {
+    flex-basis: 100px;
+    flex-grow: 1;
+  }
+
+  > div:nth-child(3) {
+    flex-basis: 100px;
+    flex-grow: 1;
+  }
+
+  > div:nth-child(4) {
+    flex-basis: 100px;
+  }
+}
+
+.form-responses-list-item:last-child {
+  border-bottom: 0;
+}

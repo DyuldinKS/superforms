@@ -14,6 +14,11 @@ class FormAPI {
     return data;
   }
 
+  static async getResponses(id) {
+    const data = await fetch(`/api/v1/form/${id}/responses`);
+    return data;
+  }
+
   static async update(id, payload = {}) {
     const data = await fetch(`/api/v1/form/${id}`, {
       method: 'PATCH',

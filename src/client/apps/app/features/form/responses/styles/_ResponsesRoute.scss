@@ -1,0 +1,15 @@
+.form-responses {
+  margin-top: 50px;
+
+  .card-body {
+    > h3 {
+      margin-bottom: 2rem;
+    }
+  }
+
+  .jumbotron {
+    padding: 2rem;
+    background-color: transparent;
+    text-align: center;
+  }
+}

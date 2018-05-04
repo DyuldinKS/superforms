@@ -8,6 +8,7 @@ import FormNav from './components/FormNav';
 import FormGenerator from './generator/generatorRoute';
 import FormPreview from './preview/previewRoute';
 import DistributionRoute from './distribution/distributionRoute';
+import FormResponses from './responses/responsesRoute';
 
 const propTypes = {
   match: PropTypes.object.isRequired,
@@ -47,7 +48,12 @@ class FormRoute extends Component {
         />
         <Route
           path={`${path}/distribute`}
+          exact
           component={DistributionRoute}
+        />
+        <Route
+          path={`${path}/responses`}
+          component={FormResponses}
         />
         <Route
           path={`${path}`}

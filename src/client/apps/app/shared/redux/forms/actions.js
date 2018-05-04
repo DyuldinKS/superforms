@@ -80,3 +80,41 @@ export function collectUpdate(id, updates) {
     }
   };
 }
+
+// Fetch responses in short form for list display
+function fetchResponsesRequest(id) {
+  return {
+    type: types.FETCH_RESPONSES_REQUEST,
+    meta: { entityName, id },
+  };
+}
+
+function fetchResponsesSuccess(id, payload) {
+  return {
+    type: types.FETCH_RESPONSES_SUCCESS,
+    meta: { entityName, id },
+    payload,
+  };
+}
+
+function fetchResponsesFailure(id, error) {
+  return {
+    type: types.FETCH_RESPONSES_FAILURE,
+    meta: { entityName, id },
+    error: true,
+    payload: error,
+  };
+}
+
+export function fetchResponses(id) {
+  return async (dispatch) => {
+    dispatch(fetchResponsesRequest(id));
+
+    try {
+      const data = await FormAPI.getResponses(id);
+      dispatch(fetchResponsesSuccess(id, data));
+    } catch (error) {
+      dispatch(fetchResponsesFailure(id, error));
+    }
+  };
+}
