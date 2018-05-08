@@ -1,16 +1,16 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Card, CardHeader } from 'reactstrap';
+import { Button, Card, CardHeader } from 'reactstrap';
 import { EntriesList } from 'shared/ui/list';
 import { InputSearch } from 'shared/ui/inputs';
-import { Link } from 'shared/router/components';
 import * as sessionModule from 'apps/app/shared/redux/session';
 import * as usersModule from 'apps/app/shared/redux/users';
 import BaseComponent, {
   propTypes as basePropTypes,
   defaultProps as baseDefaultProps,
 } from '../shared/components/FormsListContainer';
+import CreateFormModal from './components/CreateFormModal';
 import {
   Header,
   Item,
@@ -26,17 +26,43 @@ const defaultProps = {
 };
 
 class UserFormsListContainer extends BaseComponent {
+  constructor(props) {
+    super(props);
+
+    this.state = { showCreateModal: false };
+
+    this.hideCreateModal = this.hideCreateModal.bind(this);
+    this.showCreateModal = this.showCreateModal.bind(this);
+  }
+
+  hideCreateModal() {
+    this.setState(() => ({ showCreateModal: false }));
+  }
+
+  showCreateModal() {
+    this.setState(() => ({ showCreateModal: true }));
+  }
+
   renderCreateLink() {
     const { isSessionUser } = this.props;
     if (!isSessionUser) return null;
 
     return (
-      <Link
-        to="/forms/new"
-        className="btn btn-primary forms-list-btn-add"
+      <Button
+        color="primary"
+        className="forms-list-btn-add"
+        onClick={this.showCreateModal}
       >
         Создать форму
-      </Link>
+      </Button>
+    );
+  }
+
+  renderCreateModal() {
+    return (
+      <CreateFormModal
+        closeModal={this.hideCreateModal}
+      />
     );
   }
 
@@ -45,6 +71,12 @@ class UserFormsListContainer extends BaseComponent {
 
     return (
       <Card className="forms-list-container">
+        {
+          this.state.showCreateModal
+            ? this.renderCreateModal()
+            : null
+        }
+
         <CardHeader>
           <div className="forms-list-search">
             <InputSearch
