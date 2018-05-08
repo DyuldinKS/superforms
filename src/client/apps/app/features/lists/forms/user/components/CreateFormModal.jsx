@@ -13,6 +13,7 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  UncontrolledAlert,
 } from 'reactstrap';
 import RequiredAsterisk from 'shared/form/components/RequiredAsterisk';
 import * as formsModule from 'apps/app/shared/redux/forms';
@@ -106,6 +107,16 @@ class CreateFormModal extends Component {
     }
   }
 
+  renderUploadError() {
+    const { uploadError } = this.state;
+
+    return (
+      <UncontrolledAlert color="danger">
+        {String(uploadError)}
+      </UncontrolledAlert>
+    );
+  }
+
   render() {
     const { closeModal } = this.props;
     const {
@@ -130,6 +141,12 @@ class CreateFormModal extends Component {
             Создание новой формы
           </ModalHeader>
           <ModalBody>
+              {
+                uploadError
+                  ? this.renderUploadError()
+                  : null
+              }
+
               <FormGroup>
                 <Label>Название<RequiredAsterisk /></Label>
                 <Input

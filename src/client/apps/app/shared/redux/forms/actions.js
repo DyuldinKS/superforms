@@ -64,7 +64,7 @@ export function create(payload) {
       return {};
     } catch (error) {
       console.log(error);
-      return dispatch(createFailure(parentId, error));
+      return dispatch(createFailure(error));
     }
   }
 }
