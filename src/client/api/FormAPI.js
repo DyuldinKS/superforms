@@ -23,6 +23,11 @@ class FormAPI {
     return data;
   }
 
+  static async getResponsesInXLSX(id) {
+    const xlsxBuffer = await fetch(`/api/v1/form/${id}/xlsx`);
+    return xlsxBuffer;
+  }
+
   static async update(id, payload = {}) {
     const data = await fetch(`/api/v1/form/${id}`, {
       method: 'PATCH',

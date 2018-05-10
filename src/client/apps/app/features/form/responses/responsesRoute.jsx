@@ -6,6 +6,8 @@ import {
   Card,
   Jumbotron,
 } from 'reactstrap';
+import FormApi from 'api/FormApi';
+import download from 'shared/utils/download';
 import * as formsModule from 'apps/app/shared/redux/forms';
 import ResponsesList from './components/ResponsesList';
 
@@ -26,9 +28,25 @@ const defaultProps = {
 };
 
 class FormResponses extends Component {
+  constructor(props) {
+    super(props);
+
+    this.fetchResponsesXLSX = this.fetchResponsesXLSX.bind(this);
+  }
+
   componentDidMount() {
     const { id, fetchResponses } = this.props;
     fetchResponses(id);
+  }
+
+  async fetchResponsesXLSX() {
+    const { id } = this.props;
+    const xlsxBuffer = await FormApi.getResponsesInXLSX(id);
+    const blob = new Blob([new Uint8Array(xlsxBuffer.data)]);
+    download(
+      blob,
+      'report.xlsx',
+    );
   }
 
   render() {
@@ -42,7 +60,13 @@ class FormResponses extends Component {
           <h1 className="display-4">{`Получено ответов: ${amount}`}</h1>
           <hr className="my-2" />
           <p>Для работы с ответами вы можете скачать таблицу в формате XLSX</p>
-          <Button size="lg" color="success">Скачать таблицу</Button>
+          <Button
+            size="lg"
+            color="success"
+            onClick={this.fetchResponsesXLSX}
+          >
+            Скачать таблицу
+          </Button>
         </Jumbotron>
 
         <h3>Журнал ответов</h3>
