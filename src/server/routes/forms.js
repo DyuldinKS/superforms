@@ -8,7 +8,7 @@ import ssr from '../templates/ssr';
 export default (app) => {
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/form\/\d{1,8}(\/responses)?$/, // api
+			/\/api\/v\d{1,2}\/form\/\d{1,8}(\/(responses|xlsx))?$/, // api
 			/\/form\/\d{1,8}$/, // ssr
 		],
 		isActive,
@@ -20,6 +20,13 @@ export default (app) => {
 		'/form/:id',
 		(req, res, next) => {
 			const { form } = req.loaded;
+			const { s: shared } = req.query;
+
+			if(!shared) return res.redirect('/form/:id/edit');
+
+			if(form.collecting === null || form.collecting.shared !== shared) {
+				return next(new HTTPError(404, 'form not found'));
+			}
 			res.send(ssr.interview({ form }));
 		},
 	);
@@ -39,7 +46,21 @@ export default (app) => {
 		(req, res, next) => {
 			const { form } = req.loaded;
 			form.getResponses()
-				.then(responses => res.json(responses));
+				.then(responses => res.json(responses))
+				.catch(next);
+		},
+	);
+
+
+	app.get(
+		'/api/v1/form/:id/xlsx',
+		(req, res, next) => {
+			const { form } = req.loaded;
+			form.getResponses('full')
+				.then(() => {
+					const xlsxBuffer = form.generateXLSX();
+					res.json(xlsxBuffer);
+				});
 		},
 	);
 
