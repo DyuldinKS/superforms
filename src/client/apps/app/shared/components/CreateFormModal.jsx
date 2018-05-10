@@ -192,6 +192,6 @@ CreateFormModal.defaultProps = defaultProps;
 
 const mapDispatchToProps = {
   createForm: formsModule.actions.create,
-}
+};
 
 export default connect(null, mapDispatchToProps)(CreateFormModal);

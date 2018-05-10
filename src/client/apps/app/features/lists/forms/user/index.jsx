@@ -6,11 +6,11 @@ import { EntriesList } from 'shared/ui/list';
 import { InputSearch } from 'shared/ui/inputs';
 import * as sessionModule from 'apps/app/shared/redux/session';
 import * as usersModule from 'apps/app/shared/redux/users';
+import withCreateFormModal from 'apps/app/shared/components/withCreateFormModal';
 import BaseComponent, {
   propTypes as basePropTypes,
   defaultProps as baseDefaultProps,
 } from '../shared/components/FormsListContainer';
-import CreateFormModal from './components/CreateFormModal';
 import {
   Header,
   Item,
@@ -18,6 +18,7 @@ import {
 
 const propTypes = {
   userId: PropTypes.string.isRequired,
+  showCreateModal: PropTypes.func.isRequired,
   ...basePropTypes,
 };
 
@@ -26,43 +27,18 @@ const defaultProps = {
 };
 
 class UserFormsListContainer extends BaseComponent {
-  constructor(props) {
-    super(props);
-
-    this.state = { showCreateModal: false };
-
-    this.hideCreateModal = this.hideCreateModal.bind(this);
-    this.showCreateModal = this.showCreateModal.bind(this);
-  }
-
-  hideCreateModal() {
-    this.setState(() => ({ showCreateModal: false }));
-  }
-
-  showCreateModal() {
-    this.setState(() => ({ showCreateModal: true }));
-  }
-
   renderCreateLink() {
-    const { isSessionUser } = this.props;
+    const { isSessionUser, showCreateModal } = this.props;
     if (!isSessionUser) return null;
 
     return (
       <Button
         color="primary"
         className="forms-list-btn-add"
-        onClick={this.showCreateModal}
+        onClick={showCreateModal}
       >
         Создать форму
       </Button>
-    );
-  }
-
-  renderCreateModal() {
-    return (
-      <CreateFormModal
-        closeModal={this.hideCreateModal}
-      />
     );
   }
 
@@ -71,12 +47,6 @@ class UserFormsListContainer extends BaseComponent {
 
     return (
       <Card className="forms-list-container">
-        {
-          this.state.showCreateModal
-            ? this.renderCreateModal()
-            : null
-        }
-
         <CardHeader>
           <div className="forms-list-search">
             <InputSearch
@@ -118,4 +88,5 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-export default connect(mapStateToProps, null)(UserFormsListContainer);
+const WithCreateFormModal = withCreateFormModal(UserFormsListContainer);
+export default connect(mapStateToProps, null)(WithCreateFormModal);

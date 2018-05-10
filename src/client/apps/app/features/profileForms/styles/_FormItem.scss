@@ -1,0 +1,57 @@
+.profile-forms-item {
+  margin-bottom: 10px;
+  padding-top: .5rem;
+  padding-bottom: .5rem;
+
+  .profile-forms-item-col {
+    padding-right: 10px;
+    padding-left: 10px;
+
+    &:first-child {
+      padding-left: 0;
+    }
+
+    &:last-child {
+      padding-right: 0;
+    }
+
+    &.col1 {
+      width: 50px;
+    }
+
+    &.col2 {
+      width: 60%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &.col3 {
+      width: 25%;
+    }
+
+    &.col4 {
+      text-align: right;
+      width: 20%;
+      flex-grow: 1;
+    }
+
+    &.col5 {
+      width: 24px;
+
+      .dropdown-toggle {
+        padding: 0;
+      }
+    }
+  }
+}
+
+.profile-forms-item-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.profile-forms-item-credentials {
+  width: 100%;
+}
