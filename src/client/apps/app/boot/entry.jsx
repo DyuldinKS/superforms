@@ -2,9 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
 import { Provider } from 'react-redux';
+import Moment from 'moment';
 import store from './store';
 import './styles.scss';
 import App from '../appContainer';
+
+Moment.locale('ru');
 
 const container = document.getElementById('react-root');
 

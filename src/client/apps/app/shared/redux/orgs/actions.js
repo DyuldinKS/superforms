@@ -1,4 +1,5 @@
 import { actions as list } from 'shared/lists/list';
+import * as listModule from 'shared/lists/list';
 import { actions as entity } from 'shared/entities/entity';
 import { actions as entities } from 'shared/entities';
 import { actions as router } from 'shared/router/redux';
@@ -249,3 +250,25 @@ export function fetchForms(orgId, options) {
     }
   };
 }
+
+// Fetch forms by org
+export function fetchFormsNew(orgId) {
+  return async (dispatch, getState) => {
+    const listId = getFormsListId(orgId);
+    const { search } = listModule.selectors.getList(getState(), listId);
+    const options = { search };
+    dispatch(list.fetchRequest(listId, options));
+
+    try {
+      const data = await OrgAPI.getForms(orgId, options);
+
+      dispatch(batchActions(
+        entities.add(data.entities),
+        list.fetchSuccess(listId, data.list),
+      ));
+    } catch (error) {
+      dispatch(list.fetchFailure(listId, error));
+    }
+  };
+}
+

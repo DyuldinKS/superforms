@@ -1,5 +1,6 @@
 import { actions as entity } from 'shared/entities/entity';
 import { actions as entities } from 'shared/entities';
+import { actions as router } from 'shared/router/redux';
 import { batchActions } from 'shared/batch';
 import { FormAPI } from 'api/';
 import entityName from './constants';
@@ -20,6 +21,55 @@ export function fetch(id) {
   };
 }
 
+// Create form
+function createRequest(payload) {
+  return {
+    type: types.CREATE_REQUEST,
+    meta: { entityName },
+    payload,
+  };
+}
+
+function createSuccess(payload) {
+  return {
+    type: types.CREATE_SUCCESS,
+    meta: { entityName },
+    payload,
+  };
+}
+
+function createFailure(error) {
+  return {
+    type: types.CREATE_REQUEST,
+    meta: { entityName },
+    error: true,
+    payload: error,
+  };
+}
+
+export function create(payload) {
+  return async (dispatch) => {
+    dispatch(createRequest(payload));
+
+    try {
+      const data = await FormAPI.create(payload);
+      const createdId = data.id;
+
+      dispatch(batchActions(
+        createSuccess(data),
+        entity.fetchOneSuccess(entityName, createdId, data),
+        router.replace(`/form/${createdId}`),
+      ));
+
+      return {};
+    } catch (error) {
+      console.log(error);
+      return dispatch(createFailure(error));
+    }
+  }
+}
+
+// Update form
 function updateRequest(id, payload) {
   return {
     type: types.UPDATE_REQUEST,
@@ -45,7 +95,6 @@ function updateFailure(id, error) {
   };
 }
 
-// Update form
 export function update(id, payload) {
   return async (dispatch) => {
     dispatch(updateRequest(id, payload));

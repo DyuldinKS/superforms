@@ -1,12 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Card, CardHeader } from 'reactstrap';
+import { Button, Card, CardHeader } from 'reactstrap';
 import { EntriesList } from 'shared/ui/list';
 import { InputSearch } from 'shared/ui/inputs';
-import { Link } from 'shared/router/components';
 import * as sessionModule from 'apps/app/shared/redux/session';
 import * as usersModule from 'apps/app/shared/redux/users';
+import withCreateFormModal from 'apps/app/shared/components/withCreateFormModal';
 import BaseComponent, {
   propTypes as basePropTypes,
   defaultProps as baseDefaultProps,
@@ -18,6 +18,7 @@ import {
 
 const propTypes = {
   userId: PropTypes.string.isRequired,
+  showCreateModal: PropTypes.func.isRequired,
   ...basePropTypes,
 };
 
@@ -27,16 +28,17 @@ const defaultProps = {
 
 class UserFormsListContainer extends BaseComponent {
   renderCreateLink() {
-    const { isSessionUser } = this.props;
+    const { isSessionUser, showCreateModal } = this.props;
     if (!isSessionUser) return null;
 
     return (
-      <Link
-        to="/forms/new"
-        className="btn btn-primary forms-list-btn-add"
+      <Button
+        color="primary"
+        className="forms-list-btn-add"
+        onClick={showCreateModal}
       >
         Создать форму
-      </Link>
+      </Button>
     );
   }
 
@@ -86,4 +88,5 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-export default connect(mapStateToProps, null)(UserFormsListContainer);
+const WithCreateFormModal = withCreateFormModal(UserFormsListContainer);
+export default connect(mapStateToProps, null)(WithCreateFormModal);
