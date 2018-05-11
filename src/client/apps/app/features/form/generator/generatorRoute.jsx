@@ -170,6 +170,9 @@ class FormGenerator extends Component {
           ...order.slice(0, index),
           ...order.slice(index + 1),
         ],
+        selectedItem: state.selectedItem === id
+          ? null
+          : state.selectedItem,
       };
     });
   }
