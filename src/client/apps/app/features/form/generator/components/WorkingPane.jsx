@@ -6,17 +6,20 @@ import SortableList from './SortableList';
 const propTypes = {
   title: PropTypes.string,
   order: PropTypes.array,
+  selectedItem: PropTypes.string,
 };
 
 const defaultProps = {
   title: '',
   order: [],
+  selectedItem: null,
 };
 
 function WorkingPane(props) {
   const {
     title,
     order,
+    selectedItem,
   } = props;
 
   return (
@@ -27,6 +30,7 @@ function WorkingPane(props) {
 
       <SortableList
         order={order}
+        selectedItem={selectedItem}
       />
     </div>
   );

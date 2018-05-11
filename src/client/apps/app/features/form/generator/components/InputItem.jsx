@@ -12,6 +12,7 @@ const propTypes = {
   onDuplicate: PropTypes.func,
   onRemove: PropTypes.func,
   reordering: PropTypes.bool,
+  selected: PropTypes.bool,
   // from dnd
   connectDragSource: PropTypes.func,
   connectDropTarget: PropTypes.func,
@@ -24,6 +25,7 @@ const defaultProps = {
   onDuplicate: () => {},
   onRemove: () => {},
   reordering: false,
+  selected: false,
   // from DnD
   connectDragSource: n => n,
   connectDropTarget: n => n,
@@ -62,6 +64,7 @@ export class InputItem extends PureComponent {
       index,
       item,
       reordering,
+      selected,
       // from DnD
       connectDragSource,
       connectDropTarget,
@@ -76,6 +79,7 @@ export class InputItem extends PureComponent {
       hidden,
       draggable,
       dragging,
+      selected,
     });
 
     return connectDragSource(connectDropTarget(

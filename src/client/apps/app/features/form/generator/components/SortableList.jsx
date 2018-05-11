@@ -9,6 +9,7 @@ import InsertZone from './InsertZone';
 
 const propTypes = {
   order: PropTypes.array.isRequired,
+  selectedItem: PropTypes.string,
   // form DnD
   canDrop: PropTypes.bool,
   connectDropTarget: PropTypes.func.isRequired,
@@ -19,6 +20,8 @@ const propTypes = {
 };
 
 const defaultProps = {
+  selectedItem: null,
+  // from DnD
   canDrop: false,
   dragItemId: null,
   dragItemType: null,
@@ -79,6 +82,7 @@ class SortableList extends Component {
       removeItem,
       selectItem,
     } = this.context;
+    const { selectedItem } = this.props;
     const reordering = this.isReordering();
 
     return items.map(itemId => (
@@ -91,6 +95,7 @@ class SortableList extends Component {
         onDuplicate={duplicateItem}
         onRemove={removeItem}
         reordering={reordering}
+        selected={selectedItem === itemId}
         // for DnD
         findItem={findItem}
         getDragIndex={this.getDragIndex}

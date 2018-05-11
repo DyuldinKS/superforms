@@ -276,6 +276,7 @@ class FormGenerator extends Component {
             <WorkingPane
               title={title}
               order={order}
+              selectedItem={selectedItem}
             />
 
             <BlockTransitions
