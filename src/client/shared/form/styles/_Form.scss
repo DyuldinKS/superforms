@@ -11,8 +11,20 @@
     padding-right: 30px;
   }
 
-  .form-group > label {
-    font-size: 1.05rem;
-    font-weight: 600;
+  > header {
+    margin-bottom: 2.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 2rem;
+
+    > label {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+  }
+
+  .text-info {
+    white-space: pre-wrap;
   }
 }

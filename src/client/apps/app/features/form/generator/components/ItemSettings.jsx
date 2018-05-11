@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import {
+  Button,
   FormGroup,
   Input,
   Label,
@@ -60,17 +61,15 @@ class ItemSettings extends Component {
 
   render() {
     const {
-      id,
       itemIndex,
       onClose,
-      updateItem,
     } = this.props;
 
     return (
       <div className="form-generator-side-bar item-settings">
         <header>
           <h2>{`Вопрос #${itemIndex}`}</h2>
-          <button onClick={onClose}>Close</button>
+          <Button size="sm" onClick={onClose}>Закрыть</Button>
         </header>
 
         <div className="item-settings-section">
@@ -98,7 +97,8 @@ class ItemSettings extends Component {
             <Label>Текст</Label>
             <Input
               bsSize="sm"
-              type="text"
+              type="textarea"
+              rows="2"
               name="title"
               value={this.getValue('title') || ''}
               onChange={this.handleChange}
@@ -109,7 +109,8 @@ class ItemSettings extends Component {
             <Label>Описание</Label>
             <Input
               bsSize="sm"
-              type="text"
+              type="textarea"
+              rows="2"
               name="description"
               value={this.getValue('description') || ''}
               onChange={this.handleChange}

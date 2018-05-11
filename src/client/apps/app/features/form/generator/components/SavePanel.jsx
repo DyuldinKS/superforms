@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Button } from 'reactstrap';
 import Moment from 'moment';
+import classNames from 'classnames';
 
 const propTypes = {
   hasUnsavedChanges: PropTypes.bool,
@@ -26,7 +27,7 @@ class SavePanel extends Component {
 
     return (
       <React.Fragment>
-        <p className="text-muted">
+        <p>
           Есть несохраненные изменения{' '}
         </p>
         <Button color="link" onClick={onSave} >
@@ -38,7 +39,7 @@ class SavePanel extends Component {
 
   renderPending() {
     return (
-      <p className="text-muted">
+      <p>
         Сохранение...
       </p>
     );
@@ -46,20 +47,28 @@ class SavePanel extends Component {
 
   renderSuccess() {
     const { lastSave } = this.props;
-    const date = Moment(lastSave).format(`${dateFormat} ${timeFormat}`);
+    const date = !!lastSave
+      ? Moment(lastSave).format(`(${dateFormat} ${timeFormat})`)
+      : '';
 
     return (
-      <p className="text-muted">
-        {`Все изменения сохранены (${date})`}
+      <p>
+        {`Все изменения сохранены ${date}`}
       </p>
     );
   }
 
   render() {
     const { hasUnsavedChanges, updating } = this.props;
+    const className = classNames({
+      'form-generator-save-panel': true,
+      alert: true,
+      'alert-warning': hasUnsavedChanges,
+      'alert-success': !hasUnsavedChanges,
+    });
 
     return (
-      <div className="form-generator-save-panel">
+      <div className={className}>
         {
           updating
           ? this.renderPending()

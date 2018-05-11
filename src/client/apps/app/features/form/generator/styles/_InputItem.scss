@@ -24,6 +24,7 @@
 
 .input-item-type {
   width: 125px;
+  font-size: .85rem;
   text-align: right;
 }
 
@@ -36,9 +37,15 @@
   border-left: 1px solid $card-border-color;
 
   .icon {
-    width: 20px;
-    height: 20px;
     margin-right: 5px;
+    padding: 2px;
+    color: $secondary;
+
+    &:hover,
+    &:focus,
+    &:active {
+      color: $primary;
+    }
 
     &:last-child {
       margin-right: 0;

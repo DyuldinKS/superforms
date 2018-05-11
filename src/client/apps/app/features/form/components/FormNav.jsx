@@ -37,7 +37,7 @@ class FormNav extends Component {
     const { subpath, baseUrl } = this.props;
 
     return (
-      <div className="form-generator-header">
+      <div className="form-generator-nav">
         <Nav tabs>
           <NavItem>
             <Link

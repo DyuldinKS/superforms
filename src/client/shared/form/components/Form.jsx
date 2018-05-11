@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Button } from 'reactstrap';
+import { Button, FormText } from 'reactstrap';
 import createForm from './createForm';
 import FormItem from './FormItem';
 import RequiredAsterisk from './RequiredAsterisk';
@@ -29,7 +29,7 @@ class Form extends Component {
 
   render() {
     const { getRef, form } = this.props;
-    const { scheme, title } = form;
+    const { scheme, title, description } = form;
     const { items, order } = scheme;
 
     return (
@@ -39,8 +39,15 @@ class Form extends Component {
         noValidate
         onSubmit={this.handleSubmit}
       >
-        <h1>{title}</h1>
-        <p><RequiredAsterisk /> Обязательное поле</p>
+        <header>
+          <h1>{title}</h1>
+          <FormText color="info">
+            {description}
+          </FormText>
+          <FormText color="danger">
+            <RequiredAsterisk /> Обязательное поле
+          </FormText>
+        </header>
 
         {
           order.map(itemId => (

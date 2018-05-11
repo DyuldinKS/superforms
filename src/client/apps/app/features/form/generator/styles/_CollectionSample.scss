@@ -1,5 +1,7 @@
 .form-item-sample {
   @include generator-item;
+  padding-top: 7px;
+  padding-bottom: 7px;
 
   &.draggable {
     cursor: grab;
@@ -8,5 +10,10 @@
   &.dragging {
     cursor: grabbing;
     @include generator-item-focused;
+  }
+
+  .icon {
+    margin-right: 15px;
+    font-size: 1.25rem;
   }
 }

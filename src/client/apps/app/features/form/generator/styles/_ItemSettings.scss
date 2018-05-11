@@ -3,11 +3,16 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
+    margin-bottom: 1rem;
   }
 
   .item-settings-section {
     margin-bottom: 0.5rem;
     border-bottom: 1px solid $card-border-color;
+
+    .form-control-label {
+      font-weight: 600;
+    }
 
     &:last-child {
       border-bottom: 0;

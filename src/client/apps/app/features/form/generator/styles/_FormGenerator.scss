@@ -6,7 +6,7 @@
   display: flex;
   position: relative;
   width: 100%;
-  height: calc(100% - 47px);
+  height: calc(100% - 47px - #{$form-generator-header-height});
 }
 
 .form-generator-content {
@@ -22,10 +22,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: calc(100% - 600px);
+  width: calc(100% - 500px);
   height: 50px;
   border-top: 1px solid $card-border-color;
-  background-color: $primary-color;
+  border-radius: 0;
+  margin-bottom: 0;
 
   > p {
     margin-bottom: 0;
@@ -34,7 +35,7 @@
 
 .form-generator-side-bar {
   overflow-y: auto;
-  width: 600px;
+  width: 500px;
   height: 100%;
   padding: 20px 10px 50px 10px;
   border-left: 1px solid $card-border-color;

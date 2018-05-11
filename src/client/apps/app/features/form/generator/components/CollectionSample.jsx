@@ -2,8 +2,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import makeSortableInwardItem from './makeSortableInwardItem';
+import getCollectionSampleIcon from '../utils/getCollectionSampleIcon';
 
 const propTypes = {
+  id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   draggable: PropTypes.bool,
   dragging: PropTypes.bool,
@@ -19,6 +21,7 @@ function CollectionSample(props) {
     connectDragSource,
     draggable,
     dragging,
+    id,
     title,
   } = props;
 
@@ -28,8 +31,11 @@ function CollectionSample(props) {
     dragging,
   });
 
+  const icon = getCollectionSampleIcon(id);
+
   return connectDragSource(
     <div className={className}>
+      <i className={`icon text-secondary ${icon}`} />
       {title}
     </div>
   );

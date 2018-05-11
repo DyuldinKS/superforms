@@ -6,7 +6,7 @@ import {
   Card,
   Jumbotron,
 } from 'reactstrap';
-import FormApi from 'api/FormApi';
+import FormAPI from 'api/FormAPI';
 import download from 'shared/utils/download';
 import * as formsModule from 'apps/app/shared/redux/forms';
 import ResponsesList from './components/ResponsesList';

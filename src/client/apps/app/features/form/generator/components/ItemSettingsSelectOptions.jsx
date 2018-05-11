@@ -88,7 +88,7 @@ class ItemSelectOptionsSettings extends PureComponent {
           />
           <div className="input-group-append">
             <Button size="sm" onClick={() => this.handleRemove(index)}>
-              X
+              <i className="fas fa-times" />
             </Button>
           </div>
         </InputGroup>

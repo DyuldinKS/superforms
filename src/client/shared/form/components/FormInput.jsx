@@ -37,11 +37,11 @@ function FormInput(props) {
           required &&
             <RequiredAsterisk />
         }
+        {
+          description &&
+            <FormText color="info">{description}</FormText>
+        }
       </Label>
-      {
-        description &&
-          <FormText color="info">{description}</FormText>
-      }
       <Input
         {...passProps}
         name={id}

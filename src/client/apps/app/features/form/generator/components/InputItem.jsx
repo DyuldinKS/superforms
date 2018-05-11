@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { Button } from 'reactstrap';
 import { locales as typeLocales } from 'shared/form/utils/inputTypes';
 import makeSortableItem from './makeSortableItem';
 
@@ -87,18 +88,24 @@ export class InputItem extends PureComponent {
         <div className="input-item-title">{`${index}. ${title || ''}`}</div>
         <div className="input-item-type">{typeLocales[type]}</div>
         <div className="input-item-options">
-          <button
+          <Button
             className="icon"
+            color="link"
+            size="sm"
+            title="Дублировать"
             onClick={this.handleDuplicate}
           >
-            D
-          </button>
-          <button
+            <i className="fas fa-copy" />
+          </Button>
+          <Button
             className="icon"
+            color="link"
+            size="sm"
+            title="Удалить"
             onClick={this.handleRemove}
           >
-            R
-          </button>
+            <i className="fas fa-trash" />
+          </Button>
         </div>
       </div>
     ));

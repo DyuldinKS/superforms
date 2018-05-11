@@ -93,7 +93,10 @@ class FormItem extends Component {
     return (
       <div className="profile-forms-item-col col5">
         <UncontrolledDropdown>
-          <DropdownToggle caret size="sm" color="link" />
+          <DropdownToggle
+            tag="i"
+            className="fas fa-ellipsis-v"
+          />
           <DropdownMenu right>
             <DropdownItem>Создать дубликат</DropdownItem>
             <DropdownItem>Удалить</DropdownItem>
