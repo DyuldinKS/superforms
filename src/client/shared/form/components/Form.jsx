@@ -1,20 +1,20 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Button, FormText } from 'reactstrap';
-import createForm from './createForm';
+import { FormText } from 'reactstrap';
 import FormItem from './FormItem';
 import RequiredAsterisk from './RequiredAsterisk';
 
 const propTypes = {
-  errors: PropTypes.object.isRequired,
   form: PropTypes.object.isRequired,
   getRef: PropTypes.func.isRequired,
-  handleSubmit: PropTypes.func.isRequired,
-  valid: PropTypes.bool.isRequired,
-  values: PropTypes.object.isRequired,
+  onSubmit: PropTypes.func,
+  submitButton: PropTypes.node,
 };
 
-const defaultProps = {};
+const defaultProps = {
+  onSubmit: () => {},
+  submitButton: null,
+};
 
 class Form extends Component {
   constructor(props) {
@@ -24,11 +24,12 @@ class Form extends Component {
   }
 
   handleSubmit(event) {
-    this.props.handleSubmit(event);
+    event.preventDefault();
+    this.props.onSubmit(event);
   }
 
   render() {
-    const { getRef, form } = this.props;
+    const { getRef, form, submitButton } = this.props;
     const { scheme, title, description } = form;
     const { items, order } = scheme;
 
@@ -59,7 +60,7 @@ class Form extends Component {
           ))
         }
 
-        <Button type="submit" color="primary">Отправить</Button>
+        {submitButton}
       </form>
     );
   }
@@ -68,4 +69,4 @@ class Form extends Component {
 Form.propTypes = propTypes;
 Form.defaultProps = defaultProps;
 
-export default createForm(Form);
+export default Form;

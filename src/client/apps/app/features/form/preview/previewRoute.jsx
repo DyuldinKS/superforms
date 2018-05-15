@@ -1,13 +1,16 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import * as formsModule from 'apps/app/shared/redux/forms';
+import createForm from 'shared/form/components/createForm';
 import Form from 'shared/form/components/Form';
 
 const propTypes = {
   // from Redux
   id: PropTypes.string.isRequired,
   form: PropTypes.object,
+  // from createForm HOC
+  getRef: PropTypes.func.isRequired,
 };
 
 const defaultProps = {
@@ -19,10 +22,13 @@ const defaultProps = {
 };
 
 function FormPreview(props) {
-  const { form } = props;
+  const { getRef, form } = props;
 
   return (
-    <Form form={form} />
+    <Form
+      getRef={getRef}
+      form={form}
+    />
   );
 }
 
@@ -39,4 +45,5 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-export default connect(mapStateToProps, null)(FormPreview);
+const withForm = createForm(FormPreview);
+export default connect(mapStateToProps, null)(withForm);

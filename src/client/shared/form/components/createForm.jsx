@@ -41,9 +41,9 @@ export default function createForm(WrappedComponent) {
 
       this.getInputProps = this.getInputProps.bind(this);
       this.getRef = this.getRef.bind(this);
-      this.handleSubmit = this.handleSubmit.bind(this);
       this.setError = this.setError.bind(this);
       this.setValue = this.setValue.bind(this);
+      this.showErrors = this.showErrors.bind(this);
       this.focusOnFirstError = this.focusOnFirstError.bind(this);
     }
 
@@ -73,21 +73,6 @@ export default function createForm(WrappedComponent) {
       this.formRef = form;
     }
 
-    handleSubmit(event) {
-      event.preventDefault();
-      const { errors, values } = this.state;
-
-      if (errors) {
-        this.setState(state => ({
-          ...state,
-          submitErrors: { ...errors },
-        }), this.focusOnFirstError);
-        return;
-      }
-
-      alert(JSON.stringify(values));
-    }
-
     setError(name, error) {
       this.setState(state => ({
         values: state.values,
@@ -104,6 +89,17 @@ export default function createForm(WrappedComponent) {
         errors: updateErrors(state.errors, name, error),
         submitErrors: deleteMapProp(state.submitErrors, name),
       }));
+    }
+
+    showErrors() {
+      const { errors } = this.state;
+
+      if (errors) {
+        this.setState(state => ({
+          ...state,
+          submitErrors: { ...errors },
+        }), this.focusOnFirstError);
+      }
     }
 
     focusOnFirstError() {
@@ -127,8 +123,8 @@ export default function createForm(WrappedComponent) {
       const passProps = {
         errors,
         getRef: this.getRef,
-        handleSubmit: this.handleSubmit,
         invalid: !!errors,
+        showErrors: this.showErrors,
         valid: !errors,
         values,
       };
