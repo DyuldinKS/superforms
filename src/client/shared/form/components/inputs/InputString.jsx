@@ -29,11 +29,11 @@ class InputString extends BaseInput {
       required,
     } = this.props;
 
-    if (required === true) {
+    if (required) {
       validators.push(notEmpty);
     }
 
-    if (maxLength !== undefined) {
+    if (maxLength) {
       validators.push(isShorterOrEqual(maxLength));
     }
 

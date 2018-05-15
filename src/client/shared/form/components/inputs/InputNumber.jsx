@@ -46,11 +46,11 @@ class InputNumber extends BaseInput {
       validators.push(isNumber);
     }
 
-    if (min !== undefined) {
+    if (min) {
       validators.push(isGreaterOrEqual(min));
     }
 
-    if (max !== undefined) {
+    if (max) {
       validators.push(isLesserOrEqual(max));
     }
 

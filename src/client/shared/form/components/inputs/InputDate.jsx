@@ -19,7 +19,7 @@ class InputDate extends BaseInput {
     const validators = [];
     const { required } = this.props;
 
-    if (required === true) {
+    if (required) {
       validators.push(notEmpty);
     }
 
