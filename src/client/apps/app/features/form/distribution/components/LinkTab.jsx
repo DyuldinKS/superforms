@@ -90,7 +90,7 @@ class FormDistributionByLink extends Component {
               name="title"
               readOnly
               innerRef={(input) => { this.linkInput = input; }}
-              value={`${window.location.origin}/forms/${id}?s=${shared}`}
+              value={`${window.location.origin}/form/${id}?s=${shared}`}
             />
             <div className="input-group-append">
               <Button color="primary" onClick={this.copyToClipboard}>
