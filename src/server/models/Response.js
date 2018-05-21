@@ -30,6 +30,7 @@ Response.prototype.entityName = 'response';
 Response.prototype.props = {
 	id: { writable: false, enumerable: true },
 	formId: { writable: false, enumerable: true },
+	secret: { writable: false, enumerable: false },
 	items: { writable: true, enumerable: true },
 	respondent: { writable: true, enumerable: true },
 	recipientId: { writable: false, enumerable: true },

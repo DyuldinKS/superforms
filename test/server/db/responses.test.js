@@ -166,4 +166,40 @@ describe('responses sql-functions test', () => {
 				assert.deepStrictEqual({ ...expected }, { ...actual });
 			})
 	})
+
+	it('should cast type to responses', () => {
+		const initial = {
+			id: 1337,
+			formId: 231,
+			items: {},
+			respondent: { ip: '127.0.0.1' },
+			recipientId: 89,
+			created: null,
+			updated: null,
+			deleted: null,
+			authorId: 56,
+			some: 'trash',
+		};
+
+		const expected = {
+			id: 1337,
+			form_id: 231,
+			items: {},
+			respondent: { ip: '127.0.0.1' },
+			recipient_id: 89,
+			created: null,
+			updated: null,
+			deleted: null,
+			author_id: 56,
+		};
+
+		return db.query('SELECT (to_responses($1::json)).*;', [initial])
+			.then((actual) => {
+				assert.deepStrictEqual(expected, { ...actual });
+				return db.query('SELECT (to_responses($1::json)).*;', [expected]);
+			})
+			.then((actual) => {
+				assert.deepStrictEqual(expected, { ...actual });
+			})
+	});
 });

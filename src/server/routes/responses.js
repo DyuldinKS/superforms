@@ -1,6 +1,6 @@
 import { isActive } from '../middleware/users';
 import loadInstance from '../middleware/loadInstance';
-import Form from '../models/Response';
+import Form from '../models/Form';
 import Response from '../models/Response';
 import { HTTPError } from '../errors';
 import ssr from '../templates/ssr';
@@ -44,19 +44,24 @@ export default (app) => {
 		isActive,
 		(req, res, next) => {
 			const { author } = req;
-			const props = req.body;
+			const props = {
+				...req.body,
+				respondent: { ip: req.connection.remoteAddress }
+			};
 			const response = new Response(props);
-			response.respondent = { ip: req.connection.remoteAddress };
+			if(!response.formId) {
+				return next(new HTTPError(400, '"formId" is not specified.'));
+			}
 
 			Form.findById(response.formId)
-				.then(form => {
+				.then((form) => {
+					if(!form) throw new HTTPError(404, 'form not found');
+
 					if(form.collecting && (
 						form.collecting.shared === response.secret
-					)) {
-						return response.save({ props, author })
-					} else {
-						throw new HTTPError(403, 'No access');
-					}
+					)) return response.save({ author });
+
+					throw new HTTPError(403, 'No access');
 				})
 				.then(() => {	res.send(response); })
 				.catch(next);
