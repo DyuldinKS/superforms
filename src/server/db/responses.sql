@@ -1,3 +1,5 @@
+/***********************************  TYPES ***********************************/
+
 CREATE TYPE response_full AS (
 	id integer,
 	"formId" integer,
@@ -19,6 +21,25 @@ CREATE TYPE response_short AS (
 );
 
 
+CREATE OR REPLACE FUNCTION to_responses(
+	_props json,
+	OUT _record responses
+) AS
+$$
+	DECLARE
+		_rspn response_full;
+	BEGIN
+		_record := json_populate_record(null::responses, _props);
+		_rspn := json_populate_record(null::response_full, _props);
+
+		_record.form_id = coalesce(_record.form_id, _rspn."formId");
+		_record.recipient_id = coalesce(_record.recipient_id, _rspn."recipientId");
+		_record.author_id = coalesce(_record.author_id, _rspn."authorId");
+	END;
+$$
+LANGUAGE plpgsql IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION to_response_full(_response responses)
 	RETURNS response_full AS
 $$
@@ -36,6 +57,27 @@ $$
 		_response.created;
 $$
 LANGUAGE SQL STABLE;
+
+
+-- (!)
+
+-- Avoid to use auto type casting, it's slow.
+-- Instead, use the functions above manually
+
+CREATE CAST (json AS responses)
+WITH FUNCTION to_responses(json);
+
+
+CREATE CAST (responses AS response_full)
+WITH INOUT;
+
+
+CREATE CAST (responses AS response_short)
+WITH FUNCTION to_response_short(responses);
+
+
+
+/*******************************  CRUD METHODS ********************************/
 
 
 CREATE OR REPLACE FUNCTION get_response(_id integer)
@@ -66,7 +108,7 @@ $$
 	DECLARE
 		_inserted responses;
 	BEGIN
-		SELECT * FROM json_populate_record(null::responses, _props) INTO _inserted;
+		_inserted := to_responses(_props);
 
 		-- set default values
 		_inserted.id = nextval('responses_id_seq');
