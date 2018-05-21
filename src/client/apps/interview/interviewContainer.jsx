@@ -31,9 +31,9 @@ class InterviewContainer extends Component {
 
     try {
       const res = await ResponseAPI.create(formId, secret, values);
-      return {};
+      return res;
     } catch (error) {
-      return { error: true, payload: error };
+      throw (error);
     }
   }
 

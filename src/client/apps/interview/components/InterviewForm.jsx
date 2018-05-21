@@ -3,19 +3,22 @@ import PropTypes from 'prop-types';
 import { Alert, Button } from 'reactstrap';
 import createForm from 'shared/form/components/createForm';
 import Form from 'shared/form/components/Form';
+import formatValues from '../utils/formatValues';
 
 const propTypes = {
   form: PropTypes.object.isRequired,
   submitValues: PropTypes.func,
   // from createForm HOC
+  errors: PropTypes.object,
   getRef: PropTypes.func.isRequired,
-  invalid: PropTypes.bool.isRequired,
   showErrors: PropTypes.func.isRequired,
   values: PropTypes.object.isRequired,
 };
 
 const defaultProps = {
   submitValues: async () => {},
+  // from createForm HOC
+  errors: null,
 };
 
 const defaultState = {
@@ -55,25 +58,29 @@ class InterviewForm extends Component {
   }
 
   async handleSubmit(event) {
-    const { invalid, values } = this.props;
+    const { errors } = this.props;
     event.preventDefault();
 
     if (this.state.submitting) {
       return;
     }
 
-    if (invalid) {
+    if (errors) {
       this.props.showErrors();
       return;
     }
 
+    const { form, values } = this.props;
+    const { items } = form.scheme;
     this.handleSubmitRequest();
-    const result = await this.props.submitValues(values);
-    if (result && result.error) {
-      const { message } = result.payload;
-      this.handleSubmitFailure(message);
-    } else {
+
+    try {
+      const formatted = formatValues(items, values);
+      const result = await this.props.submitValues(formatted);
       this.handleSubmitSuccess();
+    } catch (error) {
+      console.error(error);
+      this.handleSubmitFailure(error.message);
     }
   }
 
