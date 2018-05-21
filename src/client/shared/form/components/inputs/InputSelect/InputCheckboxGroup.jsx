@@ -93,7 +93,7 @@ class InputCheckboxGroup extends PureComponent {
       nextValue = deleteMapProp(toggleMap, 'other');
     }
 
-    const error = validateWrapper(value, required, this.validate);
+    const error = validateWrapper(nextValue, required, this.validate);
     setValue(name, nextValue, error);
     this.setState(() => ({ dirty: true }));
   }
