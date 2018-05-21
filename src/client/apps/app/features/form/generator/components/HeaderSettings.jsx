@@ -15,8 +15,8 @@ const propTypes = {
 };
 
 const defaultProps = {
-  title: PropTypes.string,
-  description: PropTypes.string,
+  title: '',
+  description: '',
 };
 
 class HeaderSettings extends Component {
@@ -29,6 +29,7 @@ class HeaderSettings extends Component {
   handleChange(event) {
     const { target } = event;
     const { name, value } = target;
+
     const { updateHeader } = this.props;
     updateHeader(name, value);
   }
@@ -55,7 +56,7 @@ class HeaderSettings extends Component {
               type="textarea"
               rows="2"
               name="title"
-              value={title}
+              value={title || ''}
               onChange={this.handleChange}
             />
           </FormGroup>
@@ -67,7 +68,7 @@ class HeaderSettings extends Component {
               type="textarea"
               rows="7"
               name="description"
-              value={description}
+              value={description || ''}
               onChange={this.handleChange}
             />
           </FormGroup>

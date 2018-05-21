@@ -113,13 +113,7 @@ class FormGenerator extends Component {
       return;
     }
 
-    this.setState((state) => {
-      const nextState = !value
-        ? deleteMapProp(state, prop)
-        : { ...state, [prop]: value };
-
-      return nextState;
-    });
+    this.setState((state) => ({ ...state, [prop]: value }));
   }
 
   addItem(item, atIndex) {
@@ -227,7 +221,14 @@ class FormGenerator extends Component {
       order,
       items,
     } = this.state;
-    updateForm(id, { title, description, scheme: { order, items } });
+
+    const payload = {
+      title: title || 'Новая форма',
+      description,
+      scheme: { order, items },
+    };
+
+    updateForm(id, payload);
   }
 
   syncStateWithProps(props) {

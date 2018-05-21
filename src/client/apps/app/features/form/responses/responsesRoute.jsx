@@ -41,7 +41,7 @@ class FormResponses extends Component {
 
   async fetchResponsesXLSX() {
     const { id } = this.props;
-    const xlsxBuffer = await FormApi.getResponsesInXLSX(id);
+    const xlsxBuffer = await FormAPI.getResponsesInXLSX(id);
     const blob = new Blob([new Uint8Array(xlsxBuffer.data)]);
     download(
       blob,
