@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { FormFeedback } from 'reactstrap';
+import validateWrapper from '../../utils/validateWrapper';
 
 export const basePropTypes = {
   error: PropTypes.string,
@@ -34,19 +35,29 @@ class BaseInput extends PureComponent {
   }
 
   componentDidMount() {
-    this.validate = this.createValidation();
-    const { name, setError, value } = this.props;
-    const error = this.validate(value.trim());
+    this.validate = this.getValidateFn();
+    const {
+      name,
+      required,
+      setError,
+      value,
+    } = this.props;
+    const error = validateWrapper(value.trim(), required, this.validate);
     setError(name, error);
   }
 
-  createValidation() {
+  getValidateFn() {
     return () => null;
   }
 
   handleBlur() {
-    const { name, setError, value } = this.props;
-    const error = this.validate(value.trim());
+    const {
+      name,
+      required,
+      setError,
+      value,
+    } = this.props;
+    const error = validateWrapper(value.trim(), required, this.validate);
     setError(name, error);
     this.setState(() => ({ inputting: false }));
   }

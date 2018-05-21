@@ -4,7 +4,6 @@ import { Input } from 'reactstrap';
 import connectInput from './connectInput';
 import BaseInput from './BaseInput';
 import {
-  notEmpty,
   isGreaterOrEqual,
   isLesserOrEqual,
   isNumber,
@@ -27,18 +26,13 @@ const defaultProps = {
 };
 
 class InputNumber extends BaseInput {
-  createValidation() {
+  getValidateFn() {
     const validators = [];
     const {
       integer,
       max,
       min,
-      required,
     } = this.props;
-
-    if (required) {
-      validators.push(notEmpty);
-    }
 
     if (integer) {
       validators.push(isInteger);

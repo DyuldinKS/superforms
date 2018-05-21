@@ -4,8 +4,9 @@ import { FormFeedback, FormGroup, Input, Label } from 'reactstrap';
 import connectInput from '../connectInput';
 import { basePropTypes, baseDefaultProps } from '../BaseInput';
 import OptionOther from './OptionOther';
-import { notEmpty, notEmptyOptionOther } from '../../../utils/validators';
+import { notEmptyOptionOther } from '../../../utils/validators';
 import createValidation from '../../../utils/createValidation';
+import validateWrapper from '../../../utils/validateWrapper';
 import deleteMapProp from '../../../utils/deleteMapProp';
 
 const propTypes = {
@@ -28,25 +29,26 @@ class InputCheckboxGroup extends PureComponent {
       dirty: false,
     };
 
-    this.createValidation = this.createValidation.bind(this);
+    this.getValidateFn = this.getValidateFn.bind(this);
     this.handleOptionToggle = this.handleOptionToggle.bind(this);
     this.handleOtherChange = this.handleOtherChange.bind(this);
   }
 
   componentDidMount() {
-    this.validate = this.createValidation();
-    const { name, setError, value } = this.props;
-    const error = this.validate(value.trim());
+    this.validate = this.getValidateFn();
+    const {
+      name,
+      required,
+      setError,
+      value,
+    } = this.props;
+    const error = validateWrapper(value, required, this.validate);
     setError(name, error);
   }
 
-  createValidation() {
+  getValidateFn() {
     const validators = [];
-    const { optionOther, required } = this.props;
-
-    if (required) {
-      validators.push(notEmpty);
-    }
+    const { optionOther } = this.props;
 
     if (optionOther) {
       validators.push(notEmptyOptionOther);
@@ -56,7 +58,12 @@ class InputCheckboxGroup extends PureComponent {
   }
 
   handleOptionToggle(event) {
-    const { name, setValue, value: toggleMap = {} } = this.props;
+    const {
+      name,
+      required,
+      setValue,
+      value: toggleMap = {},
+    } = this.props;
     const { value: optionId } = event.target;
     let value = {};
 
@@ -66,13 +73,18 @@ class InputCheckboxGroup extends PureComponent {
       value = deleteMapProp(toggleMap, optionId);
     }
 
-    const error = this.validate(value);
+    const error = validateWrapper(value, required, this.validate);
     setValue(name, value, error);
     this.setState(() => ({ dirty: true }));
   }
 
   handleOtherChange(value) {
-    const { name, setValue, value: toggleMap = {} } = this.props;
+    const {
+      name,
+      required,
+      setValue,
+      value: toggleMap = {},
+    } = this.props;
     let nextValue = {};
 
     if (value !== undefined) {
@@ -81,7 +93,7 @@ class InputCheckboxGroup extends PureComponent {
       nextValue = deleteMapProp(toggleMap, 'other');
     }
 
-    const error = this.validate(nextValue);
+    const error = validateWrapper(nextValue, required, this.validate);
     setValue(name, nextValue, error);
     this.setState(() => ({ dirty: true }));
   }
@@ -129,6 +141,7 @@ class InputCheckboxGroup extends PureComponent {
               <OptionOther
                 checked={toggleMap.other !== undefined}
                 invalid={this.isErrorVisible()}
+                name={name}
                 onChange={this.handleOtherChange}
                 required={required === true}
                 type="checkbox"

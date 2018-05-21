@@ -4,8 +4,9 @@ import { FormFeedback, FormGroup, Input, Label } from 'reactstrap';
 import connectInput from '../connectInput';
 import { basePropTypes, baseDefaultProps } from '../BaseInput';
 import OptionOther from './OptionOther';
-import { notEmpty, notEmptyOptionOther } from '../../../utils/validators';
+import { notEmptyOptionOther } from '../../../utils/validators';
 import createValidation from '../../../utils/createValidation';
+import validateWrapper from '../../../utils/validateWrapper';
 
 const propTypes = {
   ...basePropTypes,
@@ -27,25 +28,26 @@ class InputRadioGroup extends PureComponent {
       dirty: false,
     };
 
-    this.createValidation = this.createValidation.bind(this);
+    this.getValidateFn = this.getValidateFn.bind(this);
     this.handleOptionToggle = this.handleOptionToggle.bind(this);
     this.handleOtherChange = this.handleOtherChange.bind(this);
   }
 
   componentDidMount() {
-    this.validate = this.createValidation();
-    const { name, setError, value } = this.props;
-    const error = this.validate(value.trim());
+    this.validate = this.getValidateFn();
+    const {
+      name,
+      required,
+      setError,
+      value,
+    } = this.props;
+    const error = validateWrapper(value, required, this.validate);
     setError(name, error);
   }
 
-  createValidation() {
+  getValidateFn() {
     const validators = [];
-    const { optionOther, required } = this.props;
-
-    if (required) {
-      return notEmpty;
-    }
+    const { optionOther } = this.props;
 
     if (optionOther) {
       validators.push(notEmptyOptionOther);
@@ -55,7 +57,12 @@ class InputRadioGroup extends PureComponent {
   }
 
   handleOptionToggle(event) {
-    const { name, setValue, values: toggleMap = {} } = this.props;
+    const {
+      name,
+      required,
+      setValue,
+      values: toggleMap = {},
+    } = this.props;
     const { value: optionId } = event.target;
     let nextValue = null;
 
@@ -63,20 +70,20 @@ class InputRadioGroup extends PureComponent {
       nextValue = { [optionId]: true };
     }
 
-    const error = this.validate(nextValue);
+    const error = validateWrapper(nextValue, required, this.validate);
     setValue(name, nextValue, error);
     this.setState(() => ({ dirty: true }));
   }
 
   handleOtherChange(value) {
-    const { name, setValue } = this.props;
+    const { name, required, setValue } = this.props;
     let nextValue = null;
 
     if (value !== undefined) {
       nextValue = { other: value };
     }
 
-    const error = this.validate(nextValue);
+    const error = validateWrapper(nextValue, required, this.validate);
     setValue(name, nextValue, error);
     this.setState(() => ({ dirty: true }));
   }
