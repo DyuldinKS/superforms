@@ -141,6 +141,7 @@ class InputCheckboxGroup extends PureComponent {
               <OptionOther
                 checked={toggleMap.other !== undefined}
                 invalid={this.isErrorVisible()}
+                name={name}
                 onChange={this.handleOtherChange}
                 required={required === true}
                 type="checkbox"
