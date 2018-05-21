@@ -3,10 +3,7 @@ import PropTypes from 'prop-types';
 import { Input } from 'reactstrap';
 import connectInput from './connectInput';
 import BaseInput from './BaseInput';
-import {
-  notEmpty,
-  isShorterOrEqual,
-} from '../../utils/validators';
+import { isShorterOrEqual } from '../../utils/validators';
 import createValidation from '../../utils/createValidation';
 
 const propTypes = {
@@ -22,16 +19,9 @@ const defaultProps = {
 };
 
 class InputString extends BaseInput {
-  createValidation() {
+  getValidateFn() {
     const validators = [];
-    const {
-      maxLength,
-      required,
-    } = this.props;
-
-    if (required) {
-      validators.push(notEmpty);
-    }
+    const { maxLength } = this.props;
 
     if (maxLength) {
       validators.push(isShorterOrEqual(maxLength));

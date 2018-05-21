@@ -1,10 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Input } from 'reactstrap';
 import connectInput from './connectInput';
 import BaseInput from './BaseInput';
-import { notEmpty } from '../../utils/validators';
-import createValidation from '../../utils/createValidation';
 
 const propTypes = {
   ...BaseInput.propTypes,
@@ -15,17 +12,6 @@ const defaultProps = {
 };
 
 class InputTime extends BaseInput {
-  createValidation() {
-    const validators = [];
-    const { required } = this.props;
-
-    if (required) {
-      validators.push(notEmpty);
-    }
-
-    return createValidation(validators);
-  }
-
   render() {
     const {
       name,
