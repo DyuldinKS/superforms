@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { FormGroup, FormText, Label } from 'reactstrap';
 import RequiredAsterisk from './RequiredAsterisk';
-import { inputTypes } from '../utils/constants';
+import { constants as inputTypes } from '../utils/inputTypes';
 import getInputByType from '../utils/getInputByType';
 
 const propTypes = {

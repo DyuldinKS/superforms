@@ -1,19 +1,17 @@
-import { inputTypes } from './constants';
+import { constants } from './inputTypes';
 import * as inputs from '../components/inputs';
 
 const {
   DATE,
   NUMBER,
-  PHONE,
   SELECT,
   TEXT,
   TIME,
-} = inputTypes;
+} = constants;
 
 const match = {
   [DATE]: 'InputDate',
   [NUMBER]: 'InputNumber',
-  [PHONE]: 'InputPhone',
   [SELECT]: 'InputSelect',
   [TEXT]: 'InputString',
   [TIME]: 'InputTime',
