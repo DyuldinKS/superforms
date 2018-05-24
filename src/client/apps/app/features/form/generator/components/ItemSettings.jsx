@@ -17,6 +17,7 @@ const propTypes = {
   itemIndex: PropTypes.number.isRequired,
   onClose: PropTypes.func.isRequired,
   updateItem: PropTypes.func.isRequired,
+  updateInputType: PropTypes.func.isRequired,
 };
 
 const defaultProps = {
@@ -31,6 +32,7 @@ class ItemSettings extends Component {
 
     this.getValue = this.getValue.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleTypeChange = this.handleTypeChange.bind(this);
     this.updateItemSelectOptions = this.updateItemSelectOptions.bind(this);
 
     this.togglers = getTogglers(props.item);
@@ -48,6 +50,12 @@ class ItemSettings extends Component {
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const { id, updateItem } = this.props;
     updateItem(id, name, value);
+  }
+
+  handleTypeChange(event) {
+    const { value } = event.target;
+    const { id, updateInputType } = this.props;
+    updateInputType(id, value);
   }
 
   getValue(name) {
@@ -80,7 +88,7 @@ class ItemSettings extends Component {
               type="select"
               name="type"
               value={this.getValue('type') || ''}
-              onChange={this.handleChange}
+              onChange={this.handleTypeChange}
             >
               {typeOptions.map(type => (
                 <option

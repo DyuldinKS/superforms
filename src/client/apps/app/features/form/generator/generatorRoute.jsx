@@ -12,6 +12,7 @@ import HeaderSettings from './components/HeaderSettings';
 import ItemSettings from './components/ItemSettings';
 import WorkingPane from './components/WorkingPane';
 import SavePanel from './components/SavePanel';
+import dropSpecificFields from './utils/dropSpecificFields';
 
 const propTypes = {
   // from Redux
@@ -83,6 +84,7 @@ class FormGenerator extends Component {
     this.removeItem = this.removeItem.bind(this);
     this.reorderItem = this.reorderItem.bind(this);
     this.updateItem = this.updateItem.bind(this);
+    this.updateInputType = this.updateInputType.bind(this);
 
     this.selectItem = this.selectItem.bind(this);
     this.clearSelectedItem = this.clearSelectedItem.bind(this);
@@ -113,7 +115,7 @@ class FormGenerator extends Component {
       return;
     }
 
-    this.setState((state) => ({ ...state, [prop]: value }));
+    this.setState(state => ({ ...state, [prop]: value }));
   }
 
   addItem(item, atIndex) {
@@ -213,6 +215,22 @@ class FormGenerator extends Component {
     });
   }
 
+  updateInputType(id, nextType) {
+    this.setState((state) => {
+      const item = this.getItem(id);
+      const nextItem = dropSpecificFields(item);
+      nextItem.type = nextType;
+
+      return {
+        ...state,
+        items: {
+          ...state.items,
+          [id]: nextItem,
+        },
+      };
+    });
+  }
+
   postUpdates() {
     const { updateForm, id } = this.props;
     const {
@@ -264,6 +282,7 @@ class FormGenerator extends Component {
         itemIndex={this.findItem(selectedItem) + 1}
         onClose={this.clearSelectedItem}
         updateItem={this.updateItem}
+        updateInputType={this.updateInputType}
       />
     );
   }
