@@ -3,7 +3,10 @@ import { fetch } from './utils/defaultRequest';
 class FormAPI {
   static async create(payload = {}) {
     if (!payload.scheme) {
-      payload.scheme = {};
+      payload.scheme = {
+        order: [],
+        items: {},
+      };
     }
 
     const data = await fetch('/api/v1/form', {

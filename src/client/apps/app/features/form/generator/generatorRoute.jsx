@@ -161,7 +161,7 @@ class FormGenerator extends Component {
       if (index < 0) return state;
       return {
         ...state,
-        items: deleteMapProp(items, id),
+        items: deleteMapProp(items, id) || {},
         order: [
           ...order.slice(0, index),
           ...order.slice(index + 1),

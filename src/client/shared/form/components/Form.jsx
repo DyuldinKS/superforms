@@ -30,8 +30,8 @@ class Form extends Component {
 
   render() {
     const { getRef, form, submitButton } = this.props;
-    const { scheme, title, description } = form;
-    const { items, order } = scheme;
+    const { scheme = {}, title, description } = form;
+    const { items = {}, order = [] } = scheme;
 
     return (
       <form
