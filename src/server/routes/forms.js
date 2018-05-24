@@ -22,7 +22,7 @@ export default (app) => {
 			const { form } = req.loaded;
 			const { s: shared } = req.query;
 
-			if(!shared) return res.redirect('/form/:id/edit');
+			if(!shared) return res.redirect(`/form/${form.id}/edit`);
 
 			if(form.collecting === null || form.collecting.shared !== shared) {
 				return next(new HTTPError(404, 'form not found'));
