@@ -27,7 +27,7 @@ class FormAPI {
   }
 
   static async getResponsesInXLSX(id) {
-    const xlsxBuffer = await fetch(`/api/v1/form/${id}/xlsx`);
+    const xlsxBuffer = await fetch(`/api/v1/form/${id}/responses?type=xlsx`);
     return xlsxBuffer;
   }
 
