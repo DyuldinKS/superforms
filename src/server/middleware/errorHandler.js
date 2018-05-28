@@ -15,6 +15,10 @@ function errorHandler(err, req, res, next) {
 		httpError = err.toHTTPError();
 		break;
 	}
+	case SyntaxError: {
+		if(err.body) httpError = new HTTPError(400, err.message);
+		break;
+	}
 	default: {
 		httpError = new HTTPError(500);
 	}
