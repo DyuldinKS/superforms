@@ -10,9 +10,9 @@ import FormAPI from 'api/FormAPI';
 import download from 'shared/utils/download';
 import * as formsModule from 'apps/app/shared/redux/forms';
 import ResponsesList from './components/ResponsesList';
+import ResponseModal from './components/ResponseModal';
 
 const propTypes = {
-  match: PropTypes.object.isRequired,
   // from Redux
   id: PropTypes.string.isRequired,
   fetching: PropTypes.bool,
@@ -31,7 +31,13 @@ class FormResponses extends Component {
   constructor(props) {
     super(props);
 
+    this.state = {
+      modalId: null,
+    };
+
     this.fetchResponsesXLSX = this.fetchResponsesXLSX.bind(this);
+    this.showModal = this.showModal.bind(this);
+    this.hideModal = this.hideModal.bind(this);
   }
 
   componentDidMount() {
@@ -49,9 +55,26 @@ class FormResponses extends Component {
     );
   }
 
+  showModal(respId) {
+    this.setState(() => ({ modalId: respId }));
+  }
+
+  hideModal() {
+    this.setState(() => ({ modalId: null }));
+  }
+
+  renderResponseModal() {
+    return (
+      <ResponseModal
+        formId={this.props.id}
+        respId={this.state.modalId}
+        hideModal={this.hideModal}
+      />
+    );
+  }
+
   render() {
-    const { match, responses } = this.props;
-    const { url } = match;
+    const { responses } = this.props;
     const amount = responses.length;
 
     return (
@@ -71,9 +94,11 @@ class FormResponses extends Component {
 
         <h3>Журнал ответов</h3>
         <ResponsesList
-          path={url}
           entries={responses}
+          onSelect={this.showModal}
         />
+
+        {this.state.modalId && this.renderResponseModal()}
       </div>
     );
   }

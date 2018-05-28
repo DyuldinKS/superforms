@@ -1,12 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Link } from 'shared/router/components';
 import { Card } from 'reactstrap';
 import Moment from 'moment';
 
 const propTypes = {
   entries: PropTypes.array,
-  path: PropTypes.string.isRequired,
+  onSelect: PropTypes.func.isRequired,
 };
 
 const defaultProps = {
@@ -16,7 +15,7 @@ const defaultProps = {
 const dateFormat = 'DD.MM.YYYY HH:mm';
 
 function ResponsesList(props) {
-  const { entries, path } = props;
+  const { entries, onSelect } = props;
 
   return (
     <Card className="form-responses-list">
@@ -48,9 +47,9 @@ function ResponsesList(props) {
                 {entry.respondent.ip || 'Нет данных'}
               </div>
               <div className="list-item-cell">
-                <Link to={`${path}/${entry.id}`}>
+                <a href="#" onClick={() => onSelect(entry.id)}>
                   Показать
-                </Link>
+                </a>
               </div>
             </div>
           ))

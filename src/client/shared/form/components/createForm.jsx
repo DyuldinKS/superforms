@@ -41,6 +41,7 @@ export default function createForm(WrappedComponent) {
 
       this.getInputProps = this.getInputProps.bind(this);
       this.getRef = this.getRef.bind(this);
+      this.init = this.init.bind(this);
       this.setError = this.setError.bind(this);
       this.setValue = this.setValue.bind(this);
       this.showErrors = this.showErrors.bind(this);
@@ -71,6 +72,14 @@ export default function createForm(WrappedComponent) {
 
     getRef(form) {
       this.formRef = form;
+    }
+
+    init(values) {
+      this.setState(() => ({
+        errors: null,
+        submitErrors: null,
+        values,
+      }));
     }
 
     setError(name, error) {
@@ -123,6 +132,7 @@ export default function createForm(WrappedComponent) {
       const passProps = {
         errors,
         getRef: this.getRef,
+        init: this.init,
         invalid: !!errors,
         showErrors: this.showErrors,
         valid: !errors,
