@@ -60,6 +60,7 @@ class InputCheckboxGroup extends BaseSelect {
       name,
       optionOther,
       options,
+      readOnly,
       required,
       value: toggleMap,
     } = this.props;
@@ -76,7 +77,8 @@ class InputCheckboxGroup extends BaseSelect {
                 <Label check>
                   <Input
                     checked={toggleMap[optionId] === true}
-                    onChange={this.handleOptionToggle}
+                    disabled={readOnly}
+                    onChange={this.onOptionToggle}
                     required={required === true}
                     type="checkbox"
                     value={optionId}

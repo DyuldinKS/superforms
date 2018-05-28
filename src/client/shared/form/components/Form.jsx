@@ -8,11 +8,13 @@ const propTypes = {
   form: PropTypes.object.isRequired,
   getRef: PropTypes.func.isRequired,
   onSubmit: PropTypes.func,
+  readOnly: PropTypes.bool,
   submitButton: PropTypes.node,
 };
 
 const defaultProps = {
   onSubmit: () => {},
+  readOnly: false,
   submitButton: null,
 };
 
@@ -29,7 +31,12 @@ class Form extends Component {
   }
 
   render() {
-    const { getRef, form, submitButton } = this.props;
+    const {
+      getRef,
+      form,
+      readOnly,
+      submitButton
+    } = this.props;
     const { scheme = {}, title, description } = form;
     const { items = {}, order = [] } = scheme;
 
@@ -55,6 +62,7 @@ class Form extends Component {
             <FormItem
               key={itemId}
               id={itemId}
+              readOnly={readOnly}
               {...items[itemId]}
             />
           ))

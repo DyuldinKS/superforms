@@ -15,6 +15,7 @@ class InputDate extends BaseInput {
   render() {
     const {
       name,
+      readOnly,
       required,
       value,
     } = this.props;
@@ -24,8 +25,9 @@ class InputDate extends BaseInput {
         <Input
           className={this.isErrorVisible() ? 'is-invalid' : ''}
           name={name}
-          onBlur={this.handleBlur}
-          onChange={this.handleChange}
+          onBlur={this.onBlur}
+          onChange={this.onChange}
+          readOnly={readOnly}
           required={required === true}
           type="date"
           value={value}

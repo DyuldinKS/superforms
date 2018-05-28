@@ -30,6 +30,14 @@ class BaseSelect extends PureComponent {
     this.getValidateFn = this.getValidateFn.bind(this);
   }
 
+  componentWillMount() {
+    if (this.props.readOnly) {
+      this.disableInput();
+    } else {
+      this.enableInput();
+    }
+  }
+
   componentDidMount() {
     const {
       name,
@@ -41,6 +49,26 @@ class BaseSelect extends PureComponent {
     this.validate = this.getValidateFn();
     const error = validateWrapper(value, required, this.validate);
     setError(name, error);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.readOnly !== this.props.readOnly) {
+      if (nextProps.readOnly) {
+        this.disableInput();
+      } else {
+        this.enableInput();
+      }
+    }
+  }
+
+  disableInput() {
+    this.onOptionToggle = () => {};
+    this.onOtherChange = () => {};
+  }
+
+  enableInput() {
+    this.onOptionToggle = this.handleOptionToggle;
+    this.onOtherChange = this.handleOtherChange;
   }
 
   getValidateFn() {
@@ -71,6 +99,7 @@ class BaseSelect extends PureComponent {
     const {
       multiple,
       name,
+      readOnly,
       required,
       value: toggleMap,
     } = this.props;
@@ -80,7 +109,8 @@ class BaseSelect extends PureComponent {
         checked={toggleMap.other !== undefined}
         invalid={this.isErrorVisible()}
         name={name}
-        onChange={this.handleOtherChange}
+        onChange={this.onOtherChange}
+        readOnly={readOnly}
         required={required}
         type={multiple ? 'checkbox' : 'radio'}
         value={toggleMap.other}

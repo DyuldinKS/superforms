@@ -56,6 +56,7 @@ class InputNumber extends BaseInput {
       max,
       min,
       name,
+      readOnly,
       required,
       value,
     } = this.props;
@@ -67,8 +68,9 @@ class InputNumber extends BaseInput {
           max={max}
           min={min}
           name={name}
-          onBlur={this.handleBlur}
-          onChange={this.handleChange}
+          onBlur={this.onBlur}
+          onChange={this.onChange}
+          readOnly={readOnly}
           required={required === true}
           type="text"
           value={value}

@@ -55,6 +55,7 @@ class InputRadioGroup extends BaseSelect {
       optionOther,
       options,
       required,
+      readOnly,
       value: toggleMap,
     } = this.props;
 
@@ -70,7 +71,8 @@ class InputRadioGroup extends BaseSelect {
                 <Label check>
                   <Input
                     checked={toggleMap[optionId] === true}
-                    onChange={this.handleOptionToggle}
+                    disabled={readOnly}
+                    onChange={this.onOptionToggle}
                     required={required === true}
                     type="radio"
                     value={optionId}

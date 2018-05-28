@@ -33,6 +33,7 @@ class InputString extends BaseInput {
   render() {
     const {
       name,
+      readOnly,
       required,
       textarea,
       value,
@@ -43,8 +44,9 @@ class InputString extends BaseInput {
         <Input
           className={this.isErrorVisible() ? 'is-invalid' : ''}
           name={name}
-          onBlur={this.handleBlur}
-          onChange={this.handleChange}
+          onBlur={this.onBlur}
+          onChange={this.onChange}
+          readOnly={readOnly}
           required={required === true}
           type={textarea ? 'textarea' : 'text'}
           value={value}

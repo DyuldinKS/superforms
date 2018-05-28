@@ -6,6 +6,7 @@ const propTypes = {
   checked: PropTypes.bool,
   invalid: PropTypes.bool,
   onChange: PropTypes.func.isRequired,
+  readOnly: PropTypes.bool,
   required: PropTypes.bool,
   type: PropTypes.oneOf(['radio', 'checkbox']),
   value: PropTypes.string,
@@ -14,6 +15,7 @@ const propTypes = {
 const defaultProps = {
   checked: false,
   invalid: false,
+  readOnly: false,
   required: false,
   type: 'checkbox',
   value: '',
@@ -70,6 +72,7 @@ class OptionOther extends Component {
     const {
       checked,
       invalid,
+      readOnly,
       required,
       type,
       value,
@@ -86,6 +89,7 @@ class OptionOther extends Component {
       >
         <Input
           checked={checked}
+          disabled={readOnly}
           onChange={this.handleOtherToggle}
           required={required === true}
           type={type}
@@ -99,6 +103,7 @@ class OptionOther extends Component {
           onChange={this.handleOtherInput}
           onFocus={this.handleOtherFocus}
           placeholder="Свой вариант"
+          readOnly={readOnly}
           required={required === true}
           type="text"
           value={value}

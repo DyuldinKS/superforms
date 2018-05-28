@@ -8,6 +8,7 @@ import getInputByType from '../utils/getInputByType';
 const propTypes = {
   description: PropTypes.string,
   id: PropTypes.string.isRequired,
+  readOnly: PropTypes.bool,
   required: PropTypes.bool,
   title: PropTypes.string.isRequired,
   type: PropTypes.oneOf(Object.values(inputTypes)).isRequired,
@@ -15,6 +16,7 @@ const propTypes = {
 
 const defaultProps = {
   description: null,
+  readOnly: false,
   required: false,
 };
 
@@ -22,6 +24,7 @@ function FormInput(props) {
   const {
     description,
     id,
+    readOnly,
     required,
     title,
     type,
@@ -45,6 +48,7 @@ function FormInput(props) {
       <Input
         {...passProps}
         name={id}
+        readOnly={readOnly}
         required={required}
       />
     </FormGroup>
