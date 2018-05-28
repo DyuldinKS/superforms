@@ -4,13 +4,9 @@ import * as types from './actionTypes';
 export default function (state = initialState, action) {
   switch (action.type) {
     case types.UPDATE_REQUEST:
-      return handleUpdateRequest(state, action);
-
     case types.UPDATE_SUCCESS:
-      return handleUpdateSuccess(state, action);
-
     case types.UPDATE_FAILURE:
-      return handleUpdateFailure(state, action);
+      return handleUpdate(state, action);
 
     case types.FETCH_RESPONSES_REQUEST:
     case types.FETCH_RESPONSES_SUCCESS:
@@ -22,43 +18,36 @@ export default function (state = initialState, action) {
   }
 }
 
-function handleUpdateRequest(state, action) {
+function handleUpdate(state, action) {
   const { id } = action.meta;
   const entity = state.entities[id] || {};
+  let nextEntity = { ...entity };
+
+  switch (action.type) {
+    case types.UPDATE_REQUEST:
+      nextEntity.updating = true;
+      break;
+
+    case types.UPDATE_FAILURE:
+      break;
+
+    case types.UPDATE_SUCCESS:
+      nextEntity.updating = false;
+      nextEntity = { ...nextEntity, ...action.payload };
+      break;
+
+    default:
+      return state;
+  }
 
   return {
     fetchStatus: state.fetchStatus,
     errors: state.errors,
     entities: {
       ...state.entities,
-      [id]: {
-        ...entity,
-        updating: true,
-      },
+      [id]: nextEntity,
     },
   };
-}
-
-function handleUpdateSuccess(state, action) {
-  const { id } = action.meta;
-  const entity = state.entities[id] || {};
-
-  return {
-    fetchStatus: state.fetchStatus,
-    errors: state.errors,
-    entities: {
-      ...state.entities,
-      [id]: {
-        ...entity,
-        updating: false,
-        ...action.payload,
-      },
-    },
-  };
-}
-
-function handleUpdateFailure(state, action) {
-  return state;
 }
 
 function handleFetchResponses(state, action) {
