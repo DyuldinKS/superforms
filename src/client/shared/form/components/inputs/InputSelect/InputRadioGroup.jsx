@@ -1,59 +1,15 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
-import { FormFeedback, FormGroup, Input, Label } from 'reactstrap';
+import React from 'react';
+import { FormGroup, Input, Label } from 'reactstrap';
 import connectInput from '../connectInput';
-import { basePropTypes, baseDefaultProps } from '../BaseInput';
-import OptionOther from './OptionOther';
-import { notEmptyOptionOther } from '../../../utils/validators';
-import createValidation from '../../../utils/createValidation';
+import BaseSelect from './BaseSelect';
 import validateWrapper from '../../../utils/validateWrapper';
 
-const propTypes = {
-  ...basePropTypes,
-  options: PropTypes.array,
-  optionOther: PropTypes.bool,
-};
-
-const defaultProps = {
-  ...baseDefaultProps,
-  options: [],
-  optionOther: false,
-};
-
-class InputRadioGroup extends PureComponent {
+class InputRadioGroup extends BaseSelect {
   constructor(props) {
     super(props);
 
-    this.state = {
-      dirty: false,
-    };
-
-    this.getValidateFn = this.getValidateFn.bind(this);
     this.handleOptionToggle = this.handleOptionToggle.bind(this);
     this.handleOtherChange = this.handleOtherChange.bind(this);
-  }
-
-  componentDidMount() {
-    this.validate = this.getValidateFn();
-    const {
-      name,
-      required,
-      setError,
-      value,
-    } = this.props;
-    const error = validateWrapper(value, required, this.validate);
-    setError(name, error);
-  }
-
-  getValidateFn() {
-    const validators = [];
-    const { optionOther } = this.props;
-
-    if (optionOther) {
-      validators.push(notEmptyOptionOther);
-    }
-
-    return createValidation(validators);
   }
 
   handleOptionToggle(event) {
@@ -63,6 +19,7 @@ class InputRadioGroup extends PureComponent {
       setValue,
       values: toggleMap = {},
     } = this.props;
+
     const { value: optionId } = event.target;
     let nextValue = null;
 
@@ -76,7 +33,11 @@ class InputRadioGroup extends PureComponent {
   }
 
   handleOtherChange(value) {
-    const { name, required, setValue } = this.props;
+    const {
+      name,
+      required,
+      setValue,
+    } = this.props;
     let nextValue = null;
 
     if (value !== undefined) {
@@ -88,14 +49,8 @@ class InputRadioGroup extends PureComponent {
     this.setState(() => ({ dirty: true }));
   }
 
-  isErrorVisible() {
-    return this.props.submitError
-      || (this.state.dirty && this.props.invalid);
-  }
-
   render() {
     const {
-      error,
       name,
       optionOther,
       options,
@@ -125,28 +80,12 @@ class InputRadioGroup extends PureComponent {
               </FormGroup>
             ))
           }
-          {
-            optionOther
-            ? (
-              <OptionOther
-                checked={toggleMap.other !== undefined}
-                invalid={this.isErrorVisible()}
-                onChange={this.handleOtherChange}
-                required={required === true}
-                type="radio"
-                value={toggleMap.other}
-              />
-              )
-            : null
-          }
+          {optionOther && super.renderOptionOther()}
         </fieldset>
-        <FormFeedback>{error}</FormFeedback>
+        {super.renderError()}
       </div>
     );
   }
 }
-
-InputRadioGroup.propTypes = propTypes;
-InputRadioGroup.defaultProps = defaultProps;
 
 export default connectInput(InputRadioGroup);
