@@ -44,23 +44,18 @@ export default (app) => {
 	app.get(
 		'/api/v1/form/:id/responses',
 		(req, res, next) => {
+			const { type } = req.query;
 			const { form } = req.loaded;
-			form.getResponses()
-				.then(responses => res.json(responses))
+			// default value
+			let mode = 'short';
+			if(type === 'xlsx' || type === 'full') mode = 'full';
+
+			form.getResponses(mode)
+				.then((responses) => {
+					// send xlsx buffer or responses as JSON
+					res.json(type === 'xlsx' ? form.generateXLSX() : responses);
+				})
 				.catch(next);
-		},
-	);
-
-
-	app.get(
-		'/api/v1/form/:id/xlsx',
-		(req, res, next) => {
-			const { form } = req.loaded;
-			form.getResponses('full')
-				.then(() => {
-					const xlsxBuffer = form.generateXLSX();
-					res.json(xlsxBuffer);
-				});
 		},
 	);
 
