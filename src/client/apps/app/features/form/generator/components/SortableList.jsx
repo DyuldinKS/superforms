@@ -51,10 +51,9 @@ class SortableList extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.canDrop
-      && nextProps.dragItemType === SAMPLE
       && this.props.isOver
       && !nextProps.isOver) {
-      // when dragged SAMPLE leave container
+      // when dragged SAMPLE or BLOCK leave container
       this.setDragIndex(-1);
     }
   }
