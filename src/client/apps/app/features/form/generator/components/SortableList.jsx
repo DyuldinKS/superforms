@@ -145,15 +145,11 @@ class SortableList extends Component {
       <div className="form-generator-items-list">
         {this.renderList()}
 
-        {
-          this.state.dragIndex > -1
-          ? null
-          : <InsertZone
-            insertIndex={order.length}
-            getDragIndex={this.getDragIndex}
-            setDragIndex={this.setDragIndex}
-          />
-        }
+        <InsertZone
+          insertIndex={order.length}
+          getDragIndex={this.getDragIndex}
+          setDragIndex={this.setDragIndex}
+        />
       </div>
     );
   }
