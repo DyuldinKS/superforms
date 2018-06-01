@@ -71,6 +71,7 @@ class Org extends Recipient {
 			`SELECT json_agg(parent_id ORDER BY distance) AS "parentIds"
 			FROM org_links
 			WHERE org_id = $1;`,
+			// if org is not created yet load parents for it's parent org
 			[this.id || this.parentId],
 		);
 
@@ -143,6 +144,7 @@ Org.prototype.props = {
 	...Recipient.prototype.props,
 	id: { writable: false, enumerable: true },
 	parentId: { writable: true, enumerable: true },
+	parentOrgIds: { writable: false, enumerable: false },
 	info: { writable: true, enumerable: true },
 };
 

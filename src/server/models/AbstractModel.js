@@ -4,9 +4,9 @@ import db from '../db/index';
 class AbstractModel {
 	// ***************** INSTANCE METHODS ***************** //
 
-	constructor(instance) {
-		if(instance) {
-			this.assign(instance);
+	constructor(props) {
+		if(props) {
+			this.assign(props);
 		}
 	}
 
