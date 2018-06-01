@@ -11,6 +11,7 @@
     "react"
   ],
   "plugins": [
+    "transform-runtime",
     [
       "babel-plugin-transform-builtin-extend",
       {
