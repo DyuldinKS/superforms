@@ -138,7 +138,7 @@ function fetchResponsesRequest(id) {
   };
 }
 
-function fetchResponsesSuccess(id, payload) {
+export function fetchResponsesSuccess(id, payload) {
   return {
     type: types.FETCH_RESPONSES_SUCCESS,
     meta: { entityName, id },
@@ -146,7 +146,7 @@ function fetchResponsesSuccess(id, payload) {
   };
 }
 
-function fetchResponsesFailure(id, error) {
+export function fetchResponsesFailure(id, error) {
   return {
     type: types.FETCH_RESPONSES_FAILURE,
     meta: { entityName, id },
