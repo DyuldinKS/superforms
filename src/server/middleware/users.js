@@ -1,4 +1,5 @@
 import User from '../models/User';
+import Org from '../models/Org';
 import { HTTPError } from '../errors';
 
 
@@ -9,7 +10,11 @@ const deserializeUser = (req, res, next) => {
 	return User.findById(user.id)
 		.then((found) => {
 			req.author = found;
-			return next();
+		})
+		.then(() => Org.findById(req.author.orgId))
+		.then((found) => {
+			req.author.org = found;
+			next();
 		})
 		.catch(next);
 };
@@ -25,14 +30,15 @@ const isActive = (req, res, next) => {
 		return next(new HTTPError(403, 'Your account has been locked'));
 	}
 
-	return author.getScope()
-		.then((org) => {
-			if(!org.isActive()) {
-				throw new HTTPError(403, 'Your organization has been locked');
-			}
-			return next();
-		})
-		.catch(next);
+	if(!author.orgId) {
+		return next(new HTTPError(500, 'orgId is not specified'));
+	}
+
+	if(!author.org.isActive()) {
+		return next(new HTTPError(403, 'Your organization has been locked'));
+	}
+
+	return next();
 };
 
 
