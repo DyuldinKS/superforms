@@ -7,7 +7,7 @@ import forms from './forms';
 import responses from './responses';
 import Org from '../models/Org';
 import { HTTPError } from '../errors';
-import store from '../../client/apps/app/boot/store';
+import createStore from '../../client/apps/app/boot/createStore';
 import { actions as routerActions } from '../../client/shared/router/redux';
 import { actions as sessionActions } from '../../client/apps/app/shared/redux/session';
 import ssr from '../templates/ssr';
@@ -19,6 +19,7 @@ const router = (app) => {
 		isActive,
 		(req, res, next) => {
 			const user = req.author;
+			const store = createStore();
 
 			store.dispatch(routerActions.init(req.url));
 			store.dispatch(sessionActions.init(

@@ -3,13 +3,14 @@ import ReactDOM from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
 import { Provider } from 'react-redux';
 import Moment from 'moment';
-import store from './store';
+import createStore from './createStore';
 import './styles.scss';
 import App from '../appContainer';
 
 Moment.locale('ru');
 
 const container = document.getElementById('react-root');
+const store = createStore();
 
 const render = (Component) => {
   ReactDOM.hydrate(
