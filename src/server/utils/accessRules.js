@@ -1,12 +1,18 @@
-const toSet = (obj) => {
-	if(!obj) throw new Error('Empty set');
-	if(obj.constructor.name === 'Set') return obj;
-	if(obj.constructor.name === 'Array') return new Set(obj);
-	if(obj instanceof Object) return new Set(Object.keys(obj));
-	throw new Error('argument must be instanceof of Array or Object');
-};
-
 const rules = {
+	// PRIVATE
+
+	_toSet: (obj) => {
+		if(!obj) throw new Error(`Cannot convert ${obj} to Set.`);
+		if(obj.constructor.name === 'Array') return new Set(obj);
+		if(obj.constructor.name === 'Set') return obj;
+		if(obj instanceof Object) return new Set(Object.keys(obj));
+		throw new Error('Argument must be instanceof of Array or Object.');
+	},
+	_toSetAll: (...rest) => rest.map(rules._toSet),
+	_isSubset: (a, b) => [...a].every(elem => b.has(elem)),
+
+	// PUBLIC
+
 	// subject-object relationship rules
 	isSameUser: (subj, user) => subj.id === user.id,
 	isSameOrg: (subj, org) => subj.orgId === org.id,
@@ -21,15 +27,14 @@ const rules = {
 
 	// common rules
 	isEqual: (a, b) => (a === b),
-	isElemOf: (elem, set) => toSet(set).has(elem),
+	isElemOf: (elem, set) => rules._toSet(set).has(elem),
 	isSubset: (a, b) => {
-		const setB = toSet(b);
-		return [...toSet(a)].every(elem => setB.has(elem));
+		const [setA, setB] = rules._toSetAll(a, b);
+		return rules._isSubset(setA, setB);
 	},
 	areEqualSets: (a, b) => {
-		const setA = toSet(a);
-		const setB = toSet(b);
-		return setA.size === setB.size && rules.isSubset(a, b);
+		const [setA, setB] = rules._toSetAll(a, b);
+		return setA.size === setB.size && rules._isSubset(a, b);
 	},
 };
 

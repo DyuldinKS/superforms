@@ -183,6 +183,7 @@ User.prototype.props = {
 	...Recipient.prototype.props,
 	id: { writable: false, enumerable: true },
 	orgId: { writable: true, enumerable: true },
+	parentOrgIds: { writable: false, enumerable: false },
 	org: { writable: false, enumerable: false },
 	info: { writable: true, enumerable: true },
 	role: { writable: true, enumerable: true },

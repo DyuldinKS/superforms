@@ -14,6 +14,13 @@ const orgs = {
 	org4: new Org({ id: 4, parentId: 3, parentOrgIds: [1, 3, 4] }),
 };
 
+const parentsByOrg = {
+	1: [],
+	2: [1],
+	3: [1],
+	4: [1, 3],
+}
+
 /* users:
 	idsByRole: {
 		root: 1,
@@ -34,4 +41,4 @@ const users = {
 };
 
 
-export { orgs, users };
+export { orgs, users, parentsByOrg };

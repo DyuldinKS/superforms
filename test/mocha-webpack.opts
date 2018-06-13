@@ -1,6 +1,6 @@
 --colors
 --webpack-config webpack/webpack.test.js
 --recursive
---glob '*.test.js'
+--glob '*users.test.js'
 test
 test/setup.js
