@@ -8,9 +8,8 @@ import responses from './responses';
 import Org from '../models/Org';
 import { HTTPError } from '../errors';
 import store from '../../client/apps/app/boot/store';
-import * as routerModule from '../../client/shared/router/redux';
-import * as sessionModule from '../../client/apps/app/shared/redux/session';
-import * as entitiesModule from '../../client/shared/entities';
+import { actions as routerActions } from '../../client/shared/router/redux';
+import { actions as sessionActions } from '../../client/apps/app/shared/redux/session';
 import ssr from '../templates/ssr';
 
 
@@ -21,17 +20,13 @@ const router = (app) => {
 		(req, res, next) => {
 			const user = req.author;
 
-			const session = {
-				userId: `${user.id}`,
-				orgId: `${user.org.id}`,
-			};
-
-			store.dispatch(routerModule.actions.init(req.url, req.query));
-			store.dispatch(sessionModule.actions.init(session));
-			store.dispatch(entitiesModule.actions.add({
-				users: user.toStore(),
-				orgs: user.org.toStore(),
-			}));
+			store.dispatch(routerActions.init(req.url));
+			store.dispatch(sessionActions.init(
+				`${user.id}`,
+				`${user.org.id}`,
+				user.toStore(),
+				user.org.toStore(),
+			));
 
 			res.send(ssr.app(store));
 		},
