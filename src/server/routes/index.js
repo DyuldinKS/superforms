@@ -29,8 +29,8 @@ const router = (app) => {
 			store.dispatch(routerModule.actions.init(req.url, req.query));
 			store.dispatch(sessionModule.actions.init(session));
 			store.dispatch(entitiesModule.actions.add({
-				users: user.toStore,
-				orgs: user.org.toStore,
+				users: user.toStore(),
+				orgs: user.org.toStore(),
 			}));
 
 			res.send(ssr.app(store));
