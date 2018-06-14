@@ -79,6 +79,7 @@ const buildRoles = ({
 			user: (subj, user, params) => (
 				withinOrg(subj, user)
 					&& areEqualSets(params, ['email', 'orgId', 'info', 'role'])
+					&& isElemOf(params.role, ['admin', 'user'])
 			),
 			form: (subj, form, params) => (
 				areEqualSets(params, ['title', 'description', 'scheme'])
