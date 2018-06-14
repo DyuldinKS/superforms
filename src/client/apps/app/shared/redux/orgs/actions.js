@@ -194,14 +194,32 @@ export function fetchOne(id) {
   };
 }
 
+export function fetchAffiliatedUsersSuccess(userId, listObj, entitiesMap) {
+  return (dispatch) => {
+    const listId = getAffiliatedUsersListId(userId);
+
+    dispatch(batchActions(
+      entities.add(entitiesMap),
+      list.fetchSuccess(listId, listObj),
+    ));
+  };
+}
+
+export function fetchAffiliatedUsersFailure(userId, error) {
+  return (dispatch) => {
+    const listId = getAffiliatedUsersListId(userId);
+    dispatch(list.fetchFailure(listId, error));
+  };
+}
+
 // Fetch affiliated users by org
-export function fetchAffiliatedUsers(orgId, options) {
+export function fetchAffiliatedUsers(userId, options) {
   return async (dispatch) => {
-    const listId = getAffiliatedUsersListId(orgId);
+    const listId = getAffiliatedUsersListId(userId);
     dispatch(list.fetchRequest(listId, options));
 
     try {
-      const data = await OrgAPI.getAffiliatedUsers(orgId, options);
+      const data = await OrgAPI.getAffiliatedUsers(userId, options);
 
       dispatch(batchActions(
         entities.add(data.entities),
@@ -210,6 +228,24 @@ export function fetchAffiliatedUsers(orgId, options) {
     } catch (error) {
       dispatch(list.fetchFailure(listId, error));
     }
+  };
+}
+
+export function fetchAffiliatedOrgsSuccess(orgId, listObj, entitiesMap) {
+  return (dispatch) => {
+    const listId = getAffiliatedOrgsListId(orgId);
+
+    dispatch(batchActions(
+      entities.add(entitiesMap),
+      list.fetchSuccess(listId, listObj),
+    ));
+  };
+}
+
+export function fetchAffiliatedOrgsFailure(orgId, error) {
+  return (dispatch) => {
+    const listId = getAffiliatedOrgsListId(orgId);
+    dispatch(list.fetchFailure(listId, error));
   };
 }
 
@@ -229,6 +265,24 @@ export function fetchAffiliatedOrgs(orgId, options) {
     } catch (error) {
       dispatch(list.fetchFailure(listId, error));
     }
+  };
+}
+
+export function fetchFormsSuccess(orgId, listObj, entitiesMap) {
+  return (dispatch) => {
+    const listId = getFormsListId(orgId);
+
+    dispatch(batchActions(
+      entities.add(entitiesMap),
+      list.fetchSuccess(listId, listObj),
+    ));
+  };
+}
+
+export function fetchFormsFailure(orgId, error) {
+  return (dispatch) => {
+    const listId = getFormsListId(orgId);
+    dispatch(list.fetchFailure(listId, error));
   };
 }
 
