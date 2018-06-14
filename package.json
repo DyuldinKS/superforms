@@ -16,8 +16,8 @@
     "supervisor:prod": "cross-env NODE_ENV=production supervisor ./dist/server.js | npx bunyan",
     "server:dev": "cross-env NODE_ENV=development node ./dist/server.js | npx bunyan",
     "server:prod": "cross-env NODE_ENV=production node ./dist/server.js | npx bunyan",
-    "start:dev": "npm run build:server & npm run server:dev",
-    "start:prod": "npm run build:server & npm run build:client:prod & npm run server:prod"
+    "start:dev": "npm run build:server && npm run server:dev",
+    "start:prod": "(npm run build:server & npm run build:client:prod) && npm run server:prod"
   },
   "keywords": [
     "superforms"
