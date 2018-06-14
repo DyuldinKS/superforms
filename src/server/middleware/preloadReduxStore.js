@@ -6,7 +6,6 @@ import { actions as sessionActions } from '../../client/apps/app/shared/redux/se
 export default (req, res, next) => {
 	const store = createStore();
 	const user = req.author;
-	console.log(user);
 
 	try {
 		store.dispatch(routerActions.init(req.url));

@@ -11,8 +11,8 @@ import { actions as formActions } from '../../client/apps/app/shared/redux/forms
 export default (app) => {
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/form\/\d{1,8}(\/(responses|xlsx))?$/, // api
-			/\/form\/\d{1,8}(\/(edit|preview|distribute|responses))?$/, // ssr
+			/^\/api\/v\d{1,2}\/form\/\d{1,8}(\/(responses|xlsx))?$/, // api
+			/^\/form\/\d{1,8}(\/(edit|preview|distribute|responses))?$/, // ssr
 		],
 		isActive,
 		loadInstance,
@@ -41,7 +41,7 @@ export default (app) => {
 
 
 	app.get(
-		/^\/form\/\d{1,8}(\/(edit|preview|distribute|responses))?$/,
+		/^\/form\/\d{1,8}(\/(edit|preview|distribute))?$/,
 		preloadReduxStore,
 		(req, res, next) => {
 			const { form } = req.loaded;
@@ -49,23 +49,31 @@ export default (app) => {
 			const entitiesMap = { forms: form.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
 
-			if(req.path.endsWith('responses')) {
-				form.getResponses('short')
-					.then((responses) => {
-						const action = formActions.fetchResponsesSuccess(
-							form.id,
-							responses,
-						);
-						reduxStore.dispatch(action);
-					})
-					.catch((error) => {
-						const action = formActions.fetchResponsesFailure(form.id, error);
-						reduxStore.dispatch(action);
-					})
-					.then(() => { res.send(ssr.app(reduxStore)); });
-			} else {
-				res.send(ssr.app(reduxStore));
-			}
+			res.send(ssr.app(reduxStore));
+		},
+	);
+
+
+	app.get(
+		'/form/:id/responses',
+		preloadReduxStore,
+		(req, res, next) => {
+			const { form } = req.loaded;
+			const { reduxStore } = req;
+			const entitiesMap = { forms: form.toStore() };
+			reduxStore.dispatch(entitiesActions.add(entitiesMap));
+
+			form.getResponses('short')
+				.then((responses) => {
+					console.log(responses)
+					const action = formActions.fetchResponsesSuccess(form.id, responses);
+					reduxStore.dispatch(action);
+				})
+				.catch((error) => {
+					const action = formActions.fetchResponsesFailure(form.id, error);
+					reduxStore.dispatch(action);
+				})
+				.then(() => { res.send(ssr.app(reduxStore)); });
 		},
 	);
 
