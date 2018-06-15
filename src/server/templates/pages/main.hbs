@@ -13,7 +13,9 @@
 	<body>
 		<div id="react-root">{{{reactHTML}}}</div>
 		{{!-- initial Redux state injection --}}
-		<script type="text/javascript">{{{preloadedState}}}</script>
+		<script type="text/javascript" id="preloadedState">
+			{{{preloadedState}}}
+		</script>
 		{{#each scripts}}
 		<script type="text/javascript" src="/scripts/{{this}}"></script>
 		{{/each}}
