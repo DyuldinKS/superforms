@@ -262,28 +262,26 @@ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION filter_user_forms(
 	_users integer[],
-	_filter jsonb DEFAULT NULL
+	_opts jsonb DEFAULT NULL
 ) RETURNS TABLE (
+	row_num bigint,
 	form_id integer,
 	user_id integer
 ) AS
 $$
 	DECLARE
-		_query tsquery := to_tsquery('russian', _filter->>'info');
-		_deleted boolean := (_filter->>'deleted')::boolean;
+		_query tsquery := to_tsquery('russian', _opts->>'info');
+		_deleted boolean := (_opts->>'deleted')::boolean;
 	BEGIN
 		RETURN QUERY
-			SELECT id, owner_id
+			SELECT row_number() over(ORDER BY id DESC) AS row_num, id, owner_id
 			FROM forms
 			JOIN form_info USING (id)
 			WHERE owner_id = ANY (_users)
 				AND (_query IS NULL OR tsvector @@ _query)
 				AND (_deleted IS NULL
 					OR (_deleted IS false AND deleted IS NULL)
-					OR (_deleted IS true AND deleted IS NOT NULL))
-			ORDER BY
-				CASE WHEN _query IS NOT NULL THEN ts_rank_cd(tsvector, _query) END DESC,
-				id DESC;
+					OR (_deleted IS true AND deleted IS NOT NULL));
 	END;
 $$
 LANGUAGE plpgsql STABLE;
@@ -300,23 +298,36 @@ LANGUAGE SQL STABLE;
 
 CREATE OR REPLACE FUNCTION find_user_forms(
 	_users integer[],
-	_filter jsonb DEFAULT NULL
+	_opts jsonb DEFAULT NULL
 ) RETURNS TABLE (entities json, list json) AS
 $$
 	WITH _filtered_forms AS (
-		SELECT * FROM filter_user_forms(_users, _filter)
+		SELECT * FROM filter_user_forms(_users, _opts)
 	),
+	-- get part of forms
+	_limited_forms AS (
+		SELECT * FROM _filtered_forms
+		WHERE _opts->'last' IS NULL OR row_num > (
+			SELECT row_num FROM _filtered_forms
+			WHERE form_id = (_opts->>'last')::int
+		)
+		ORDER BY row_num LIMIT (_opts->>'limit')::int
+	),
+	-- arrays of ids
 	_arrays AS (
-		SELECT array_agg(form_id) AS forms, array_agg(DISTINCT user_id) AS users
-		FROM _filtered_forms
+		-- ids of filtered ordered and limited forms
+		SELECT array_agg(form_id ORDER BY row_num) AS limited,
+			-- ids of the form owners
+			array_agg(DISTINCT user_id) AS users,
+			-- ids of all filtered and NOT limited forms
+			(SELECT array_agg(form_id) FROM _filtered_forms) AS filtered
+		FROM _limited_forms
 	)
 	SELECT json_build_object(
-			'forms',
-			build_forms_object(forms),
-			'users',
-			build_users_object(users)
+			'forms', build_forms_object(limited),
+			'users', build_users_object(users)
 		) AS entities,
-		build_list_object(forms) AS list
+		build_entity_id_list_object(filtered, limited) AS list
 	FROM _arrays;
 $$
 LANGUAGE SQL STABLE;
@@ -324,22 +335,22 @@ LANGUAGE SQL STABLE;
 
 CREATE OR REPLACE FUNCTION find_user_forms(
 	_user_id integer,
-	_filter jsonb DEFAULT NULL
+	_opts jsonb DEFAULT NULL
 ) RETURNS TABLE (entities json, list json) AS
 $$
-	SELECT * FROM find_user_forms(array[_user_id], _filter);
+	SELECT * FROM find_user_forms(array[_user_id], _opts);
 $$
 LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION find_forms_in_org(
 	_org_id integer,
-	_filter jsonb DEFAULT NULL
+	_opts jsonb DEFAULT NULL
 ) RETURNS TABLE (entities json, list json) AS
 $$
 	SELECT * FROM find_user_forms(
 		(SELECT array_agg(id) FROM users WHERE org_id = _org_id),
-		_filter
+		_opts
 	);
 $$
 LANGUAGE SQL STABLE;
