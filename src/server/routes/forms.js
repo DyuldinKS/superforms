@@ -41,7 +41,12 @@ export default (app) => {
 
 
 	app.get(
-		/^\/form\/\d{1,8}(\/(edit|preview|distribute))?$/,
+		[
+			'/form/:id',
+			'/form/:id/edit',
+			'/form/:id/preview',
+			'/form/:id/distribute',
+		],
 		preloadReduxStore,
 		(req, res, next) => {
 			const { form } = req.loaded;
@@ -65,7 +70,6 @@ export default (app) => {
 
 			form.getResponses('short')
 				.then((responses) => {
-					console.log(responses)
 					const action = formActions.fetchResponsesSuccess(form.id, responses);
 					reduxStore.dispatch(action);
 				})
