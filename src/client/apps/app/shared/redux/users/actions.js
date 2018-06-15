@@ -230,6 +230,24 @@ export function fetchOne(id) {
   };
 }
 
+export function fetchFormsSuccess(userId, listObj, entitiesMap) {
+  return (dispatch) => {
+    const listId = getFormsListId(userId);
+
+    dispatch(batchActions(
+      entities.add(entitiesMap),
+      list.fetchSuccess(listId, listObj),
+    ));
+  };
+}
+
+export function fetchFormsFailure(userId, error) {
+  return (dispatch) => {
+    const listId = getFormsListId(userId);
+    dispatch(list.fetchFailure(listId, error));
+  };
+}
+
 // Fetch forms by user
 export function fetchForms(userId, options) {
   return async (dispatch) => {

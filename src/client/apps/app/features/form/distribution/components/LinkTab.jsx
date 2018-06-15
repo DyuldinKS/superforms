@@ -56,6 +56,14 @@ class FormDistributionByLink extends Component {
     }));
   }
 
+  getLinkValue() {
+    const { id, shared } = this.props;
+    const origin = typeof window !== 'undefined'
+      ? window.location.origin
+      : '';
+    return `${origin}/form/${id}?s=${shared}`;
+  }
+
   renderPopover() {
     return (
       <Popover
@@ -72,8 +80,6 @@ class FormDistributionByLink extends Component {
   }
 
   render() {
-    const { id, shared } = this.props;
-
     return (
       <Card body className="form-distribution-public-link-container">
         <h3>
@@ -90,7 +96,7 @@ class FormDistributionByLink extends Component {
               name="title"
               readOnly
               innerRef={(input) => { this.linkInput = input; }}
-              value={`${window.location.origin}/form/${id}?s=${shared}`}
+              value={this.getLinkValue()}
             />
             <div className="input-group-append">
               <Button color="primary" onClick={this.copyToClipboard}>

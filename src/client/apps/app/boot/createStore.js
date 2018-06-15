@@ -1,6 +1,7 @@
 import { createStore, applyMiddleware, compose } from 'redux';
 import thunk from 'redux-thunk';
 import routerMiddleware from 'shared/router/redux/middleware';
+import cleanPreloadedState from 'shared/utils/cleanPreloadedState';
 import rootReducer from './reducer';
 
 function injectReduxDevTools() {
@@ -17,7 +18,7 @@ export default () => {
       ...initialState,
       ...window.PRELOADED_STATE,
     };
-    delete window.PRELOADED_STATE;
+    cleanPreloadedState();
   }
 
   return createStore(
