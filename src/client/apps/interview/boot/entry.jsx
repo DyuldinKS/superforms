@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
+import cleanPreloadedState from 'shared/utils/cleanPreloadedState';
 import './styles.scss';
 import App from '../interviewContainer';
 
@@ -10,7 +11,7 @@ let initialState = {};
 
 if (typeof window !== 'undefined' && window.PRELOADED_STATE) {
   initialState = window.PRELOADED_STATE;
-  delete window.PRELOADED_STATE;
+  cleanPreloadedState();
 }
 
 const render = (Component) => {
