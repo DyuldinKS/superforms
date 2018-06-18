@@ -41,7 +41,7 @@ class CreateOrgRoute extends BaseComponent {
 
     return (
       <div className="container app-creation">
-        <h1>Новый пользователь</h1>
+        <h1>Новая организация</h1>
 
         <Form onSubmit={this.handleSubmit} className="app-creation-form">
           <Card className="app-creation-form-entity">
