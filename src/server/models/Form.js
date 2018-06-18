@@ -1,7 +1,19 @@
 import xlsx from 'xlsx';
+import moment from 'moment';
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
 import deepFind from '../utils/deepFind';
+
+
+const basedate = new Date(1899, 11, 30, 0, 0, 0);
+const min = 60 * 1000;
+const day = 24 * 60 * min;
+// avoid node.js v10+ timezone bug for year < 1920
+const rounded = Math.round(basedate.getTime() / min) * min;
+const dnthresh = rounded + (
+	(new Date().getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000
+);
+const datenum = v => (v - dnthresh) / day;
 
 
 class Form extends AbstractModel {
@@ -14,47 +26,67 @@ class Form extends AbstractModel {
 
 
 	static buildTableScheme(formScheme) {
-		// system info
-		const system = {
-			questions: ['datetime'],
-			items: {
-				// object paths relative to response object
-				datetime: { title: 'date & time', path: 'created' },
-				// ip: { title: 'ip', path: 'respondent.ip' },
-			},
-		};
-
 		const { items, order } = formScheme;
 		// question ids of the forms
-		const questions = order.filter(id => items[id].itemType !== 'delimeter');
-		// column type cast
-		const handlers = questions.map(id => Form.defineColHandler(items[id]));
+		const questionIds = order.filter(id => (
+			items[id].itemType !== 'delimeter'
+		));
+		// cell creator list
+		const creators = questionIds.map(id => (
+			Form.getCellCreator(items[id].type)
+		));
 
-		return { system, questions, handlers };
+		return { questionIds, creators };
 	}
 
 
-	static defineColHandler(question) {
-		const baseHandler = val => val;
-		switch (question.type) {
-		case 'select': {
-			return selected => (
-				question.options
-					.map((opt, i) => selected && selected[i] && opt)
-					.filter(val => val)
-					.join('; ')
-			);
-		}
-		case 'time': // fall through
-		case 'date': {
-			return val => new Date(val);
-		}
-		case 'text': {
-			return question.datetime ? val => new Date(val) : baseHandler;
-		}
-		default: return baseHandler;
-		}
+	static getCellCreator(type) {
+		// question.type is on of [text, number, select, date, time]
+		const converterName = `${type}ToXLSX`;
+		return Form[converterName] || Form.textToXLSX;
 	}
+
+
+	static textToXLSX(question, text) {
+		return question && question.datetime
+			? Form.datetimeToXLSX(question, text) // compatibility with old data
+			: { t: 's', v: text };
+	}
+
+
+	static numberToXLSX(question, num) {
+		const cell = { t: 'n', v: num };
+		if(!question.integer) cell.z = '0.00';
+		return cell;
+	}
+
+
+	static selectToXLSX(question, selectedOpts) {
+		return {
+			t: 's',
+			v: question.options
+				.map((opt, i) => selectedOpts && selectedOpts[i] && opt)
+				.filter(val => val)
+				.join('; '),
+		};
+	}
+
+
+	static createDTConverter(inF, outF = 'd/m/yy hh:mm') {
+		return (question, datetime) => {
+			const dt = moment(datetime, inF);
+			return dt.isValid()
+				? { t: 'n', v: datenum(dt.valueOf()), z: outF }
+				: null;
+		};
+	}
+
+
+	static datetimeToXLSX = Form.createDTConverter()
+
+	static dateToXLSX = Form.createDTConverter('YYYY-MM-DD', 'dd/m/yy')
+
+	static timeToXLSX = Form.createDTConverter('hh:mm:ss', 'hh:mm')
 
 
 	// ***************** INSTANCE METHODS ***************** //
@@ -65,6 +97,7 @@ class Form extends AbstractModel {
 
 		return super.save({ author });
 	}
+
 
 	// get responses in short(default) or full form
 	getResponses(mode) {
@@ -81,32 +114,67 @@ class Form extends AbstractModel {
 	}
 
 
-	fillHeader() {
-		const { tableScheme, scheme: formScheme } = this;
-		const { system, questions } = tableScheme;
-
-		this.table.push([
-			...system.questions.map(key => key && system.items[key].title),
-			...questions.map(id => id && formScheme.items[id].title),
-		]);
-	}
-
-
-	fillBody() {
+	fill() {
 		const {
-			tableScheme: { system, questions, handlers },
+			tableScheme: { questionIds, creators },
+			scheme,
 			responses,
 		} = this;
 
-		let row;
-		return responses.forEach((response) => {
-			row = [];
-			system.questions.forEach((key) => {
-				row.push(key && deepFind(response, system.items[key].path));
-			});
-			questions.forEach((id, i) => row.push(handlers[i](response.items[id])));
-			this.table.push(row);
+		let addr;
+
+		// header
+
+		const headRowsNum = 1;
+		const sysCols = ['datetime'];
+		let creator = Form.getCellCreator('text');
+		const header = [
+			...sysCols,
+			...questionIds.map(id => scheme.items[id].title),
+		];
+
+		header.forEach((name, c) => {
+			addr = xlsx.utils.encode_cell({ c, r: 0 });
+			this.ws[addr] = creator(null, name);
 		});
+
+		// system values
+
+		const rMin = headRowsNum;
+		for (let r = 0; r < responses.length; r += 1) {
+			addr = xlsx.utils.encode_cell({ c: 0, r: r + headRowsNum });
+			this.ws[addr] = Form.datetimeToXLSX(null, responses[r].created);
+		}
+
+		// questions and answers
+
+		const cMin = sysCols.length;
+		const cMax = cMin + questionIds.length;
+		let id;
+		creator = Form.getCellCreator('text');
+
+		const rMax = rMin + responses.length;
+		let cOrigin;
+		// console.log(responses[0])
+		for (let c = cMin; c < cMax; c += 1) {
+			cOrigin = c - sysCols.length;
+			creator = creators[cOrigin];
+			for (let r = rMin; r < rMax; r += 1) {
+				addr = xlsx.utils.encode_cell({ c, r });
+				// console.log(r, c, addr);
+				id = questionIds[cOrigin];
+				this.ws[addr] = creator(
+					scheme.items[id],
+					responses[r - rMin].items[id],
+				) || null;
+			}
+		}
+
+		this.ws['!ref'] = `A0:${addr}`;
+		const widthLimit = 20; // max chars for each column
+		this.ws['!cols'] = header.map(colName => (
+			{ wch: colName.length < widthLimit ? colName.length : widthLimit }
+		));
 	}
 
 
@@ -116,17 +184,9 @@ class Form extends AbstractModel {
 		wb.Props = { Title: title, Comments: description };
 
 		this.tableScheme = Form.buildTableScheme(scheme);
-		this.table = [];
-		this.fillHeader();
-		this.fillBody();
-		const ws = xlsx.utils.aoa_to_sheet(this.table);
-
-		const widthLimit = 20; // max chars for each column
-		ws['!cols'] = this.table[0].map(question => (
-			{ wch: question.length < widthLimit ? question.length : widthLimit }
-		));
-
-		xlsx.utils.book_append_sheet(wb, ws, 'List 1');
+		this.ws = {};
+		this.fill();
+		xlsx.utils.book_append_sheet(wb, this.ws, 'List 1');
 
 		const wopts = { bookType: 'xlsx', bookSST: false, type: 'buffer' };
 		return xlsx.write(wb, wopts);
