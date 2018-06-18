@@ -22,7 +22,7 @@ function HeaderNavigation(props) {
             className="nav-link"
             to={`/org/${orgId}`}
           >
-            Моя организация
+            Админ-панель
           </Link>
         </NavItem>
       </Nav>

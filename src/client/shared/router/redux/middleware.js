@@ -1,7 +1,18 @@
 import getURLFromParts from '../utils/getURLFromParts';
-import { REDIRECT, REPLACE } from './actionTypes';
+import { REDIRECT, REPLACE, RETURN_TO } from './actionTypes';
+import { hasTransitionsBlocked, getBlockMessage } from './selectors';
 
-const routerMiddleware = () => next => (action) => {
+const blockedActions = [REDIRECT, REPLACE, RETURN_TO];
+
+const routerMiddleware = store => next => (action) => {
+  if (blockedActions.some(type => type === action.type)
+    && hasTransitionsBlocked(store.getState())) {
+    const message = getBlockMessage(store.getState());
+    const confirm = window.confirm(message);
+
+    if (!confirm) return;
+  }
+
   if (action.type !== REDIRECT && action.type !== REPLACE) {
     return next(action);
   }

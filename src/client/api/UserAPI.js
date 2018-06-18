@@ -1,3 +1,4 @@
+import getURLFromParts from 'shared/router/utils/getURLFromParts';
 import { fetch } from './utils/defaultRequest';
 
 class UserAPI {
@@ -19,6 +20,18 @@ class UserAPI {
 
   static async get(id) {
     const data = await fetch(`/api/v1/user/${id}`);
+    return data;
+  }
+
+  static async getForms(id, options = {}) {
+    const url = getURLFromParts({
+      pathname: `/api/v1/user/${id}/forms`,
+      search: {
+        search: options.search,
+      },
+    });
+
+    const data = await fetch(url);
     return data;
   }
 

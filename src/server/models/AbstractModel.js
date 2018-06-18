@@ -16,9 +16,8 @@ class AbstractModel {
 		const writable = {};
 
 		Object.keys(props).forEach((prop) => {
-			// leave only model writable props
 			if(prop in this.props
-				&& (type === 'any' || this.props[prop][type])) {
+				&& (type === 'all' || this.props[prop][type])) {
 				writable[prop] = props[prop];
 			}
 		});
@@ -30,14 +29,14 @@ class AbstractModel {
 	assign(props) {
 		if(!props) return null;
 
-		return Object.assign(this, this.filterProps(props, 'any'));
+		return Object.assign(this, this.filterProps(props, 'all'));
 	}
 
 
 	save({ author }) {
 		const typeConverter = `to_${this.entityName}_full`;
 		const create = `create_${this.entityName}`;
-		const writableProps = this.filterProps(this, 'writable');
+		const writableProps = this.filterProps(this, 'all');
 
 		return db.query(
 			`SELECT _new.* FROM ${typeConverter}(

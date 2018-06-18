@@ -11,3 +11,7 @@ export function getUserId(state) {
 export function getOrgId(state) {
   return getStore(state).orgId;
 }
+
+export function isSessionUser(state, userId) {
+  return getUserId(state) === userId;
+}

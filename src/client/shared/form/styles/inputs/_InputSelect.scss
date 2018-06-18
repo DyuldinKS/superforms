@@ -1,0 +1,48 @@
+fieldset.is-invalid {
+  .form-check-label {
+    color: #dc3545;
+  }
+
+  & ~ .invalid-feedback {
+    display: block;
+    margin-bottom: 0.5rem;
+    margin-top: 0;
+  }
+}
+
+.input-check-wrapper {
+  display: flex;
+  flex-direction: column;
+
+  fieldset {
+    order: 1;
+  }
+}
+
+.generated-form {
+  .form-check input[type='checkbox'],
+  .form-check input[type='radio'] {
+    margin-top: 0.4rem;
+  }
+
+  .form-check {
+    margin-bottom: 0.1rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.input-select-option-other {
+  position: static;
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+
+  > input[type="checkbox"],
+  > input[type="radio"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}

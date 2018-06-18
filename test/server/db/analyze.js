@@ -11,32 +11,32 @@ const orgs = {
 		// GOOD
 		'EXPLAIN ANALYZE SELECT * FROM get_org(117)',
 		'EXPLAIN ANALYZE SELECT * FROM get_orgs(array[117])',
-		
+
 		// BAD: cast type in SELECT clause
 		// 'EXPLAIN ANALYZE SELECT (org::org_short).* FROM get_org(117) org',
 		// 'EXPLAIN ANALYZE SELECT (org::org_short).* FROM get_orgs(array[117]) org',
 		// 'EXPLAIN ANALYZE SELECT (org::org_full).* FROM get_org(117) org',
 		// 'EXPLAIN ANALYZE SELECT (org::org_full).* FROM get_orgs(array[117]) org',
-		
+
 		// GOOD: cast type with LATERAL
 		'EXPLAIN ANALYZE SELECT org.* FROM to_org_short(get_org(117)) org',
 		'EXPLAIN ANALYZE SELECT org.* FROM to_org_full(get_org(117)) org',
 		// 'EXPLAIN ANALYZE SELECT org_full.* FROM get_org(117) org, to_org_full(org) org_full',
 		// 'EXPLAIN ANALYZE SELECT org_full.* FROM get_orgs(array[117]) org, to_org_full(org) org_full',
 
-	
+
 		/******************************** GET ALL *********************************/
 		// BAD: use get_org() with LATERAL
 		// 'EXPLAIN ANALYZE SELECT * FROM organizations, get_org(id)',
 		// GOOD: use get_orgs() with pgarray
 		'EXPLAIN ANALYZE SELECT * FROM get_orgs((SELECT array_agg(id) FROM organizations))',
-		
+
 		// BAD: cast type in SELECT clause
 		// 'EXPLAIN ANALYZE SELECT (org::org_short).* FROM organizations, get_org(id) org',
 		// 'EXPLAIN ANALYZE SELECT (org::org_short).* FROM get_orgs((SELECT array_agg(id) FROM organizations)) org',
 		// 'EXPLAIN ANALYZE SELECT (org::org_full).* FROM organizations, get_org(id) org',
 		// 'EXPLAIN ANALYZE SELECT (org::org_full).* FROM get_orgs((SELECT array_agg(id) FROM organizations)) org',
-		
+
 		// GOOD: cast type with LATERAL
 		'EXPLAIN ANALYZE SELECT org_short.* FROM get_orgs((SELECT array_agg(id) FROM organizations)) org, to_org_short(org) org_short',
 		// 'EXPLAIN ANALYZE SELECT org.* FROM organizations, to_org_full(get_org(id)) org',
@@ -70,36 +70,37 @@ const users = {
 	flags: ['--users', '-u'],
 	queries: [
 		/******************************** GET ONE *********************************/
-		
+
 		// GOOD
 		'EXPLAIN ANALYZE SELECT * FROM get_user(117)',
 		'EXPLAIN ANALYZE SELECT * FROM get_users(array[117])',
-		
+
 		// BAD: cast type in SELECT clause
 		// 'EXPLAIN ANALYZE SELECT (usr::user_short).* FROM get_user(117) usr',
 		// 'EXPLAIN ANALYZE SELECT (usr::user_short).* FROM get_users(array[117]) usr',
 		// 'EXPLAIN ANALYZE SELECT (usr::user_full).* FROM get_user(117) usr',
 		// 'EXPLAIN ANALYZE SELECT (usr::user_full).* FROM get_users(array[117]) usr',
-		
+
 		// GOOD: cast type with LATERAL
 		'EXPLAIN ANALYZE SELECT usr.* FROM to_user_short(get_user(117)) usr',
 		'EXPLAIN ANALYZE SELECT usr.* FROM to_user_full(get_user(117)) usr',
 		// 'EXPLAIN ANALYZE SELECT user_full.* FROM get_user(117) usr, to_user_full(usr) user_full',
 		// 'EXPLAIN ANALYZE SELECT user_full.* FROM get_users(array[117]) usr, to_user_full(usr) user_full',
 
-	
+
 		/******************************** GET ALL *********************************/
+
 		// BAD: use get_user() with LATERAL
 		// 'EXPLAIN ANALYZE SELECT * FROM users, get_user(id)',
 		// GOOD: use get_users() with pgarray
 		'EXPLAIN ANALYZE SELECT * FROM get_users((SELECT array_agg(id) FROM users))',
-		
+
 		// BAD: cast type in SELECT clause
 		// 'EXPLAIN ANALYZE SELECT (usr::user_short).* FROM users, get_user(id) usr',
 		// 'EXPLAIN ANALYZE SELECT (usr::user_short).* FROM get_users((SELECT array_agg(id) FROM users)) usr',
 		// 'EXPLAIN ANALYZE SELECT (usr::user_full).* FROM users, get_user(id) usr',
 		// 'EXPLAIN ANALYZE SELECT (usr::user_full).* FROM get_users((SELECT array_agg(id) FROM users)) usr',
-		
+
 		// GOOD: cast type with LATERAL
 		'EXPLAIN ANALYZE SELECT user_short.* FROM get_users((SELECT array_agg(id) FROM users)) usr, to_user_short(usr) user_short',
 		// 'EXPLAIN ANALYZE SELECT usr.* FROM users, to_user_full(get_user(id)) usr',
@@ -129,7 +130,67 @@ const forms = {
 	entity: 'form',
 	table: 'forms',
 	flags: ['--forms', '-f'],
-	queries: [],
+	queries: [
+		/******************************** GET ONE *********************************/
+
+		// GOOD
+		'EXPLAIN ANALYZE SELECT * FROM get_form(56)',
+		'EXPLAIN ANALYZE SELECT * FROM get_forms(array[56])',
+
+		// BAD: cast type in SELECT clause
+		// 'EXPLAIN ANALYZE SELECT (form::form_short).* FROM get_form(117) form',
+		// 'EXPLAIN ANALYZE SELECT (form::form_short).* FROM get_forms(array[117]) form',
+		// 'EXPLAIN ANALYZE SELECT (form::form_full).* FROM get_form(117) form',
+		// 'EXPLAIN ANALYZE SELECT (form::form_full).* FROM get_forms(array[117]) form',
+
+		// GOOD: cast type with LATERAL
+		'EXPLAIN ANALYZE SELECT form.* FROM to_form_short(get_form(389)) form',
+		'EXPLAIN ANALYZE SELECT form.* FROM to_form_full(get_form(389)) form',
+		// 'EXPLAIN ANALYZE SELECT form_full.* FROM get_form(117) form, to_form_full(form) form_full',
+		// 'EXPLAIN ANALYZE SELECT form_full.* FROM get_forms(array[117]) form, to_form_full(form) form_full',
+
+
+		/******************************** GET ALL *********************************/
+
+		// BAD: use get_form() with LATERAL
+		// 'EXPLAIN ANALYZE SELECT * FROM forms, get_form(id)',
+		// GOOD: use get_forms() with pgarray
+		'EXPLAIN ANALYZE SELECT * FROM get_forms((SELECT array_agg(id) FROM forms))',
+
+		// BAD: cast type in SELECT clause
+		// 'EXPLAIN ANALYZE SELECT (form::form_short).* FROM forms, get_form(id) form',
+		// 'EXPLAIN ANALYZE SELECT (form::form_short).* FROM get_forms((SELECT array_agg(id) FROM forms)) form',
+		// 'EXPLAIN ANALYZE SELECT (form::form_full).* FROM forms, get_form(id) form',
+		// 'EXPLAIN ANALYZE SELECT (form::form_full).* FROM get_forms((SELECT array_agg(id) FROM forms)) form',
+
+		// GOOD: cast type with LATERAL
+		'EXPLAIN ANALYZE SELECT form_short.* FROM get_forms((SELECT array_agg(id) FROM forms)) form, to_form_short(form) form_short',
+		// 'EXPLAIN ANALYZE SELECT form.* FROM forms, to_form_full(get_form(id)) form',
+		// 'EXPLAIN ANALYZE SELECT form_full.* FROM forms, get_form(id) form, to_form_full(form) form_full',
+		'EXPLAIN ANALYZE SELECT form_full.* FROM get_forms((SELECT array_agg(id) FROM forms)) form, to_form_full(form) form_full',
+
+
+		// /************************* FIND FORMS BY ORG ****************************/
+
+		'EXPLAIN ANALYZE SELECT * FROM find_forms_in_org(4)',
+		// by user info
+		`EXPLAIN ANALYZE SELECT * FROM find_forms_in_org(4, '{"info":"Ири:*"}')`,
+		`EXPLAIN ANALYZE SELECT * FROM find_forms_in_org(4, '{"info":"Ханило&Вячеслав:*"}')`,
+		`EXPLAIN ANALYZE SELECT * FROM find_forms_in_org(4, '{"info":"Смоленский:*"}')`,
+		// by form info
+		`EXPLAIN ANALYZE SELECT * FROM find_forms_in_org(4, '{"email":"заболеваемость:*"}')`,
+		// deleted
+		`EXPLAIN ANALYZE SELECT * FROM find_forms_in_org(4, '{"deleted":false}')`,
+
+
+		// /************************* FIND FORMS BY USER ***************************/
+
+		'EXPLAIN ANALYZE SELECT * FROM find_user_forms(118)',
+		// by info
+		`EXPLAIN ANALYZE SELECT * FROM find_user_forms(127, '{"info":"отчет|отчёт:*"}')`,
+		// deleted
+		`EXPLAIN ANALYZE SELECT * FROM find_user_forms(2, '{"deleted":false}')`,
+	],
 };
 
 

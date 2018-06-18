@@ -50,6 +50,14 @@ class ProfileNavigation extends Component {
         </NavItem>
         <NavItem>
           <Link
+            className={this.getClassName('/forms')}
+            to={`${baseUrl}/forms`}
+          >
+            Формы
+          </Link>
+        </NavItem>
+        <NavItem>
+          <Link
             className={this.getClassName('/users')}
             to={`${baseUrl}/users`}
           >

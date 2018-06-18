@@ -24,3 +24,6 @@ export function getAffiliatedUsersList(state, orgId) {
   return listSelectors.getList(state, utils.getAffiliatedUsersListId(orgId));
 }
 
+export function getFormsList(state, orgId) {
+  return listSelectors.getList(state, utils.getFormsListId(orgId));
+}

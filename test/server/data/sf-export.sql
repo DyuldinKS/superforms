@@ -195,8 +195,7 @@ LANGUAGE SQL STABLE;
 
 CREATE OR REPLACE FUNCTION rebuild_select_answer(
 	answer json,
-	options json,
-	multiple boolean,
+	question json,
 	OUT res json
 ) AS
 $$
@@ -204,7 +203,7 @@ $$
 		answer_as_text text;
 		json_array json;
 	BEGIN
-		IF multiple = true THEN
+		IF (question->>'multiple')::boolean = true THEN
 			answer_as_text := answer::text;
 			IF regexp_matches(answer_as_text, '\A\[.*\]\Z') IS NOT NULL THEN
 				json_array := answer; -- already json array
@@ -224,7 +223,7 @@ $$
 
 		SELECT json_object_agg(i - 1, true)
 		FROM json_array_elements_text(json_array) selected_opt,
-			json_array_elements_text(options)
+			json_array_elements_text(question->'options')
 				WITH ORDINALITY AS opts(value, i)
 		WHERE opts.value = selected_opt
 		INTO res;
@@ -233,18 +232,42 @@ $$
 LANGUAGE plpgsql IMMUTABLE;
 
 
+CREATE OR REPLACE FUNCTION rebuild_plain_answer(
+	answer json,
+	question json,
+	OUT res json
+) RETURNS json AS
+$$
+	DECLARE
+		value text := answer#>>'{}';
+	BEGIN
+		res := CASE
+			-- convert empty strings to null
+			WHEN value = ''
+			THEN null
+			WHEN question->>'type' = 'number'
+			THEN to_json(regexp_replace(value, ',', '.')::float)
+			ELSE answer
+		END;
+	EXCEPTION
+		WHEN invalid_text_representation THEN
+			RAISE NOTICE 'BAD NUMBER - REPLACE % WITH null', answer::text;
+			res := null;
+	END;
+$$
+LANGUAGE plpgsql IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION rebuild_answer(
 	answer json,
-	options json,
-	multiple boolean
+	question json
 ) RETURNS json AS
 $$
 	SELECT CASE
-		WHEN options IS NULL THEN
-			-- convert empty strings to null
-			CASE WHEN answer#>>'{}' = '' THEN null ELSE answer END
+		WHEN question->'options' IS NULL
+		THEN rebuild_plain_answer(answer, question)
 		-- the question type is 'select'
-		ELSE rebuild_select_answer(answer, options, multiple)
+		ELSE rebuild_select_answer(answer, question)
 	END;
 $$
 LANGUAGE SQL IMMUTABLE;
@@ -258,11 +281,7 @@ $$
 		json_strip_nulls(
 			json_object_agg(
 				question.hash,
-				rebuild_answer(
-					answer.body,
-					question.body->'options',
-					(question.body->>'multiple')::boolean
-				)
+				rebuild_answer(answer.body, question.body)
 			)
 		) AS items,
 		null::int,

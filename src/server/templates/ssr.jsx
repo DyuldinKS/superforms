@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import { AppContainer } from 'react-hot-loader';
 import App from '../../client/apps/app/appContainer';
 import Auth from '../../client/apps/auth/authContainer';
+import Interview from '../../client/apps/interview/interviewContainer';
 import hbs from '../templates/pages';
 
 
@@ -30,8 +31,8 @@ function findAssets(assetsDir, names, ext) {
 
 
 const allAssetNames = {
-	scripts: ['runtime', 'common', 'app', 'auth'],
-	styles: ['app', 'auth'],
+	scripts: ['runtime', 'common', 'app', 'auth', 'interview'],
+	styles: ['app', 'auth', 'interview'],
 };
 
 
@@ -110,6 +111,15 @@ const render = {
 		};
 
 		return renderApp(Auth, requiredAssetNames, store);
+	},
+
+	interview(store) {
+		const requiredAssetNames = {
+			scripts: ['runtime', 'common', 'interview'],
+			styles: ['interview'],
+		};
+
+		return renderApp(Interview, requiredAssetNames, store);
 	},
 };
 

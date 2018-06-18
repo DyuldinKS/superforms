@@ -1,3 +1,5 @@
+import { actions as list } from 'shared/lists/list';
+import * as listModule from 'shared/lists/list';
 import { actions as entity } from 'shared/entities/entity';
 import { actions as entities } from 'shared/entities';
 import { actions as router } from 'shared/router/redux';
@@ -5,6 +7,7 @@ import { batchActions } from 'shared/batch';
 import { UserAPI, RecipientAPI } from 'api/';
 import entityName from './constants';
 import * as types from './actionTypes';
+import { getFormsListId } from './utils';
 
 // Create
 export function createRequest(parentId, payload) {
@@ -223,6 +226,64 @@ export function fetchOne(id) {
       ));
     } catch (error) {
       dispatch(entity.fetchOneFailure(entityName, id, error));
+    }
+  };
+}
+
+export function fetchFormsSuccess(userId, listObj, entitiesMap) {
+  return (dispatch) => {
+    const listId = getFormsListId(userId);
+
+    dispatch(batchActions(
+      entities.add(entitiesMap),
+      list.fetchSuccess(listId, listObj),
+    ));
+  };
+}
+
+export function fetchFormsFailure(userId, error) {
+  return (dispatch) => {
+    const listId = getFormsListId(userId);
+    dispatch(list.fetchFailure(listId, error));
+  };
+}
+
+// Fetch forms by user
+export function fetchForms(userId, options) {
+  return async (dispatch) => {
+    const listId = getFormsListId(userId);
+    dispatch(list.fetchRequest(listId, options));
+
+    try {
+      const data = await UserAPI.getForms(userId, options);
+
+      dispatch(batchActions(
+        entities.add(data.entities),
+        list.fetchSuccess(listId, data.list),
+      ));
+    } catch (error) {
+      dispatch(list.fetchFailure(listId, error));
+    }
+  };
+}
+
+// Fetch forms by user that takes options from state
+export function fetchFormsNew(userId) {
+  return async (dispatch, getState) => {
+    const listId = getFormsListId(userId);
+    const { search } = listModule.selectors.getList(getState(), listId);
+    const options = { search };
+    dispatch(list.fetchRequest(listId, options));
+
+    try {
+      const data = await UserAPI.getForms(userId, options);
+
+      dispatch(batchActions(
+        entities.add(data.entities),
+        list.fetchSuccess(listId, data.list),
+      ));
+    } catch (error) {
+      dispatch(list.fetchFailure(listId, error));
     }
   };
 }

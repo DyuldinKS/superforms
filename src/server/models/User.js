@@ -57,21 +57,6 @@ class User extends Recipient {
 
 	// ***************** INSTANCE METHODS ***************** //
 
-	getScope() {
-		return Promise.resolve()
-			.then(() => {
-				if(this.org) return this.org;
-				if(!this.orgId) throw new Error('orgId is not specified');
-
-				return Org.findById(this.orgId)
-					.then((org) => {
-						this.org = org;
-						return org;
-					});
-			});
-	}
-
-
 	authenticate(password) {
 		return bcrypt.compare(password, this.hash)
 			.then((isPassValid) => {
@@ -150,6 +135,16 @@ class User extends Recipient {
 				: `${firstName}`;
 		}
 		return '';
+	}
+
+
+	findForms(options = {}) {
+		const filter = Org.buildFilter(options);
+
+		return db.query(
+			'SELECT * FROM find_user_forms($1::int, $2::jsonb)',
+			[this.id, filter],
+		);
 	}
 }
 

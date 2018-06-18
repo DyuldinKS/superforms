@@ -48,6 +48,18 @@ class OrgAPI {
     return data;
   }
 
+  static async getForms(id, options = {}) {
+    const url = getURLFromParts({
+      pathname: `/api/v1/org/${id}/forms`,
+      search: {
+        search: options.search,
+      },
+    });
+
+    const data = await fetch(url);
+    return data;
+  }
+
   static async updateInfo(id, payload) {
     const data = await fetch(`/api/v1/org/${id}`, {
       method: 'PATCH',

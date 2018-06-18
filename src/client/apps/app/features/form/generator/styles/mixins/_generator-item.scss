@@ -1,0 +1,12 @@
+@mixin generator-item {
+  display: flex;
+  align-items: center;
+  margin: 10px auto;
+  padding: 5px 10px;
+  border: 1px solid $card-border-color;
+  cursor: pointer;
+
+  &:hover {
+    @include generator-item-focused;
+  }
+}

@@ -7,3 +7,7 @@ export function getAffiliatedUsersListId(orgId) {
 export function getAffiliatedOrgsListId(orgId) {
   return `${NAME}-${orgId}-org`;
 }
+
+export function getFormsListId(orgId) {
+  return `${NAME}-${orgId}-forms`;
+}

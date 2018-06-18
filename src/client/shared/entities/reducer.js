@@ -1,5 +1,7 @@
 import * as usersModule from 'apps/app/shared/redux/users';
 import * as orgsModule from 'apps/app/shared/redux/orgs';
+import * as formsModule from 'apps/app/shared/redux/forms';
+import * as responsesModule from 'apps/app/shared/redux/responses';
 import * as types from './actionTypes';
 import {
   NAME as entityModuleName,
@@ -13,11 +15,15 @@ import {
 const entityFeatureReducers = {
   [usersModule.NAME]: usersModule.reducer,
   [orgsModule.NAME]: orgsModule.reducer,
+  [formsModule.NAME]: formsModule.reducer,
+  [responsesModule.NAME]: responsesModule.reducer,
 };
 
 const initialState = {
   users: entityInitialState,
   orgs: entityInitialState,
+  forms: entityInitialState,
+  responses: entityInitialState,
 };
 
 export default function (state = initialState, action) {

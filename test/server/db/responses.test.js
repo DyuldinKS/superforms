@@ -49,7 +49,7 @@ describe('responses sql-functions test', () => {
 		const response = {
 			form_id: form.id,
 			items: {},
-			owner_id: null,
+			respondent: { id: 13 },
 			recipient_id: bot.id,
 			created: new Date('2016-08-26T16:02:46.274+03:00'),
 			updated: null,
@@ -61,14 +61,14 @@ describe('responses sql-functions test', () => {
 			.then((actual) => {
 				const expected = {
 					id: actual.id,
-					formId: form.id,
+					form_id: form.id,
 					items: {},
-					ownerId: null,
-					recipientId: bot.id,
+					respondent: { id: 13 },
+					recipient_id: bot.id,
 					created: response.created,
 					updated: null,
 					deleted: null,
-					authorId: bot.id,
+					author_id: bot.id,
 				}
 
 				assert.deepStrictEqual(expected, { ...actual });
@@ -80,6 +80,7 @@ describe('responses sql-functions test', () => {
 		const response = {
 			id: 0, // should be rewritten by last value of responses_seq_id
 			form_id: form.id,
+			respondent: { ip: '22.123.1.9' },
 			items: {},
 		}
 
@@ -87,14 +88,14 @@ describe('responses sql-functions test', () => {
 			.then((actual) => {
 				const expected = {
 					id: actual.id,
-					formId: form.id,
+					form_id: form.id,
 					items: {},
-					ownerId: null,
-					recipientId: null,
+					respondent: { ip: '22.123.1.9' },
+					recipient_id: null,
 					created: actual.created,
 					updated: null,
 					deleted: null,
-					authorId: bot.id, // function should set author as bot
+					author_id: bot.id, // function should set author as bot
 				};
 
 				assert(actual.created instanceof Date);
@@ -107,6 +108,7 @@ describe('responses sql-functions test', () => {
 	it('should log inserted response', () => {
 		const response = {
 			form_id: form.id,
+			respondent: { ip: '22.123.1.9' },
 			items: {},
 		};
 
@@ -126,7 +128,6 @@ describe('responses sql-functions test', () => {
 
 				assert(log.operation === 'I') // insert
 
-				response.owner_id = null;
 				response.recipient_id = null;
 				response.updated = null;
 				response.deleted = null;
@@ -151,7 +152,10 @@ describe('responses sql-functions test', () => {
 		const response = {
 			form_id: form.id,
 			items: {},
-			owner_id: bot.id,
+			respondent: {
+				id: bot.id,
+				ip: '22.123.1.9'
+			},
 		}
 
 		let expected;
@@ -162,4 +166,40 @@ describe('responses sql-functions test', () => {
 				assert.deepStrictEqual({ ...expected }, { ...actual });
 			})
 	})
+
+	it('should cast type to responses', () => {
+		const initial = {
+			id: 1337,
+			formId: 231,
+			items: {},
+			respondent: { ip: '127.0.0.1' },
+			recipientId: 89,
+			created: null,
+			updated: null,
+			deleted: null,
+			authorId: 56,
+			some: 'trash',
+		};
+
+		const expected = {
+			id: 1337,
+			form_id: 231,
+			items: {},
+			respondent: { ip: '127.0.0.1' },
+			recipient_id: 89,
+			created: null,
+			updated: null,
+			deleted: null,
+			author_id: 56,
+		};
+
+		return db.query('SELECT (to_responses($1::json)).*;', [initial])
+			.then((actual) => {
+				assert.deepStrictEqual(expected, { ...actual });
+				return db.query('SELECT (to_responses($1::json)).*;', [expected]);
+			})
+			.then((actual) => {
+				assert.deepStrictEqual(expected, { ...actual });
+			})
+	});
 });

@@ -171,6 +171,7 @@ const getOrCreateIMCResponses = (author) => {
 	const { responses } = imc;
 	responses.forEach((rspn) => {
 		rspn.form_id = imc.conversion.forms[rspn.form_id];
+		rspn.respondent = {};
 	})
 
 	return db.queryAll(

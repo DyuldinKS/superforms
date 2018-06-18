@@ -9,7 +9,7 @@ const ROOT_PATH = path.join(__dirname, '../');
 const SRC_PATH = path.join(ROOT_PATH, 'src/client');
 const PUBLIC_PATH = path.join(ROOT_PATH, 'dist/public');
 
-const entries = ['app', 'auth'];
+const entries = ['app', 'auth', 'interview'];
 
 function handleEntries(entries) {
   return entries.reduce((acc, key) => ({

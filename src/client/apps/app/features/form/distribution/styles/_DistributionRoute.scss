@@ -1,0 +1,58 @@
+.form-distribution-start-screen {
+  background-color: #fff;
+  text-align: center;
+}
+
+.form-distribution {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-top: 50px;
+
+  // > .alert {
+  //   width: auto;
+  //   flex-basis: 100%;
+  // }
+
+  > .nav {
+    width: 200px;
+    margin-right: 50px;
+
+    > hr {
+      width: 100%;
+    }
+  }
+
+  > .tab-content {
+    width: auto;
+    flex-grow: 1;
+
+    h3 {
+      margin-bottom: 2rem;
+    }
+  }
+}
+
+.form-distribution-public-link-container {
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.form-distribution-public-link-params {
+  > header {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: .5rem;
+
+    h3 {
+      margin-bottom: 0;
+    }
+
+    button {
+      margin-left: 15px;
+    }
+  }
+}

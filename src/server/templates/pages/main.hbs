@@ -8,11 +8,14 @@
 		{{#each styles}}
 		<link rel="stylesheet" href="/styles/{{this}}">
 		{{/each}}
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 	</head>
 	<body>
 		<div id="react-root">{{{reactHTML}}}</div>
 		{{!-- initial Redux state injection --}}
-		<script type="text/javascript">{{{preloadedState}}}</script>
+		<script type="text/javascript" id="preloadedState">
+			{{{preloadedState}}}
+		</script>
 		{{#each scripts}}
 		<script type="text/javascript" src="/scripts/{{this}}"></script>
 		{{/each}}

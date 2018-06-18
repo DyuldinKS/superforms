@@ -1,0 +1,54 @@
+.input-item {
+  @include generator-item;
+
+  &.dragging {
+    @include generator-item-focused;
+  }
+
+  &.hidden {
+    display: none;
+    visibility: hidden;
+  }
+
+  &.selected {
+    color: #004085;
+    background-color: #cce5ff;
+    border-color: #b8daff;
+  }
+}
+
+.input-item-title {
+  flex-grow: 1;
+  width: 1px;
+}
+
+.input-item-type {
+  width: 125px;
+  font-size: .85rem;
+  text-align: right;
+}
+
+.input-item-options {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  padding: 5px 0 5px 5px;
+  margin-left: 5px;
+  border-left: 1px solid $card-border-color;
+
+  .icon {
+    margin-right: 5px;
+    padding: 2px;
+    color: $secondary;
+
+    &:hover,
+    &:focus,
+    &:active {
+      color: $primary;
+    }
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}

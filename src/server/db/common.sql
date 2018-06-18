@@ -32,6 +32,19 @@ LANGUAGE SQL STABLE;
 /*********************************  ENTITIES  *********************************/
 
 
+CREATE OR REPLACE FUNCTION build_form_info_tsvector(
+	title text,
+	author jsonb,
+	description text
+) RETURNS tsvector AS
+$$
+	SELECT setweight(to_tsvector('russian', title),'A')
+		|| setweight(to_tsvector('russian', author), 'B')
+		|| setweight(to_tsvector('russian', coalesce(description, '')), 'C');
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION build_list_object(_ids integer[])
 	RETURNS json AS
 $$
@@ -40,6 +53,27 @@ $$
 		(SELECT coalesce(array_to_json(_ids), '[]')),
 		'count',
 		(SELECT coalesce(array_length(_ids, 1), 0))
+	);
+$$
+LANGUAGE SQL STABLE;
+
+
+/*
+returns: {
+	entries:? integer[], // filtered ordered and limited ids
+	count:? integer // number of all filtered ids
+}
+*/
+CREATE OR REPLACE FUNCTION build_entity_id_list_object(
+	_all_ids integer[],
+	_limited_ids integer[]
+) RETURNS json AS
+$$
+	SELECT json_build_object(
+		'entries',
+		(SELECT coalesce(array_to_json(_limited_ids), '[]')),
+		'count',
+		(SELECT coalesce(array_length(_all_ids, 1), 0))
 	);
 $$
 LANGUAGE SQL STABLE;
