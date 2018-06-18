@@ -2,6 +2,7 @@ import { isActive } from '../middleware/users';
 import loadInstance from '../middleware/loadInstance';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import Form from '../models/Form';
+import XLSX from '../models/XLSX';
 import { HTTPError } from '../errors';
 import ssr from '../templates/ssr';
 import { actions as entitiesActions } from '../../client/shared/entities';
@@ -103,7 +104,11 @@ export default (app) => {
 			form.getResponses(mode)
 				.then((responses) => {
 					// send xlsx buffer or responses as JSON
-					res.json(type === 'xlsx' ? form.generateXLSX() : responses);
+					const body = (type === 'xlsx')
+						? new XLSX(form, responses).write()
+						: responses;
+
+					res.json(body);
 				})
 				.catch(next);
 		},
