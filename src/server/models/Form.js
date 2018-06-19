@@ -1,7 +1,5 @@
-import xlsx from 'xlsx';
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
-import deepFind from '../utils/deepFind';
 
 
 class Form extends AbstractModel {
@@ -13,50 +11,6 @@ class Form extends AbstractModel {
 	}
 
 
-	static buildTableScheme(formScheme) {
-		// system info
-		const system = {
-			questions: ['datetime'],
-			items: {
-				// object paths relative to response object
-				datetime: { title: 'date & time', path: 'created' },
-				// ip: { title: 'ip', path: 'respondent.ip' },
-			},
-		};
-
-		const { items, order } = formScheme;
-		// question ids of the forms
-		const questions = order.filter(id => items[id].itemType !== 'delimeter');
-		// column type cast
-		const handlers = questions.map(id => Form.defineColHandler(items[id]));
-
-		return { system, questions, handlers };
-	}
-
-
-	static defineColHandler(question) {
-		const baseHandler = val => val;
-		switch (question.type) {
-		case 'select': {
-			return selected => (
-				question.options
-					.map((opt, i) => selected && selected[i] && opt)
-					.filter(val => val)
-					.join('; ')
-			);
-		}
-		case 'time': // fall through
-		case 'date': {
-			return val => new Date(val);
-		}
-		case 'text': {
-			return question.datetime ? val => new Date(val) : baseHandler;
-		}
-		default: return baseHandler;
-		}
-	}
-
-
 	// ***************** INSTANCE METHODS ***************** //
 
 	// @implements
@@ -65,6 +19,7 @@ class Form extends AbstractModel {
 
 		return super.save({ author });
 	}
+
 
 	// get responses in short(default) or full form
 	getResponses(mode) {
@@ -78,58 +33,6 @@ class Form extends AbstractModel {
 				this.responses = responses;
 				return responses;
 			});
-	}
-
-
-	fillHeader() {
-		const { tableScheme, scheme: formScheme } = this;
-		const { system, questions } = tableScheme;
-
-		this.table.push([
-			...system.questions.map(key => key && system.items[key].title),
-			...questions.map(id => id && formScheme.items[id].title),
-		]);
-	}
-
-
-	fillBody() {
-		const {
-			tableScheme: { system, questions, handlers },
-			responses,
-		} = this;
-
-		let row;
-		return responses.forEach((response) => {
-			row = [];
-			system.questions.forEach((key) => {
-				row.push(key && deepFind(response, system.items[key].path));
-			});
-			questions.forEach((id, i) => row.push(handlers[i](response.items[id])));
-			this.table.push(row);
-		});
-	}
-
-
-	generateXLSX() {
-		const { title, description, scheme } = this;
-		const wb = xlsx.utils.book_new();
-		wb.Props = { Title: title, Comments: description };
-
-		this.tableScheme = Form.buildTableScheme(scheme);
-		this.table = [];
-		this.fillHeader();
-		this.fillBody();
-		const ws = xlsx.utils.aoa_to_sheet(this.table);
-
-		const widthLimit = 20; // max chars for each column
-		ws['!cols'] = this.table[0].map(question => (
-			{ wch: question.length < widthLimit ? question.length : widthLimit }
-		));
-
-		xlsx.utils.book_append_sheet(wb, ws, 'List 1');
-
-		const wopts = { bookType: 'xlsx', bookSST: false, type: 'buffer' };
-		return xlsx.write(wb, wopts);
 	}
 }
 

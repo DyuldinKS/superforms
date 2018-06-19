@@ -210,7 +210,7 @@ $$
 			ELSIF regexp_matches(answer_as_text, '\A".*"\Z') IS NOT NULL THEN
 				-- json string
 				json_array := to_json( -- convert array to json
-					regexp_split_to_array(
+					regexp_split_to_array( -- build array from string
 						trim(both '"' from answer_as_text), -- trim double quotes
 						E',\\s+' -- split string
 					)
@@ -240,13 +240,21 @@ CREATE OR REPLACE FUNCTION rebuild_plain_answer(
 $$
 	DECLARE
 		value text := answer#>>'{}';
+		type text := question->>'type';
 	BEGIN
 		res := CASE
 			-- convert empty strings to null
 			WHEN value = ''
 			THEN null
-			WHEN question->>'type' = 'number'
+			-- remove comma in non-integer numbers
+			WHEN type = 'number'
 			THEN to_json(regexp_replace(value, ',', '.')::float)
+			-- replace timestamp with date only
+			WHEN type = 'date'
+			THEN to_json(to_char(value::timestamp, 'YYYY-MM-DD'))
+			-- replace timestamp with time only
+			WHEN type = 'time'
+			THEN to_json(to_char(value::timestamp, 'HH24:MI'))
 			ELSE answer
 		END;
 	EXCEPTION
