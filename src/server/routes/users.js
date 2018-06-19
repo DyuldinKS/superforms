@@ -155,7 +155,6 @@ export default (app) => {
 	app.get(
 		'/api/v1/user/:id/forms',
 		(req, res, next) => {
-			console.log(req.loaded)
 			const { user } = req.loaded;
 			const options = req.query;
 
