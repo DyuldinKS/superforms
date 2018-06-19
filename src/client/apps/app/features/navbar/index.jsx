@@ -28,7 +28,7 @@ class AppNavbar extends Component {
 
   render() {
     return (
-      <Navbar id="app-navbar" light expand>
+      <Navbar id="app-navbar" light expand="lg">
         <div className="container">
           <Link to="/" className="navbar-brand">
             РАССИ
