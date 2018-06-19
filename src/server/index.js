@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
+import 'source-map-support/register';
 import 'babel-polyfill'; // For async and generator functions support
 import webpackClientConfig from 'Webpack/webpack.client'; // alias for webpack directory
 import db from './db';
