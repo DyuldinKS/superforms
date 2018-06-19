@@ -1,5 +1,6 @@
 import xlsx from 'xlsx';
 import moment from 'moment';
+import locales from '../locales/entities';
 
 
 class XLSX {
@@ -88,7 +89,7 @@ class XLSX {
 
 	injectSystemCols() {
 		const { items, order } = this.scheme;
-		const sysCols = ['response.created'];
+		const sysCols = [locales.xlsx['response.created']];
 		const sysColTypes = ['datetime'];
 		const qstnCols = order.filter(id => (
 			items[id].itemType !== 'delimeter'
@@ -170,7 +171,7 @@ class XLSX {
 		const { title, description } = this;
 		const wb = xlsx.utils.book_new();
 		wb.Props = { Title: title, Comments: description };
-		xlsx.utils.book_append_sheet(wb, ws, 'List 1');
+		xlsx.utils.book_append_sheet(wb, ws, locales.xlsx['list 1']);
 		return wb;
 	}
 

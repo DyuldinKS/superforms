@@ -9,4 +9,8 @@ export default {
 		user: 'Пользователь',
 		respondent: 'Получатель',
 	},
+	xlsx: {
+		'response.created': 'Ответ получен',
+		'list 1': 'Лист 1',
+	},
 };
