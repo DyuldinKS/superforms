@@ -151,12 +151,17 @@ $$
 		template->>'title',
 		template->>'description',
 		rebuild_items(template->'items') AS scheme,
-		json_strip_nulls(
-			json_build_object(
-				'start', sent,
-				'expires', expires,
-				'refilling', nullif(allowrefill, false)
+		(
+			CASE WHEN sent IS NOT null
+			THEN json_strip_nulls(
+				json_build_object(
+					'start', sent,
+					'stop', expires,
+					'refilling', nullif(allowrefill, false)
+				)
 			)
+			ELSE null
+			END
 		) AS collecting,
 		user_id AS owner_id,
 		created,

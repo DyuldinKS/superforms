@@ -143,7 +143,7 @@ const getOrCreateIMCForms = (author) => {
 
 				// replace owner id with corresponding new id
 				record.owner_id = imc.conversion.users[record.owner_id];
-				if(record.collecting.start) {
+				if(record.collecting && record.collecting.start) {
 					const shared = passwordGenerator(8, 8, ['numbers', 'lowercase']);
 					record.collecting.shared = shared;
 				}
