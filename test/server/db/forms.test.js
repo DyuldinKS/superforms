@@ -2,13 +2,13 @@ import chai from 'chai';
 import sinon from 'sinon';
 import assert from 'assert';
 import db from 'Server/db';
-
-const { expect } = chai;
+import { createCaseConverter } from 'Server/utils/translate';
 
 
 describe('forms sql-functions test', () => {
 	let bot;
-
+	// convert object keys to camel case
+	const keysToCamelCase = createCaseConverter('camel');
 
 	before(() => (
 		db.query('SELECT min(id) AS id FROM users;')
@@ -16,22 +16,22 @@ describe('forms sql-functions test', () => {
 	));
 
 
-	const nativeCreateForm = (form, authorId) => (
+	const createForm = (form, authorId) => (
 		db.query(
-			'SELECT * FROM create_form($1::json, $2::int)',
+			'SELECT (to_form_full(cf)).* FROM create_form($1::json, $2::int) cf',
 			[form, authorId]
 		)
 	);
 
 
-	const nativeGetForm = (id) => (
-		db.query('SELECT * FROM get_form($1::int)', [id])
+	const getForm = (id) => (
+		db.query('SELECT (to_form_full(f)).* FROM get_form($1::int) f', [id])
 	);
 
 
-	const nativeUpdate = (id, props, authorId) => (
+	const updateForm = (id, props, authorId) => (
 		db.query(
-			'SELECT * FROM update_form($1::int, $2::json, $3::int)',
+			'SELECT (to_form_full(uf)).* FROM update_form($1::int, $2::json, $3::int) uf',
 			[id, props, authorId],
 		)
 	);
@@ -43,21 +43,21 @@ describe('forms sql-functions test', () => {
 			description: 'it should create form',
 			scheme: { order: [], items: {} },
 			collecting: null,
-			owner_id: bot.id,
+			ownerId: bot.id,
 			created: new Date('2016-08-26T16:02:46.274+03:00'),
 			updated: new Date('2016-08-29T14:48:58.049+03:00'),
-			author_id: bot.id,
+			authorId: bot.id,
 		};
 
-		return nativeCreateForm(form, bot.id)
+		return createForm(form, bot.id)
 			.then((actual) => {
-				const expected = {
+				const expected = keysToCamelCase({
 					...form,
 					id: actual.id,
 					deleted: null,
-					question_count: 0,
-					response_count: 0,
-				}
+					questionCount: 0,
+					responseCount: 0,
+				});
 
 				assert.deepStrictEqual(expected, { ...actual });
 			})
@@ -66,16 +66,16 @@ describe('forms sql-functions test', () => {
 
 	it('should create form with default values', () => {
 		const form = {
-			id: 0, // should be rewritten by forms_seq_id
+			id: 0, // should be rewritten by forms_seqId
 			title: 'test2',
 			scheme: {},
-			owner_id: bot.id,
-			author_id: -1,
+			ownerId: bot.id,
+			authorId: -1,
 		}
 
-		return nativeCreateForm(form, bot.id)
+		return createForm(form, bot.id)
 			.then((actual) => {
-				const expected = {
+				const expected = keysToCamelCase({
 					...form,
 					id: actual.id,
 					description: null,
@@ -83,11 +83,11 @@ describe('forms sql-functions test', () => {
 					created: actual.created,
 					updated: null,
 					deleted: null,
-					owner_id: form.owner_id,
-					author_id: bot.id, // taken from the second create_form() param
-					question_count: 0,
-					response_count: 0,
-				};
+					ownerId: form.ownerId,
+					authorId: bot.id, // taken from the second create_form() param
+					questionCount: 0,
+					responseCount: 0,
+				});
 
 				assert(actual.created instanceof Date);
 				assert(actual.id !== form.id);
@@ -100,10 +100,10 @@ describe('forms sql-functions test', () => {
 		const form = {
 			title: 'test3',
 			scheme: { it: 'should be in the logs table' },
-			owner_id: bot.id,
+			ownerId: bot.id,
 		};
 
-		return nativeCreateForm(form, bot.id)
+		return createForm(form, bot.id)
 			.then((actual) => {
 				form.id = actual.id;
 				form.created = actual.created;
@@ -115,17 +115,13 @@ describe('forms sql-functions test', () => {
 			})
 			.then((logs) => {
 				assert(logs.length === 1); // only one record
-				const [log] = logs;
+				const log = keysToCamelCase(logs[0]);
 
 				assert(log.operation === 'I') // insert
 
-				form.description = null;
-				form.collecting = null;
-				form.updated = null;
-				form.deleted = null;
-				form.author_id = bot.id;
+				form.authorId = bot.id;
 
-				assert(log.author_id === form.author_id);
+				assert(log.authorId === form.authorId);
 
 				const { changes } = log;
 				changes.created = new Date(changes.created);
@@ -135,7 +131,7 @@ describe('forms sql-functions test', () => {
 
 
 	it('should return null as nonexistent id', () => (
-		nativeGetForm(-1)
+		getForm(-1)
 			.then(actual => assert(actual === null))
 	))
 
@@ -144,13 +140,13 @@ describe('forms sql-functions test', () => {
 		const form = {
 			title: 'test5',
 			scheme: {},
-			owner_id: bot.id,
+			ownerId: bot.id,
 		};
 		
 		let expected;
-		return nativeCreateForm(form, bot.id)
+		return createForm(form, bot.id)
 			.then((inserted) => { expected = inserted; })
-			.then(() => db.query('SELECT * FROM get_form($1);', [expected.id]))
+			.then(() => getForm(expected.id))
 			.then(actual => {
 				assert.deepStrictEqual({ ...expected }, { ...actual });
 			})
@@ -161,12 +157,11 @@ describe('forms sql-functions test', () => {
 		const form = {
 			title: 'test6',
 			scheme: {},
-			owner_id: bot.id,
-			collecting: { shared: 'unique' },
+			ownerId: bot.id,
 		};
 
 		return db.query(
-			'SELECT (_new::form_short).*FROM create_form($1::json, $2::int) _new',
+			'SELECT (_new::form_short).* FROM create_form($1::json, $2::int) _new',
 			[form, bot.id],
 		)
 			.then((actual) => {
@@ -174,8 +169,8 @@ describe('forms sql-functions test', () => {
 					id: actual.id,
 					title: form.title,
 					description: null,
-					collecting: form.collecting,
-					ownerId: form.owner_id,
+					collecting: null,
+					ownerId: form.ownerId,
 					created: actual.created,
 					questionCount: 0,
 					responseCount: 0,
@@ -190,11 +185,11 @@ describe('forms sql-functions test', () => {
 		const form = {
 			title: 'test7',
 			scheme: {},
-			owner_id: bot.id,
+			ownerId: bot.id,
 		};
 
 		return db.query(
-			'SELECT (_new::form_full).*FROM create_form($1::json, $2::int) _new',
+			'SELECT (_new::form_full).* FROM create_form($1::json, $2::int) _new',
 			[form, bot.id],
 		)
 			.then((actual) => {
@@ -204,7 +199,7 @@ describe('forms sql-functions test', () => {
 					description: null,
 					scheme: {},
 					collecting: null,
-					ownerId: form.owner_id,
+					ownerId: form.ownerId,
 					created: actual.created,
 					updated: null,
 					deleted: null,
@@ -222,7 +217,7 @@ describe('forms sql-functions test', () => {
 		const form = {
 			title: 'test8',
 			scheme: {},
-			owner_id: bot.id,
+			ownerId: bot.id,
 		};
 
 		const updatedProps = {
@@ -238,33 +233,34 @@ describe('forms sql-functions test', () => {
 				},
 				order: ['d', 'e', 'a', 'b', 'c'],
 			},
-			collecting: { shared: 'unique' },
+			collecting: { start: "2018-06-20T17:48:15.913+03:00" },
 			created: new Date(null),
 			deleted: new Date(),
 		};
 
 		let createdForm;
-		return db.query(
-			'SELECT * FROM create_form($1::json, $2::int) form',
-			[form, bot.id],
-		)
+		return createForm(form, bot.id)
 			.then((res) => { createdForm = res; })
-			.then(() => nativeUpdate(createdForm.id, updatedProps, bot.id))
+			.then(() => updateForm(createdForm.id, updatedProps, bot.id))
 			.then((actual) => {
 				const { items, order } = updatedProps.scheme;
 				// count responses
-				const question_count = order.reduce((count, key) => (
+				const questionCount = order.reduce((count, key) => (
 					count + (items[key].itemType === 'delimeter' ? 0 : 1)
 				), 0);
 
 				const expected = {
 					...createdForm,
 					...updatedProps,
-					question_count,
-					response_count: 0,
+					questionCount,
+					responseCount: 0,
 					updated: actual.updated,
-					author_id: bot.id,
-				}
+					authorId: bot.id,
+					collecting: {
+						start: updatedProps.collecting.start,
+						id: createdForm.id,
+					},
+				};
 				assert.deepStrictEqual(expected, { ...actual });
 				assert.notDeepStrictEqual(createdForm, actual);
 			})
@@ -275,31 +271,28 @@ describe('forms sql-functions test', () => {
 		const form = {
 			title: 'test9',
 			scheme: {},
-			owner_id: bot.id,
+			ownerId: bot.id,
 		};
 
 		const updatedProps = {
 			id: -123,
-			author_id: 0,
+			authorId: 0,
 			updated: new Date('2016-08-29T14:48:58.049+03:00'),
 		}
 
 		let created;
-		return db.query(
-			'SELECT * FROM create_form($1::json, $2::int) form',
-			[form, bot.id]
-		)
+		return createForm(form, bot.id)
 			.then((res) => { created = res; })
-			.then(() => nativeUpdate(created.id, updatedProps, bot.id))
+			.then(() => updateForm(created.id, updatedProps, bot.id))
 			.then((actual) => {
 				assert(actual.id === created.id);
-				assert(actual.author_id === created.author_id);
+				assert(actual.authorId === created.authorId);
 				assert(actual.updated !== updatedProps.updated);
 			})
 	});
 
 
-	it('should cast type to recipients', () => {
+	it('should cast type to forms', () => {
 		const form = {
 			id: 1337,
 			title: 'test10',
@@ -315,7 +308,6 @@ describe('forms sql-functions test', () => {
 			title: form.title,
 			description: null,
 			scheme: form.scheme,
-			collecting: null,
 			owner_id: form.ownerId,
 			created: null,
 			updated: null,
@@ -332,4 +324,51 @@ describe('forms sql-functions test', () => {
 				assert.deepStrictEqual(expected, { ...actual });
 			})
 	});
+
+
+	it(`should not create form with invalid 'collecting' object`, () => {
+		const form = {
+			title: 'test11',
+			scheme: {},
+			ownerId: bot.id,
+			collecting: { shared: 'unique' }, // start key is required
+		};
+
+		return createForm(form, bot.id)
+			.catch(err => (
+				assert.equal(
+					err.message,
+					'null value in column "start" violates not-null constraint',
+				)
+			));
+	})
+
+
+	it(`should insert 'collecting' record with form`, () => {
+		const form = {
+			title: 'test12',
+			scheme: {},
+			ownerId: bot.id,
+			collecting: {
+				start: new Date(),
+				shared: 'unique'
+			},
+		};
+
+		return createForm(form, bot.id)
+			.then((created) => {
+				form.id = created.id;
+				return db.query('SELECT * FROM collecting WHERE id = $1', [form.id])
+			})
+			.then(keysToCamelCase)
+			.then((actual) => {
+				const expected = {
+					...form.collecting,
+					id: form.id,
+					stop: null,
+					refilling: null,
+				}
+				assert.deepStrictEqual(expected, { ...actual });
+			})
+	})
 });
