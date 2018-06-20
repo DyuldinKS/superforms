@@ -254,6 +254,9 @@ $$
 		IF found THEN
 			_action = 'U';
 		ELSE
+			-- set default values and insert new record
+			_new.start = coalesce(_new.start, _time);
+			_new.refilling = coalesce(_new.refilling, false);
 			INSERT INTO collecting SELECT _new.*;
 			_action = 'I';
 		END IF;
