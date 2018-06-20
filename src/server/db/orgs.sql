@@ -184,7 +184,7 @@ $$
 		PERFORM update_rcpt(_rcpt_id, '{"type":"org"}'::json, _author_id, _time);
 
 		_links := _props::org_links;
-		PERFORM set_org_parent(_rcpt_id, _links.parent_id, _author_id);
+		PERFORM set_org_parent(_rcpt_id, _links.parent_id, _author_id, _time);
 
 		SELECT * FROM get_org(_rcpt_id) INTO _inserted;
 	END;
