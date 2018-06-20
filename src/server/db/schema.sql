@@ -93,12 +93,20 @@ CREATE TABLE IF NOT EXISTS forms (
 	title text NOT NULL,
 	description text,
 	scheme json NOT NULL,
-	collecting json,
 	owner_id integer NOT NULL REFERENCES users(id),
 	created timestamptz NOT NULL DEFAULT now(),
 	updated timestamptz,
 	deleted timestamptz,
 	author_id integer NOT NULL REFERENCES users(id)
+);
+
+
+CREATE TABLE IF NOT EXISTS collecting (
+	id integer NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
+	start timestamptz NOT NULL,
+	stop timestamptz,
+	shared varchar(255),
+	refilling boolean
 );
 
 
