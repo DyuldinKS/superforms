@@ -63,12 +63,12 @@ CREATE TYPE form_extra AS (
 	title text,
 	description text,
 	scheme json,
-	collecting json,
 	owner_id integer,
 	created timestamptz,
 	updated timestamptz,
 	deleted timestamptz,
 	author_id integer,
+	collecting collecting,
 	question_count integer,
 	response_count integer
 );
@@ -79,12 +79,12 @@ CREATE TYPE form_full AS (
 	title text,
 	description text,
 	scheme json,
-	collecting json,
 	"ownerId" integer,
 	created timestamptz,
 	updated timestamptz,
 	deleted timestamptz,
 	"authorId" integer,
+	collecting json,
 	"questionCount" integer,
 	"responseCount" integer
 );
@@ -94,9 +94,9 @@ CREATE TYPE form_short AS (
 	id integer,
 	title text,
 	description text,
-	collecting json,
 	"ownerId" integer,
 	created timestamptz,
+	collecting json,
 	"questionCount" integer,
 	"responseCount" integer
 );
@@ -109,6 +109,7 @@ CREATE OR REPLACE FUNCTION to_forms(
 $$
 	DECLARE
 		_form form_full;
+		_collecting collecting;
 	BEGIN
 		_record := json_populate_record(null::forms, _props);
 		_form := json_populate_record(null::form_full, _props);
@@ -120,10 +121,40 @@ $$
 LANGUAGE plpgsql IMMUTABLE;
 
 
+CREATE OR REPLACE FUNCTION to_collecting(_props json)
+	RETURNS collecting AS
+$$
+	SELECT json_populate_record(null::collecting, _props);
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION collecting_to_json(_collecting collecting)
+	RETURNS json AS
+$$
+	SELECT CASE WHEN _collecting IS null
+		THEN null
+		ELSE json_strip_nulls(row_to_json(_collecting))
+	END;
+$$
+LANGUAGE SQL IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION to_form_full(_form form_extra)
 	RETURNS form_full AS
 $$
-	SELECT _form.*;
+	SELECT _form.id,
+		_form.title,
+		_form.description,
+		_form.scheme,
+		_form.owner_id,
+		_form.created,
+		_form.updated,
+		_form.deleted,
+		_form.author_id,
+		collecting_to_json(_form.collecting),
+		_form.question_count,
+		_form.response_count
 $$
 LANGUAGE SQL STABLE;
 
@@ -134,9 +165,9 @@ $$
 	SELECT _form.id,
 		_form.title,
 		_form.description,
-		_form.collecting,
 		_form.owner_id,
 		_form.created,
+		collecting_to_json(_form.collecting),
 		_form.question_count,
 		_form.response_count
 $$
@@ -148,7 +179,7 @@ WITH FUNCTION to_forms(json);
 
 
 CREATE CAST (form_extra AS form_full)
-WITH INOUT;
+WITH FUNCTION to_form_full(form_extra);
 
 
 CREATE CAST (form_extra AS form_short)
@@ -162,10 +193,12 @@ WITH FUNCTION to_form_short(form_extra);
 CREATE OR REPLACE FUNCTION get_form(_id integer)
 	RETURNS form_extra AS
 $$
-	SELECT *,
+	SELECT f.*,
+		collecting,
 		count_questions(scheme),
 		count_responses(id)
-		FROM forms
+		FROM forms f
+		LEFT JOIN collecting USING (id)
 		WHERE id = _id;
 $$
 LANGUAGE SQL STABLE;
@@ -174,8 +207,9 @@ LANGUAGE SQL STABLE;
 CREATE OR REPLACE FUNCTION get_forms(_ids integer[])
 	RETURNS SETOF form_extra AS
 $$
-	SELECT forms.*, questions.count, responses.count
+	SELECT forms.*, collecting, questions.count, responses.count
 	FROM forms
+	LEFT JOIN collecting USING (id)
 	LEFT JOIN (
 		SELECT form_id AS id, count(id)::int AS count
 		FROM responses
@@ -191,6 +225,47 @@ $$
 LANGUAGE SQL STABLE;
 
 
+CREATE OR REPLACE FUNCTION set_collecting(
+	_form_id integer,
+	_props json,
+	_author_id integer,
+	_time timestamptz DEFAULT now(),
+	OUT _new collecting
+) AS
+$$
+	DECLARE
+		_action varchar(4);
+		_changes json;
+	BEGIN
+		IF _props->>'collecting' IS null THEN RETURN; END IF;
+
+		_new := to_collecting(_props->'collecting');
+		_new.id := _form_id;
+
+		-- try to update
+		UPDATE collecting c
+		SET start = coalesce(_new.start, c.start),
+			stop = coalesce(_new.stop, c.stop),
+			shared = coalesce(_new.shared, c.shared),
+			refilling = coalesce(_new.refilling, c.refilling)
+		WHERE c.id = _new.id;
+
+		-- if update is successful
+		IF found THEN
+			_action = 'U';
+		ELSE
+			INSERT INTO collecting SELECT _new.*;
+			_action = 'I';
+		END IF;
+
+		-- log changes
+		_changes := json_strip_nulls(row_to_json(_new));
+		PERFORM log(_action, 'clct', _new.id, _changes, _author_id, _time);
+	END;
+$$
+LANGUAGE plpgsql;
+
+
 CREATE OR REPLACE FUNCTION create_form(
 	_props json,
 	_author_id integer,
@@ -199,19 +274,22 @@ CREATE OR REPLACE FUNCTION create_form(
 ) AS
 $$
 	DECLARE
-		_inserted forms%ROWTYPE;
+		_new forms;
+		_changes json;
 	BEGIN
-		_inserted := _props::forms;
-		_inserted.id = nextval('forms_id_seq');
-		_inserted.created = coalesce(_inserted.created, _time);
-		_inserted.author_id = _author_id;
+		_new := to_forms(_props);
+		_new.id = nextval('forms_id_seq');
+		_new.created = coalesce(_new.created, _time);
+		_new.author_id = _author_id;
 
-		INSERT INTO forms SELECT _inserted.*;
+		INSERT INTO forms SELECT _new.*;
+		PERFORM set_collecting(_new.id, _props, _author_id, _time);
 
 		-- log changes
-		PERFORM log('I', 'form', _inserted.id, row_to_json(_inserted), _author_id, _time);
+		_changes := json_strip_nulls(row_to_json(_new));
+		PERFORM log('I', 'form', _new.id, _changes, _author_id, _time);
 
-		SELECT * FROM get_form(_inserted.id) INTO _form;
+		_form := get_form(_new.id);
 	END;
 $$
 LANGUAGE plpgsql;
@@ -235,17 +313,18 @@ $$
 		_new.updated = _time;
 		_new.author_id = _author_id;
 
-		UPDATE forms form
-		SET title = coalesce(_new.title, form.title),
-			description = coalesce(_new.description, form.description),
-			scheme = coalesce(_new.scheme, form.scheme),
-			collecting = coalesce(_new.collecting, form.collecting),
-			owner_id = coalesce(_new.owner_id, form.owner_id),
-			created = coalesce(_new.created, form.created),
+		UPDATE forms f
+		SET title = coalesce(_new.title, f.title),
+			description = coalesce(_new.description, f.description),
+			scheme = coalesce(_new.scheme, f.scheme),
+			owner_id = coalesce(_new.owner_id, f.owner_id),
+			created = coalesce(_new.created, f.created),
 			updated = _new.updated,
-			deleted = coalesce(_new.deleted, form.deleted),
+			deleted = coalesce(_new.deleted, f.deleted),
 			author_id = _new.author_id
-		WHERE form.id = _id;
+		WHERE f.id = _id;
+
+		PERFORM set_collecting(_id, _props, _author_id, _time);
 
 		_changes := json_strip_nulls(row_to_json(_new));
 		PERFORM log('U', 'form', _id, _changes, _author_id, _time);
