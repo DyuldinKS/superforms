@@ -28,11 +28,12 @@ class Org extends Recipient {
 			[this.id],
 		)
 			.then(({ orgs, ids }) => {
-				// set end for the list of parents
+				// find last org available for ther user
 				const last = ids.indexOf(opts.authorOrgId);
-				const limit = Number.parseInt(opts.limit, 10);
-				const start = opts.inclusive ? 0 : 1;
-				const end = limit > 0 && limit <= last ? limit : last + 1;
+				// set start & end indexes for the list of parents
+				const start = Number.parseInt(opts.minDist, 10);
+				let end = Number.parseInt(opts.maxDist, 10);
+				end = end > 0 && end <= last ? end : last + 1;
 
 				// filter orgs with specified start and end of list
 				const res = { orgs: {}, entries: [] };
