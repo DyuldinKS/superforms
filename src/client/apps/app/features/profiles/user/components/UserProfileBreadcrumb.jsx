@@ -7,9 +7,6 @@ import { selectors as userQuery } from 'apps/app/shared/redux/users';
 
 function mapStateToProps(state, { id }) {
   const session = sessionQuery.getStore(state);
-  console.log(id);
-  console.log(session.userId);
-
 
   if (id === session.userId) {
     return { breadcrumb: [{ label: 'Ваш профиль' }] };
