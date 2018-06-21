@@ -9,6 +9,7 @@ function mapStateToProps(state, ownProps) {
   } = orgsModule.selectors.getOrgEntity(state, parentOrgId);
 
   return {
+    parentId: Number(parentOrgId),
     parentOrgName,
   };
 }

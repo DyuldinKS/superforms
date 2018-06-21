@@ -12,9 +12,11 @@ import {
 } from 'reactstrap';
 import { BaseComponent, ErrorPanel } from '../shared/components';
 import { connectNewOrg } from '../shared/components/connect';
+import Breadcrumb from '../shared/components/Breadcrumb';
 
 const propTypes = {
   // from Redux
+  parentId: PropTypes.number.isRequired,
   parentOrgName: PropTypes.string.isRequired,
   createOrg: PropTypes.func.isRequired,
 };
@@ -36,81 +38,84 @@ class CreateOrgRoute extends BaseComponent {
   }
 
   render() {
-    const { parentOrgName } = this.props;
+    const { parentId, parentOrgName } = this.props;
     const { error, uploading } = this.state;
 
     return (
-      <div className="container app-creation">
-        <h1>Новая организация</h1>
+      <React.Fragment>
+        <Breadcrumb id={parentId} lastLabel="Новая организация" />
+        <div className="container app-creation">
+          <h1>Новая организация</h1>
 
-        <Form onSubmit={this.handleSubmit} className="app-creation-form">
-          <Card className="app-creation-form-entity">
-            <CardHeader>
-              Информация об организации
-            </CardHeader>
-            <CardBody>
-              <FormGroup>
-                <Label for="fullName">Полное наименование</Label>
-                <Input
-                  name="fullName"
-                  type="textarea"
-                  value={this.getValue('fullName')}
-                  onChange={this.handleInputChange}
-                />
-              </FormGroup>
+          <Form onSubmit={this.handleSubmit} className="app-creation-form">
+            <Card className="app-creation-form-entity">
+              <CardHeader>
+                Информация об организации
+              </CardHeader>
+              <CardBody>
+                <FormGroup>
+                  <Label for="fullName">Полное наименование</Label>
+                  <Input
+                    name="fullName"
+                    type="textarea"
+                    value={this.getValue('fullName')}
+                    onChange={this.handleInputChange}
+                  />
+                </FormGroup>
 
-              <FormGroup>
-                <Label for="label">Краткое наименование</Label>
-                <Input
-                  name="label"
-                  value={this.getValue('label')}
-                  onChange={this.handleInputChange}
-                />
-              </FormGroup>
+                <FormGroup>
+                  <Label for="label">Краткое наименование</Label>
+                  <Input
+                    name="label"
+                    value={this.getValue('label')}
+                    onChange={this.handleInputChange}
+                  />
+                </FormGroup>
 
-              <FormGroup>
-                <Label for="email">Электронная почта</Label>
-                <Input
-                  name="email"
-                  value={this.getValue('email')}
-                  onChange={this.handleInputChange}
-                />
-              </FormGroup>
-            </CardBody>
-          </Card>
+                <FormGroup>
+                  <Label for="email">Электронная почта</Label>
+                  <Input
+                    name="email"
+                    value={this.getValue('email')}
+                    onChange={this.handleInputChange}
+                  />
+                </FormGroup>
+              </CardBody>
+            </Card>
 
-          <Card className="app-creation-form-location">
-            <CardHeader>
-              Принадлежность к организации
-            </CardHeader>
-            <CardBody>
-              <FormGroup>
-                <Label for="org">Организация</Label>
-                <Input
-                  name="org"
-                  disabled
-                  value={parentOrgName}
-                />
-              </FormGroup>
+            <Card className="app-creation-form-location">
+              <CardHeader>
+                Принадлежность к организации
+              </CardHeader>
+              <CardBody>
+                <FormGroup>
+                  <Label for="org">Организация</Label>
+                  <Input
+                    name="org"
+                    disabled
+                    value={parentOrgName}
+                  />
+                </FormGroup>
 
-              <FormGroup className="app-creation-form-submit-outer">
-                {
-                  error
-                    ? <ErrorPanel message={error} />
-                    : null
-                }
-                <Button type="submit" color="primary">
+                <FormGroup className="app-creation-form-submit-outer">
                   {
-                    uploading
-                      ? 'Добавление'
-                      : 'Добавить'
+                    error
+                      ? <ErrorPanel message={error} />
+                      : null
                   }
-                </Button>
-              </FormGroup>
-            </CardBody>
-          </Card>
-        </Form>
-      </div>
+                  <Button type="submit" color="primary">
+                    {
+                      uploading
+                        ? 'Добавление'
+                        : 'Добавить'
+                    }
+                  </Button>
+                </FormGroup>
+              </CardBody>
+            </Card>
+          </Form>
+        </div>
+      </React.Fragment>
     );
   }
 }
