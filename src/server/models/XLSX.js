@@ -50,13 +50,15 @@ class XLSX {
 	}
 
 
-	static selectToXLSX(question, selectedOpts) {
-		if(typeof selectedOpts !== 'object') return null;
+	static selectToXLSX(question, answers) {
+		if(typeof answers !== 'object') return null;
 
 		return {
 			t: 's',
-			v: question.options
-				.map((opt, i) => selectedOpts && selectedOpts[i] && opt)
+			v: [
+				...question.options.map((opt, i) => answers[i] && opt),
+				answers.other,
+			]
 				.filter(val => val)
 				.join('; '),
 		};
