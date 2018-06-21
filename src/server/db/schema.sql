@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS forms (
 
 
 CREATE TABLE IF NOT EXISTS collecting (
-	id integer NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
+	id integer PRIMARY KEY REFERENCES forms(id) ON DELETE CASCADE,
 	start timestamptz NOT NULL,
 	stop timestamptz,
 	shared varchar(255),
