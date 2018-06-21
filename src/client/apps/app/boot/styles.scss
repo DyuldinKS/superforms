@@ -6,6 +6,9 @@
 }
 
 @import
+  '../shared/components/NavBreadcrumb/styles';
+
+@import
   '../features/navbar/styles/index',
   '../features/profiles/styles',
   '../features/lists/styles',

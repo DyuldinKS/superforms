@@ -27,3 +27,30 @@ export function getAffiliatedUsersList(state, orgId) {
 export function getFormsList(state, orgId) {
   return listSelectors.getList(state, utils.getFormsListId(orgId));
 }
+
+const getLink = id => `/org/${id}`;
+
+export function getBreadcrumb(state, fromId, toId) {
+  const breadcrumb = [];
+
+  // go up by the tree from toId to fromId
+  let cursor = getOrgEntity(state, toId);
+  while (Object.keys(cursor).length > 0 && cursor.id !== fromId) {
+    const { label, parentId } = cursor;
+    breadcrumb.push({ label, link: getLink(cursor.id) });
+    cursor = getOrgEntity(state, parentId);
+  }
+
+  // if found gap between tree nodes
+  if (cursor.id !== fromId) {
+    breadcrumb.push({ label: '...' });
+  }
+
+  // add session org
+  breadcrumb.push({
+    label: 'Ваша организация',
+    link: getLink(fromId),
+  });
+
+  return breadcrumb.reverse();
+}

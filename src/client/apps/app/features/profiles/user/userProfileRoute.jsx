@@ -7,6 +7,7 @@ import { Switch, Route } from 'shared/router/components';
 import * as usersModule from 'apps/app/shared/redux/users';
 import * as orgsModule from 'apps/app/shared/redux/orgs';
 import {
+  UserProfileBreadcrumb,
   UserProfileFormsList,
   UserProfileHeader,
   UserProfileInfo,
@@ -19,13 +20,13 @@ const propTypes = {
   location: PropTypes.object.isRequired,
   // from Redux
   id: PropTypes.string.isRequired,
-  user: PropTypes.object,
+  fullName: PropTypes.string,
   org: PropTypes.object,
   fetchUser: PropTypes.func.isRequired,
 };
 
 const defaultProps = {
-  user: {},
+  fullName: '',
   org: {},
 };
 
@@ -37,8 +38,9 @@ class UserProfilePage extends Component {
 
   render() {
     const {
+      id,
       org,
-      user,
+      fullName,
       match,
       location,
     } = this.props;
@@ -47,11 +49,12 @@ class UserProfilePage extends Component {
 
     return (
       <Page>
+        <UserProfileBreadcrumb id={id} />
+
         <div className="app-profile-header-outer">
           <div className="container">
             <UserProfileHeader
-              user={user}
-              org={org}
+              header={fullName}
             />
 
             <UserProfileNav
@@ -88,13 +91,14 @@ UserProfilePage.propTypes = propTypes;
 UserProfilePage.defaultProps = defaultProps;
 
 function mapStateToProps(state, ownProps) {
-  const userId = ownProps.match.params.id;
-  const user = usersModule.selectors.getUser(state, userId);
-  const org = orgsModule.selectors.getOrg(state, user.entity.orgId);
+  const userId = Number(ownProps.match.params.id);
+  const fullName = usersModule.selectors.getFullName(state, userId);
+  const { orgId } = usersModule.selectors.getUserEntity(state, userId);
+  const org = orgsModule.selectors.getOrg(state, orgId);
 
   return {
     id: userId,
-    user: user.entity,
+    fullName,
     org: org.entity,
   };
 }
