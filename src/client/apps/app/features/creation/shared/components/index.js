@@ -1,3 +1,3 @@
 export * as connect from './connect';
-export BaseComponent from './BaseComponent';
+export BaseCreateForm from './BaseCreateForm';
 export ErrorPanel from './ErrorPanel';
