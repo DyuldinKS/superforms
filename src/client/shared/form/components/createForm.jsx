@@ -19,9 +19,7 @@ function updateErrors(errors, name, value) {
 }
 
 export default function createForm(WrappedComponent) {
-  const propTypes = {
-    form: PropTypes.object.isRequired,
-  };
+  const propTypes = {};
 
   const childContextTypes = {
     getInputProps: PropTypes.func.isRequired,
@@ -112,15 +110,26 @@ export default function createForm(WrappedComponent) {
     }
 
     focusOnFirstError() {
-      const { order } = this.props.form.scheme;
       const { errors } = this.state;
-      const name = order.find(itemId => errors[itemId]);
-      if (!name) return;
-      const input = this.formRef.elements[name];
-      const formGroup = input.closest('.form-group') || input;
+      const formElements = this.formRef.elements;
+
+      let i = 0;
+      let found;
+      while (i < formElements.length && !found) {
+        const elName = formElements[i].name;
+        found = errors[elName] ? formElements[i] : undefined;
+        i++;
+      }
+
+      if (!found) {
+        return;
+      }
+
+
+      const formGroup = found.closest('.form-group') || found;
       const { top } = getCoords(formGroup);
       window.scrollTo(window.pageXOffset, top - 50);
-      input.focus();
+      found.focus();
     }
 
     render() {
