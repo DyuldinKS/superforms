@@ -6,6 +6,7 @@ import {
 	isArray,
 	isObject,
 	isDate,
+	len,
 	isEmpty,
 } from 'Server/utils/extras';
 
@@ -26,6 +27,12 @@ describe('Object Extras', () => {
 		arr: ['a', 'few', 'elems'],
 		emptyArr: [],
 		obj: { foo: 'baz' },
+		compObj: {
+			a: 'this is',
+			b: 'large and compound',
+			c: 'object',
+			d: this.obj,
+		},
 		emptyObj: {},
 		date: new Date(),
 		invDate: new Date('invalid date'),
@@ -91,9 +98,6 @@ describe('Object Extras', () => {
 	describe('isArray()', () => {
 		it('should return true for Array direct instance', () => {
 			assert(isArray(all.arr));
-		});
-
-		it('should return true for empty array', () => {
 			assert(isArray(all.emptyArr));
 		});
 
@@ -106,14 +110,13 @@ describe('Object Extras', () => {
 	describe('isObject()', () => {
 		it('should return true for Object direct instance', () => {
 			assert(isObject(all.obj));
-		});
-
-		it('should return true for empty object', () => {
+			assert(isObject(all.compObj));
 			assert(isObject(all.emptyObj));
 		});
 
+		const objects = ['obj', 'emptyObj', 'compObj'];
 		it('should return false for all except plain objects', () => {
-			assert(except(['obj', 'emptyObj']).every(arg => !isObject(arg)))
+			assert(except(objects).every(arg => !isObject(arg)))
 		});
 	});
 
@@ -137,6 +140,36 @@ describe('Object Extras', () => {
 	});
 
 
+	describe('len()', () => {
+		it('should return number of keys for objects', () => {
+			assert(len(all.obj) === 1);
+			assert(len(all.emptyObj) === 0);
+			assert(len(all.compObj) === 4);
+
+		});
+
+		it('should return length of arrays', () => {
+			assert(len(all.arr) === all.arr.length);
+			assert(len(all.emptyArr) === all.emptyArr.length);
+		});
+
+		it('should return length of strings', () => {
+			assert(len(all.str) === all.str.length);
+			assert(len(all.emptyStr) === all.emptyStr.length);
+		});
+
+		const iterable = [
+			'obj', 'compObj', 'emptyObj',
+			'arr', 'emptyArr',
+			'str', 'emptyStr',
+		];
+		iterable.forEach(key => console.log(key, len(all[key])))
+		it('should return undefined for non-iterable instances', () => {
+			assert(except(iterable).every(arg => len(arg) === undefined));
+		})
+	})
+
+
 	describe('isEmpty()', () => {
 		const empty = ['emptyObj', 'emptyStr', 'emptyArr']
 
@@ -145,7 +178,7 @@ describe('Object Extras', () => {
 		});
 
 		it('should return false for non empty objects', () => {
-			assert(except(empty).every(arg => !isEmpty(all.obj)));
+			assert(except(empty).every(arg => !isEmpty(arg)));
 		});
 	});
 })

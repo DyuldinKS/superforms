@@ -16,11 +16,15 @@ const isDate = d => (
 		&& !Number.isNaN(d.getTime())
 );
 
+// return length of string/array/Object.keys
+const len = (arg) => {
+	if(isObject(arg)) return Object.keys(arg).length;
+	if(isString(arg) || isArray(arg)) return arg.length;
+	return undefined;
+};
+
 // returns true if string/array/object is empty
-const isEmpty = obj => (
-	(isObject(obj) && Object.keys(obj).length === 0)
-	|| ((isString(obj) || isArray(obj)) && obj.length === 0)
-);
+const isEmpty = obj => len(obj) === 0;
 
 
 export {
@@ -30,5 +34,6 @@ export {
 	isArray,
 	isObject,
 	isDate,
+	len,
 	isEmpty,
 };
