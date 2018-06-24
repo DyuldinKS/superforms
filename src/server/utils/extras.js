@@ -16,6 +16,7 @@ const isDate = d => (
 		&& !Number.isNaN(d.getTime())
 );
 
+
 // return length of string/array/Object.keys
 const len = (arg) => {
 	if(isObject(arg)) return Object.keys(arg).length;
@@ -27,6 +28,22 @@ const len = (arg) => {
 const isEmpty = obj => len(obj) === 0;
 
 
+// find object value by path
+const deepFind = (obj, path) => {
+	const keys = path.split('.');
+	let current = obj;
+
+	for (let i = 0; i < keys.length; i += 1) {
+		if (keys[i] in current) {
+			current = current[keys[i]];
+		} else {
+			return undefined;
+		}
+	}
+	return current;
+};
+
+
 export {
 	isNumber,
 	isString,
@@ -36,4 +53,5 @@ export {
 	isDate,
 	len,
 	isEmpty,
+	deepFind,
 };
