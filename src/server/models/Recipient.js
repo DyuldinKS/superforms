@@ -1,3 +1,4 @@
+import emailValidator from 'email-validator';
 import emailSMTPVerificator from 'email-smtp-verificator';
 import config from '../config';
 import db from '../db/index';
@@ -6,7 +7,9 @@ import { HTTPError } from '../errors';
 
 
 class Recipient extends AbstractModel {
-	// ***************** STATIC METHODS ***************** //
+	/*----------------------------------------------------------------------------
+	------------------------------- STATIC METHODS -------------------------------
+	----------------------------------------------------------------------------*/
 
 	static findById(id) {
 		return db.query(
@@ -33,13 +36,56 @@ class Recipient extends AbstractModel {
 	}
 
 
+	static validateEmail = emailValidator.validate
+
+
 	static verifyEmail = emailSMTPVerificator({
 		timeout: 12000,
 		sender: config.nodemailer.smtp.auth.user,
 	})
 
 
-	// ***************** INSTANCE METHODS ***************** //
+	static checkEmail(props) {
+		if('email' in props && !Recipient.validateEmail(props.email)) {
+			throw new HTTPError(400, `Invalid email`);
+		}
+	}
+
+
+	/*----------------------------------------------------------------------------
+	------------------------------ INSTANCE METHODS ------------------------------
+	----------------------------------------------------------------------------*/
+
+	saveIfNotExists({ author }) {
+		return Promise.resolve()
+			.then(() => {
+				if(!this.email) throw new HTTPError(400, 'Missing email');
+
+				return db.query(
+					'SELECT (_rcpt::rcpt_full).* FROM get_or_create_rcpt($1, $2) _rcpt',
+					[this, author.id],
+				);
+			})
+			.then(rcpt => this.assign(rcpt));
+	}
+
+
+	// @overrides
+	update({ props, author }) {
+		return Promise.resolve()
+			.then(() => {
+				if('email' in props && !props.email) {
+					throw new HTTPError(400, 'Bad email address');
+				}
+			})
+			.then(() => super.update({ props, author }));
+	}
+
+
+	check(props) {
+		Recipient.checkEmail(props);
+	}
+
 
 	isUnregistered() {
 		return this.type === 'rcpt';
@@ -54,31 +100,7 @@ class Recipient extends AbstractModel {
 	}
 
 
-	saveIfNotExists({ author }) {
-		return Promise.resolve()
-			.then(() => {
-				if(!this.email) throw new HTTPError(400, 'Missing email');
-
-				return db.query(
-					'SELECT (_rcpt::rcpt_full).* FROM get_or_create_rcpt($1, $2) _rcpt',
-					[this, author.id],
-				);
-			})
-			.then(rcpt => this.assign(rcpt))
-	}
-
-
-	update({ props, author }) {
-		return Promise.resolve()
-			.then(() => {
-				if('email' in props && !props.email) {
-					throw new HTTPError(400, 'Bad email address');
-				}
-			})
-			.then(() => super.update({ props, author }));
-	}
-
-
+	// @overrides
 	toJSON() {
 		const obj = super.toJSON();
 
@@ -92,7 +114,11 @@ class Recipient extends AbstractModel {
 	}
 }
 
-// static property
+
+/*------------------------------------------------------------------------------
+----------------------------- PROTOTYPE PROPERTIES -----------------------------
+------------------------------------------------------------------------------*/
+
 Recipient.prototype.tableName = 'recipients';
 
 Recipient.prototype.entityName = 'rcpt';
