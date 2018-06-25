@@ -5,11 +5,21 @@ import db from '../db/index';
 import Recipient from './Recipient';
 import Org from './Org';
 import passwordGenerator from '../libs/passwordGenerator';
+import { isObject, isEmpty } from '../utils/extras';
 import { HTTPError } from '../errors';
 
 
 class User extends Recipient {
-	// ***************** STATIC METHODS ***************** //
+	/*----------------------------------------------------------------------------
+	-------------------------------- STATIC PROPS --------------------------------
+	----------------------------------------------------------------------------*/
+
+	static roles = ['root', 'admin', 'user', 'respondent']
+
+
+	/*----------------------------------------------------------------------------
+	------------------------------- STATIC METHODS -------------------------------
+	----------------------------------------------------------------------------*/
 
 	static findById(id) {
 		return db.query(
@@ -18,6 +28,7 @@ class User extends Recipient {
 		)
 			.then(found => (found ? new User(found) : null));
 	}
+
 
 	// for authentication or password recovery
 	static findByEmail(email, mode = null) {
@@ -50,12 +61,91 @@ class User extends Recipient {
 	}
 
 
-	static encrypt(password) {
+	static checkRole(props) {
+		if('role' in props && !User.roles.includes(props.role)) {
+			throw new HTTPError(400, 'Invalid role');
+		}
+	}
+
+
+	static checkInfo(props) {
+		if('info' in props) {
+			const { info } = props;
+			if(!isObject(info)) {
+				throw new HTTPError(400, 'Invalid info');
+			}
+
+			const {
+				firstName, lastName, patronymic, ...unexpected
+			} = props.info;
+
+			if(!(firstName && firstName.length > 0
+					&& lastName && lastName.length > 0
+					&& isEmpty(unexpected))) {
+				throw new HTTPError(400, 'Invalid info structure');
+			}
+		}
+	}
+
+
+	static checkPassword(props) {
+		if('password' in props) {
+			const { password } = props;
+			if(!(password && password.length >= 8 && password.length <= 64)) {
+				throw new HTTPError(400, 'Invalid password');
+			}
+		}
+	}
+
+
+	static async encrypt(password) {
 		return bcrypt.hash(password, config.bcrypt.saltRound);
 	}
 
 
-	// ***************** INSTANCE METHODS ***************** //
+	/*----------------------------------------------------------------------------
+	------------------------------ INSTANCE METHODS ------------------------------
+	----------------------------------------------------------------------------*/
+
+	// @overrides
+	async save({ author }) {
+		const rcpt = await new Recipient(this).saveIfNotExists({ author });
+		if(!rcpt.active || rcpt.type !== 'rcpt') {
+			throw new HTTPError(403, 'This email is not available');
+		}
+
+		const writableProps = this.filterProps(this, 'writable');
+		const user = await db.query(
+			`SELECT _new.* FROM to_user_full(
+				create_user($1::int, $2::json, $3::int)
+			) _new;`,
+			[rcpt.id, writableProps, author.id],
+		);
+
+		return this.assign(user);
+	}
+
+
+	// @overrides
+	async update({ props, author }) {
+		const { password } = props;
+		if(password) {
+			props.hash = await User.encrypt(password);
+		}
+
+		return super.update({ props, author });
+	}
+
+
+	// @overrides
+	check(props) {
+		// throws HTTPError if props object contains invalid values
+		super.check(props);
+		User.checkRole(props);
+		User.checkInfo(props);
+		User.checkPassword(props);
+	}
+
 
 	authenticate(password) {
 		return bcrypt.compare(password, this.hash)
@@ -94,36 +184,11 @@ class User extends Recipient {
 
 	resetPassword({ password, author }) {
 		this.password = password || passwordGenerator(8);
+		const props = { password: this.password };
 
-		return User.encrypt(this.password)
-			.then(hash => this.update({ props: { hash }, author }))
+		return this.update({ props, author })
 			.then(() => this.deleteToken())
 			.then(() => this);
-	}
-
-
-	// @implements
-	save({ author }) {
-		return Promise.resolve()
-			.then(() => {
-				if(!this.role) throw new HTTPError(400, 'Missing user role');
-
-				return new Recipient(this).saveIfNotExists({ author });
-			})
-			.then((rcpt) => {
-				if(!rcpt.active || rcpt.type !== 'rcpt') {
-					throw new HTTPError(403, 'This email is not available');
-				}
-
-				const writableProps = this.filterProps(this, 'writable');
-				return db.query(
-					`SELECT _new.* FROM to_user_full(
-						create_user($1::int, $2::json, $3::int)
-					) _new;`,
-					[rcpt.id, writableProps, author.id],
-				);
-			})
-			.then(user => this.assign(user));
 	}
 
 
@@ -149,7 +214,9 @@ class User extends Recipient {
 }
 
 
-// ***************** PROTOTYPE PROPERTIES ***************** //
+/*------------------------------------------------------------------------------
+----------------------------- PROTOTYPE PROPERTIES -----------------------------
+------------------------------------------------------------------------------*/
 
 User.prototype.tableName = 'users';
 User.prototype.entityName = 'user';
