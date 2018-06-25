@@ -72,12 +72,16 @@ class FormRoute extends Component {
     return (
       <div className="app-form-generator">
         <FormBreadcrumb id={id} />
-        <FormHeader id={id} />
 
-        <FormNav
-          subpath={subpath}
-          baseUrl={match.url}
-        />
+        <div className="app-profile-header-outer">
+          <div className="container">
+            <FormHeader id={id} />
+            <FormNav
+              subpath={subpath}
+              baseUrl={match.url}
+            />
+          </div>
+        </div>
 
         {
           isLoaded
