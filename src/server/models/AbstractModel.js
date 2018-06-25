@@ -15,16 +15,16 @@ class AbstractModel {
 
 	filterProps(props, type) {
 		if(!props) return null;
-		const writable = {};
+		const filtered = {};
 
 		Object.keys(props).forEach((prop) => {
 			if(prop in this.props
 				&& (type === 'all' || this.props[prop][type])) {
-				writable[prop] = props[prop];
+				filtered[prop] = props[prop];
 			}
 		});
 
-		return writable;
+		return filtered;
 	}
 
 
@@ -38,7 +38,7 @@ class AbstractModel {
 	save({ author }) {
 		const typeConverter = `to_${this.entityName}_full`;
 		const create = `create_${this.entityName}`;
-		const writableProps = this.filterProps(this, 'all');
+		const writableProps = this.filterProps(this, 'writable');
 
 		return db.query(
 			`SELECT _new.* FROM ${typeConverter}(
@@ -54,11 +54,13 @@ class AbstractModel {
 		// sql funcs
 		const typeConverter = `to_${this.entityName}_full`;
 		const update = `update_${this.entityName}`;
+
 		// filter props to update
 		const writableProps = this.filterProps(props, 'writable');
 		const newProps = diff(this, writableProps);
 		if(isEmpty(newProps)) return this;
 
+		// update only new props
 		return db.query(
 			`SELECT _updated.* FROM ${typeConverter}(
 				${update}($1::int, $2::json, $3::int)
