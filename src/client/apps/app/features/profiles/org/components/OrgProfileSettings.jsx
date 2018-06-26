@@ -44,7 +44,13 @@ class OrgSettings extends Component {
 
   handleActiveChange() {
     const { active, changeStatus, id } = this.props;
-    changeStatus(id, !active);
+    const action = active ? 'заблокировать' : 'разблокировать';
+
+    const confirm = window.confirm(`Вы действительно хотите ${action} доступ в систему для данной организации?`);
+
+    if (confirm) {
+      changeStatus(id, !active);
+    }
   }
 
   handleInfoChange(form) {
