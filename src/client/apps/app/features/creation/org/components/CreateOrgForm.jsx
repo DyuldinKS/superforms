@@ -9,7 +9,9 @@ import fields from './fields';
 
 class CreateOrgForm extends BaseCreateForm {
   formatValues() {
-    return formatValues(fields, this.props.values);
+    const values = formatValues(fields, this.props.values);
+    delete values.org;
+    return values;
   }
 
   render() {

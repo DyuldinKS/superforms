@@ -20,6 +20,7 @@ class CreateUserForm extends BaseCreateForm {
     values.role = rolesNames.find(role =>
       rolesMap[role] === selectedRoleLabel);
 
+    delete values.org;
     return values;
   }
 
