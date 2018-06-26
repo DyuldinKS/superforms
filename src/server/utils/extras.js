@@ -1,5 +1,8 @@
+
+const isBool = b => typeof b === 'boolean';
 // is finite number
 const isNumber = n => typeof n === 'number' && Number.isFinite(n);
+const isNatural = n => Number.isSafeInteger(n) && n > 0;
 
 const isString = s => typeof s === 'string';
 const isFunction = f => typeof f === 'function';
@@ -45,7 +48,9 @@ const deepFind = (obj, path) => {
 
 
 export {
+	isBool,
 	isNumber,
+	isNatural,
 	isString,
 	isFunction,
 	isArray,
