@@ -19,67 +19,95 @@ describe('User model', () => {
 
 
 	it('should be instance of User, Recipient and AbstractModel', () => {
-		const user = new User();
+		const user = new User({});
 		assert(user instanceof User);
 		assert(user instanceof Recipient);
 		assert(user instanceof AbstractModel);
 		assert.deepStrictEqual(user.props, User.prototype.props);
 	});
 
+
 	describe('check()', () => {
 		it('should NOT throw Error on checking valid props', () => {
 			const user = new User({ id: 13 });
+			const props = {
+				id: 3289,
+				orgId: 892,
+				email: 'some-real@email.com',
+				role: 'user',
+				info: { firstName: 'W', lastName: 'M' },
+				info: { firstName: 'V', lastName: 'Lenin', patronymic: 'I'  },
+				password: 'encryptMe', email: 'wc@gmail.com',
+				created: new Date,
+				authorId: 21,
+			};
+
+			assert.doesNotThrow(() => user.check(props));
+		});
+
+
+		it('shoult throw Error about unexpected property', () => {
+			const user = new User({ id: 13 });
+			const unexpectedPropsList = [
+				{ save: 'me to db' },
+				{ hello: 'world' },
+				{ '': null },
+				{ 2981: { name: 'Winston' } },
+			];
+
+			unexpectedPropsList.forEach((props) => {
+				assert.throws(
+					() => user.check(props), Error, /^Unexpected user.\w+ property$/
+				);
+			})
+		})
+
+
+		it('should throw Error about invalid property value', () => {
+			const user = new User({ id: 13 });
 			const invalidPropsList = [
-				{ email: 'some-real@email.com' },
-				{ role: 'user' },
-				{ info: { firstName: 'W', lastName: 'M' } },
-				{ info: { firstName: 'V', lastName: 'Lenin', patronymic: 'I'  } },
-				{ password: 'encryptMe', email: 'wc@gmail.com' },
+				{ id: 3289.2 },
+				{ orgId: 'nope' },
+				{ email: 'jo@ke' },
+				{ role: 'superman' },
+				{ info: null },
+				{ info: { name: 'Winston' } },
+				{ password: null, email: 'wc@gmail.com' },
+				{ authorId: -234 },
 			];
 
 			invalidPropsList.forEach((props) => {
-				assert.doesNotThrow(() => user.check(props));
-			})
-		});
-
-
-		it('should throw HTTPError about invalid property values', () => {
-			const user = new User({ id: 13 });
-			const invalidPropsList = [
-				[{ email: 'jo@ke' }, 'Invalid email'],
-				[{ role: 'superman' }, 'Invalid role'],
-				[{ info: null }, 'Invalid info'],
-				[{ info: { name: 'Winston' } }, 'Invalid info structure'],
-				[{ password: null, email: 'wc@gmail.com' }, 'Invalid password'],
-			];
-
-			invalidPropsList.forEach(([props, msg]) => {
-				assert.throws(() => user.check(props), HTTPError, msg);
+				assert.throws(
+					() => user.check(props), Error, /^Invalid user.\w+ value$/
+				);
 			})
 		});
 	});
 
 
-	const PROPS = {
-		email: 'winston@mccall.com',
-		info: { firstName: 'Winston', lastName: 'McCall' },
-		role: 'admin',
-		orgId: 127,
-	};
-	const unwanted = { invalid: true, some: 'trash' };
-
-	it('should filter out all unwanted props on creation', () => {
-		const user = new User({ ...PROPS, ...unwanted });
-		assert.deepStrictEqual({ ...user }, PROPS);
-	});
+	describe('assign()', () => {
+		const initial = {
+			email: 'winston@mccall.com',
+			info: { firstName: 'Winston', lastName: 'McCall' },
+			role: 'admin',
+			orgId: 127,
+		};
+		const unwanted = { invalid: true, some: 'trash' };
 
 
-	it('should assign only allowable props', () => {
-		const user = new User();
-		user.assign(PROPS);
-		user.assign(unwanted);
-		assert.deepStrictEqual({ ...user }, PROPS);
-	});
+		it('should assign only allowable props', () => {
+			const user = new User({});
+			user.assign(initial);
+			user.assign(unwanted);
+			assert.deepStrictEqual({ ...user }, initial);
+		});
+
+
+		it('should filter out all unwanted props on creation', () => {
+			const user = new User({ ...initial, ...unwanted });
+			assert.deepStrictEqual({ ...user }, initial);
+		});
+	})
 
 
 	describe('update()', () => {
@@ -137,7 +165,7 @@ describe('User model', () => {
 
 
 	describe('toJSON()', () => {
-		it('should convert to json only enumerable props', () => {
+		it('should convert to json only readable props', () => {
 			const secretProps = {
 				password: 'secret',
 				hash: '$2a$10$6g',
@@ -145,7 +173,6 @@ describe('User model', () => {
 			};
 			const json = { id: 13, email: 'w@mc.com' };
 			const user = new User({ ...json, ...secretProps });
-
 			assert.deepStrictEqual(user.toJSON(), json);
 		});
 
