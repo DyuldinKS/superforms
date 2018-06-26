@@ -5,7 +5,7 @@ import db from '../db/index';
 import Recipient from './Recipient';
 import Org from './Org';
 import passwordGenerator from '../libs/passwordGenerator';
-import { isObject, isEmpty } from '../utils/extras';
+import { isNatural, isObject, isString, isEmpty } from '../utils/extras';
 import { HTTPError } from '../errors';
 
 
@@ -14,7 +14,7 @@ class User extends Recipient {
 	-------------------------------- STATIC PROPS --------------------------------
 	----------------------------------------------------------------------------*/
 
-	static roles = ['root', 'admin', 'user', 'respondent']
+	static roles = new Set(['root', 'admin', 'user', 'respondent'])
 
 
 	/*----------------------------------------------------------------------------
@@ -61,40 +61,27 @@ class User extends Recipient {
 	}
 
 
-	static checkRole(props) {
-		if('role' in props && !User.roles.includes(props.role)) {
-			throw new HTTPError(400, 'Invalid role');
-		}
+	static checkInfo(info) {
+		if(!isObject(info)) return false;
+
+		const {
+			firstName, lastName, patronymic, ...unexpected
+		} = info;
+
+		return (firstName && isString(firstName)
+				&& lastName && isString(lastName)
+				&& (patronymic === undefined || isString(patronymic))
+				&& isEmpty(unexpected));
 	}
 
 
-	static checkInfo(props) {
-		if('info' in props) {
-			const { info } = props;
-			if(!isObject(info)) {
-				throw new HTTPError(400, 'Invalid info');
-			}
-
-			const {
-				firstName, lastName, patronymic, ...unexpected
-			} = props.info;
-
-			if(!(firstName && firstName.length > 0
-					&& lastName && lastName.length > 0
-					&& isEmpty(unexpected))) {
-				throw new HTTPError(400, 'Invalid info structure');
-			}
-		}
+	static checkRole(role) {
+		return User.roles.has(role);
 	}
 
 
-	static checkPassword(props) {
-		if('password' in props) {
-			const { password } = props;
-			if(!(password && password.length >= 8 && password.length <= 64)) {
-				throw new HTTPError(400, 'Invalid password');
-			}
-		}
+	static checkPassword(p) {
+		return isString(p) && p.length >= 8 && p.length <= 64;
 	}
 
 
@@ -134,16 +121,6 @@ class User extends Recipient {
 		}
 
 		return super.update({ props, author });
-	}
-
-
-	// @overrides
-	check(props) {
-		// throws HTTPError if props object contains invalid values
-		super.check(props);
-		User.checkRole(props);
-		User.checkInfo(props);
-		User.checkPassword(props);
 	}
 
 
@@ -222,15 +199,20 @@ User.prototype.tableName = 'users';
 User.prototype.entityName = 'user';
 
 User.prototype.props = {
+	/* client */
 	...Recipient.prototype.props,
-	id: { writable: false, enumerable: true },
-	orgId: { writable: true, enumerable: true },
-	org: { writable: false, enumerable: false },
-	info: { writable: true, enumerable: true },
-	role: { writable: true, enumerable: true },
-	token: { writable: false, enumerable: false },
-	password: { writable: false, enumerable: false },
-	hash: { writable: true, enumerable: false },
+	// @override recipient.id
+	id: { writableOn: 'create', readable: true, check: isNatural },
+	orgId: { writable: 'create', readable: true, check: isNatural },
+	info: { writable: true, readable: true, check: User.checkInfo },
+	role: { writable: true, readable: true, check: User.checkRole },
+	// should be encrypted and saved as hash property
+	password: { writable: false, readable: false, check: User.checkPassword },
+
+	/* system */
+	org: { writable: false, readable: false },
+	token: { writable: false, readable: false },
+	hash: { writable: true, readable: false },
 };
 
 Object.freeze(User);
