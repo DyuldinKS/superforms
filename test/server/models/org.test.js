@@ -17,7 +17,7 @@ describe('Org model', () => {
 	after(() => db.query.restore());
 
 	it('should be instance of Org, Recipient and AbstractModel', () => {
-		const org = new Org();
+		const org = new Org({});
 		assert(org instanceof Org);
 		assert(org instanceof Recipient);
 		assert(org instanceof AbstractModel);
@@ -25,25 +25,26 @@ describe('Org model', () => {
 	});
 
 
-	const PROPS = {
-		email: 'admissions@mit.edu',
-		info: { fullName: 'Massachusetts Institute of Technology', label: 'MIT' },
-		parentId: 287,
-	};
-	const unwanted = { invalid: true, some: 'trash' };
+	describe('assign()', () => {
+		const initial = {
+			email: 'admissions@mit.edu',
+			info: { fullName: 'Massachusetts Institute of Technology', label: 'MIT' },
+			parentId: 287,
+		};
+		const unwanted = { invalid: true, some: 'trash' };
 
-	it('should filter out all unwanted props on creation', () => {
-		const org = new Org({ ...PROPS, ...unwanted });
-		assert.deepStrictEqual({ ...org }, PROPS);
-	});
+		it('should filter out all unwanted props on creation', () => {
+			const org = new Org({ ...initial, ...unwanted });
+			assert.deepStrictEqual({ ...org }, initial);
+		});
 
-
-	it('should assign only allowable props', () => {
-		const org = new Org();
-		org.assign(PROPS);
-		org.assign(unwanted);
-		assert.deepStrictEqual({ ...org }, PROPS);
-	});
+		it('should assign only allowable props', () => {
+			const org = new Org({});
+			org.assign(initial);
+			org.assign(unwanted);
+			assert.deepStrictEqual({ ...org }, initial);
+		});
+	})
 
 	
 	it('should update only writable props', () => {
@@ -80,19 +81,25 @@ describe('Org model', () => {
 			});
 	});
 
+	describe('toJSON()', () => {
+		it('should convert to json only readable props', () => {
+			const json = { id: 13, email: 'w@mc.com', parentId: 187 };
+			const org = new Org(json);
 
-	it('should convert to json only enumerable props', () => {
-		const json = { id: 13, email: 'w@mc.com', parentId: 187 };
-		const org = new Org(json);
-
-		assert.deepStrictEqual(org.toJSON(), json);
-	});
+			assert.deepStrictEqual(org.toJSON(), json);
+		});
 
 
-	it('should unnest info prop for client', () => {
-		const org = new Org(PROPS);
-		const { info, ...rest } = PROPS;
+		it('should unnest info prop for client', () => {
+			const initial = {
+				email: 'admissions@mit.edu',
+				info: { fullName: 'Massachusetts Institute of Technology', label: 'MIT' },
+				parentId: 287,
+			};
+			const org = new Org(initial);
+			const { info, ...rest } = initial;
 
-		assert.deepStrictEqual(org.toJSON(), { ...info, ...rest });
-	});
+			assert.deepStrictEqual(org.toJSON(), { ...info, ...rest });
+		});
+	})
 });
