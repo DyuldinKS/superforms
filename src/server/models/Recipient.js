@@ -3,10 +3,18 @@ import emailSMTPVerificator from 'email-smtp-verificator';
 import config from '../config';
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
+import { isNatural, isBool, isDate } from '../utils/extras';
 import { HTTPError } from '../errors';
 
 
 class Recipient extends AbstractModel {
+	/*----------------------------------------------------------------------------
+	-------------------------------- STATIC PROPS --------------------------------
+	----------------------------------------------------------------------------*/
+
+	static types = new Set(['rcpt', 'user', 'org'])
+
+
 	/*----------------------------------------------------------------------------
 	------------------------------- STATIC METHODS -------------------------------
 	----------------------------------------------------------------------------*/
@@ -36,20 +44,18 @@ class Recipient extends AbstractModel {
 	}
 
 
-	static validateEmail = emailValidator.validate
+	static checkEmail = emailValidator.validate
+
+
+	static checkType(type) {
+		return Recipient.types.has(type);
+	}
 
 
 	static verifyEmail = emailSMTPVerificator({
 		timeout: 12000,
 		sender: config.nodemailer.smtp.auth.user,
 	})
-
-
-	static checkEmail(props) {
-		if('email' in props && !Recipient.validateEmail(props.email)) {
-			throw new HTTPError(400, `Invalid email`);
-		}
-	}
 
 
 	/*----------------------------------------------------------------------------
@@ -79,11 +85,6 @@ class Recipient extends AbstractModel {
 				}
 			})
 			.then(() => super.update({ props, author }));
-	}
-
-
-	check(props) {
-		Recipient.checkEmail(props);
 	}
 
 
@@ -124,14 +125,14 @@ Recipient.prototype.tableName = 'recipients';
 Recipient.prototype.entityName = 'rcpt';
 
 Recipient.prototype.props = {
-	id: { writable: false, enumerable: true },
-	email: { writable: true, enumerable: true },
-	type: { writable: false, enumerable: true },
-	active: { writable: true, enumerable: true },
-	created: { writable: false, enumerable: true },
-	updated: { writable: false, enumerable: true },
-	deleted: { writable: true, enumerable: true },
-	authorId: { writable: false, enumerable: true },
+	id: { writable: false, readable: true, check: isNatural },
+	email: { writable: true, readable: true, check: Recipient.checkEmail },
+	type: { writable: false, readable: true, check: Recipient.checkType },
+	active: { writable: true, readable: true, check: isBool },
+	created: { writable: false, readable: true, check: isDate },
+	updated: { writable: false, readable: true, check: isDate },
+	deleted: { writable: true, readable: true, check: isDate },
+	authorId: { writable: false, readable: true, check: isNatural },
 };
 
 Object.freeze(Recipient);
