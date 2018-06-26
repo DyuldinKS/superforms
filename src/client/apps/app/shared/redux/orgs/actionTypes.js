@@ -16,3 +16,7 @@ export const CHANGE_EMAIL_FAILURE = `${BASE}/${NAME}/ChangeEmailFailure`;
 export const CHANGE_INFO_REQUEST = `${BASE}/${NAME}/ChangeInfoRequest`;
 export const CHANGE_INFO_SUCCESS = `${BASE}/${NAME}/ChangeInfoSuccess`;
 export const CHANGE_INFO_FAILURE = `${BASE}/${NAME}/ChangeInfoFailure`;
+
+export const FETCH_ANCESTORS_REQUEST = `${BASE}/${NAME}/FetchAncestorsRequest`;
+export const FETCH_ANCESTORS_SUCCESS = `${BASE}/${NAME}/FetchAncestorsSuccess`;
+export const FETCH_ANCESTORS_FAILURE = `${BASE}/${NAME}/FetchAncestorsFailure`;
