@@ -1,10 +1,13 @@
 import db from '../db/index';
 import Recipient from './Recipient';
+import { isObject, isEmpty, isNatural, isString } from '../utils/extras';
 import { HTTPError } from '../errors';
 
 
 class Org extends Recipient {
-	// ***************** STATIC METHODS ***************** //
+	/*----------------------------------------------------------------------------
+	------------------------------- STATIC METHODS -------------------------------
+	----------------------------------------------------------------------------*/
 
 	static findById(id) {
 		return db.query(
@@ -54,7 +57,19 @@ class Org extends Recipient {
 	}
 
 
-	// ***************** INSTANCE METHODS ***************** //
+	static checkInfo(info) {
+		if(!isObject(info)) return false;
+
+		const { label, fullName, ...unexpected } = info;
+		return label && isString(label)
+				&& fullName && isString(fullName)
+				&& isEmpty(unexpected);
+	}
+
+
+	/*----------------------------------------------------------------------------
+	------------------------------ INSTANCE METHODS ------------------------------
+	----------------------------------------------------------------------------*/
 
 	// @implements
 	save({ author }) {
@@ -111,7 +126,9 @@ class Org extends Recipient {
 }
 
 
-// ***************** PROTOTYPE PROPERTIES ***************** //
+/*------------------------------------------------------------------------------
+----------------------------- PROTOTYPE PROPERTIES -----------------------------
+------------------------------------------------------------------------------*/
 
 Org.prototype.tableName = 'organizations';
 
@@ -119,9 +136,9 @@ Org.prototype.entityName = 'org';
 
 Org.prototype.props = {
 	...Recipient.prototype.props,
-	id: { writable: false, enumerable: true },
-	parentId: { writable: true, enumerable: true },
-	info: { writable: true, enumerable: true },
+	id: { writableOn: 'create', readable: true, check: isNatural },
+	parentId: { writable: true, readable: true, check: isNatural },
+	info: { writable: true, readable: true, check: Org.checkInfo },
 };
 
 Object.freeze(Org);
