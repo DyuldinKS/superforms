@@ -119,11 +119,11 @@ describe('User model', () => {
 				role: 'root',
 				info: { firstName: 'W', lastName: 'MC' },
 				deleted: true,
-				orgId: 13,
 			};
 			// props that can not be updated
 			const unwritable = {
 				id: 14,
+				orgId: 13,
 				type: 'rcpt',
 				created: new Date(),
 				updated: new Date(),
@@ -141,7 +141,6 @@ describe('User model', () => {
 					assert(query.includes('update_user'));
 					assert(id === 13);
 					assert(authorId === author.id);
-
 					assert.deepStrictEqual(updatedProps, writable);
 				});
 		});

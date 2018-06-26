@@ -22,7 +22,7 @@ describe('Object Extras', () => {
 		inf: Infinity,
 		str: 'hello world',
 		emptyStr: '',
-		func: () => { console.log('what should i do?'); },
+		func: () => 'what should i do?',
 		construnctedFunc: new Function(),
 		arr: ['a', 'few', 'elems'],
 		emptyArr: [],
@@ -163,7 +163,7 @@ describe('Object Extras', () => {
 			'arr', 'emptyArr',
 			'str', 'emptyStr',
 		];
-		iterable.forEach(key => console.log(key, len(all[key])))
+
 		it('should return undefined for non-iterable instances', () => {
 			assert(except(iterable).every(arg => len(arg) === undefined));
 		})

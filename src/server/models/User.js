@@ -203,7 +203,7 @@ User.prototype.props = {
 	...Recipient.prototype.props,
 	// @override recipient.id
 	id: { writableOn: 'create', readable: true, check: isNatural },
-	orgId: { writable: 'create', readable: true, check: isNatural },
+	orgId: { writableOn: 'create', readable: true, check: isNatural },
 	info: { writable: true, readable: true, check: User.checkInfo },
 	role: { writable: true, readable: true, check: User.checkRole },
 	// should be encrypted and saved as hash property
