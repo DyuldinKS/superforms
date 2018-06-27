@@ -67,7 +67,7 @@ export default (app) => {
 
 
 	app.use(
-		// all routes except
+		// all api routes with specified recipient id
 		/\/api\/v\d{1,2}\/recipient\/\d{1,8}$/,
 		isActive,
 		loadInstance,

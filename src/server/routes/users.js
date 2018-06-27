@@ -51,15 +51,16 @@ export default (app) => {
 		/^\/user\/\d{1,8}(\/(info|settings|forms))?$/,
 		isActive,
 		loadInstance,
+		preloadReduxStore,
 	);
 
 
 	app.get(
+		// all static routes with specified user id
 		[
 			'/user/:id/info',
 			'/user/:id/settings',
 		],
-		preloadReduxStore,
 		(req, res, next) => {
 			const { user } = req.loaded;
 			const { reduxStore } = req;
@@ -73,7 +74,6 @@ export default (app) => {
 
 	app.get(
 		'/user/:id/forms',
-		preloadReduxStore,
 		(req, res, next) => {
 			const { user } = req.loaded;
 			const options = req.query;
@@ -132,7 +132,7 @@ export default (app) => {
 			const props = req.body;
 			const user = new User(props);
 
-			return Promise.resolve()
+			Promise.resolve()
 				.then(() => user.check(props))
 				.then(() => user.save({ author }))
 				.then(() => user.resetPassword({ author }))
@@ -144,7 +144,7 @@ export default (app) => {
 
 
 	app.use(
-		// all routes with user id
+		// all api routes with user id
 		/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/\w{1,12})?$/,
 		isActive,
 		loadInstance,

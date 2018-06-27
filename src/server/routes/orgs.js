@@ -2,22 +2,28 @@ import { isActive } from '../middleware/users';
 import loadInstance from '../middleware/loadInstance';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import Org from '../models/Org';
-import { HTTPError } from '../errors';
 import ssr from '../templates/ssr';
 import { actions as entitiesActions } from '../../client/shared/entities';
 import { actions as orgActions } from '../../client/apps/app/shared/redux/orgs';
+import { HTTPError } from '../errors';
 
 
 export default (app) => {
+	/*----------------------------------------------------------------------------
+	---------------------------- SERVER SIDE RENDERING ---------------------------
+	----------------------------------------------------------------------------*/
+
 	app.use(
+		// all static routes with specified org id
 		[
-			/^\/api\/v\d{1,2}\/org\/\d{1,8}(\/\w{1,12})?$/, // api
-			/^\/org\/\d{1,8}(\/(info|settings|forms|orgs|users))?$/, // ssr
-			/^\/org\/\d{1,8}\/(orgs|users)\/new$/, // ssr
+			/^\/org\/\d{1,8}(\/(info|settings|forms|orgs|users))?$/,
+			/^\/org\/\d{1,8}\/(orgs|users)\/new$/,
 		],
 		isActive,
 		loadInstance,
+		preloadReduxStore,
 	);
+
 
 	app.get(
 		[
@@ -27,7 +33,6 @@ export default (app) => {
 			'/org/:id/settings',
 			'/org/:id/users/new',
 		],
-		preloadReduxStore,
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const { reduxStore } = req;
@@ -38,9 +43,9 @@ export default (app) => {
 		},
 	);
 
+
 	app.get(
 		'/org/:id/forms',
-		preloadReduxStore,
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const options = req.query;
@@ -64,9 +69,9 @@ export default (app) => {
 		},
 	);
 
+
 	app.get(
 		'/org/:id/orgs',
-		preloadReduxStore,
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const options = req.query;
@@ -91,9 +96,9 @@ export default (app) => {
 		},
 	);
 
+
 	app.get(
 		'/org/:id/users',
-		preloadReduxStore,
 		(req, res, next) => {
 			const { org } = req.loaded;
 			const options = req.query;
@@ -118,6 +123,34 @@ export default (app) => {
 		},
 	);
 
+
+	/*----------------------------------------------------------------------------
+	---------------------------------- API ---------------------------------------
+	----------------------------------------------------------------------------*/
+
+	// create organization
+	app.post(
+		'/api/v1/org',
+		isActive,
+		(req, res, next) => {
+			const { author } = req;
+			const org = new Org({ ...req.body });
+
+			return org.save({ author })
+				.then(() => res.json(org))
+				.catch(next);
+		},
+	);
+
+
+	app.use(
+		// all api routes with specified org id
+		/^\/api\/v\d{1,2}\/org\/\d{1,8}(\/\w{1,12})?$/,
+		isActive,
+		loadInstance,
+	);
+
+
 	// get one org
 	app.get(
 		'/api/v1/org/:id',
@@ -138,6 +171,7 @@ export default (app) => {
 		},
 	);
 
+
 	// find orgs in organization subtree
 	app.get(
 		'/api/v1/org/:id/orgs',
@@ -150,6 +184,7 @@ export default (app) => {
 				.catch(next);
 		},
 	);
+
 
 	// find users in organization subtree
 	app.get(
@@ -164,6 +199,7 @@ export default (app) => {
 		},
 	);
 
+
 	// find forms in specified organization
 	app.get(
 		'/api/v1/org/:id/forms',
@@ -177,19 +213,6 @@ export default (app) => {
 		},
 	);
 
-	// create organization
-	app.post(
-		'/api/v1/org',
-		isActive,
-		(req, res, next) => {
-			const { author } = req;
-			const org = new Org({ ...req.body });
-
-			return org.save({ author })
-				.then(() => res.json(org))
-				.catch(next);
-		},
-	);
 
 	// update org
 	app.patch(

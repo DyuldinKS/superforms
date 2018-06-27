@@ -7,26 +7,61 @@ import ssr from '../templates/ssr';
 
 
 export default (app) => {
+	/*----------------------------------------------------------------------------
+	---------------------------- SERVER SIDE RENDERING ---------------------------
+	----------------------------------------------------------------------------*/
+
 	app.use(
-		[
-			/\/api\/v\d{1,2}\/response\/\d{1,16}$/, // api
-			/\/response\/\d{1,16}$/, // ssr
-		],
+		// all ssr routes with specified response id
+		/\/response\/\d{1,16}$/,
 		isActive,
 		loadInstance,
 	);
 
 
-	app.get(
-		'/response/:id',
+	/*----------------------------------------------------------------------------
+	---------------------------------- API ---------------------------------------
+	----------------------------------------------------------------------------*/
+
+	// create response (save filled form)
+	app.post(
+		'/api/v1/response',
 		isActive,
-		loadInstance,
 		(req, res, next) => {
-			const { response } = req.loaded;
-			res.send('awesome stub');
+			const { author } = req;
+			const props = {
+				...req.body,
+				respondent: { ip: req.connection.remoteAddress },
+			};
+			const response = new Response(props);
+			if(!response.formId) {
+				return next(new HTTPError(400, 'formId is not specified.'));
+			}
+
+			Form.findById(response.formId)
+				.then((form) => {
+					if(!form) throw new HTTPError(404, 'form not found');
+
+					if(!form.collecting
+							|| (form.collecting.shared !== response.secret)) {
+						throw new HTTPError(403, 'No access');
+					}
+
+					return form.checkAnswers(response.items);
+				})
+				.then(() => response.save({ author }))
+				.then(() => {	res.send(response); })
+				.catch(next);
 		},
 	);
 
+
+	app.use(
+		// all api routes with specified response id
+		/\/api\/v\d{1,2}\/response\/\d{1,16}$/,
+		isActive,
+		loadInstance,
+	);
 
 	app.get(
 		'/api/v1/response/:id',
@@ -35,36 +70,6 @@ export default (app) => {
 		(req, res, next) => {
 			const { response } = req.loaded;
 			res.json(response);
-		},
-	);
-
-
-	app.post(
-		'/api/v1/response',
-		isActive,
-		(req, res, next) => {
-			const { author } = req;
-			const props = {
-				...req.body,
-				respondent: { ip: req.connection.remoteAddress }
-			};
-			const response = new Response(props);
-			if(!response.formId) {
-				return next(new HTTPError(400, '"formId" is not specified.'));
-			}
-
-			Form.findById(response.formId)
-				.then((form) => {
-					if(!form) throw new HTTPError(404, 'form not found');
-
-					if(form.collecting && (
-						form.collecting.shared === response.secret
-					)) return response.save({ author });
-
-					throw new HTTPError(403, 'No access');
-				})
-				.then(() => {	res.send(response); })
-				.catch(next);
 		},
 	);
 };
