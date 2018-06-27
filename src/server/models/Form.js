@@ -46,6 +46,84 @@ class Form extends AbstractModel {
 	}
 
 
+	static getAnswerValidator(type) {
+		const uCased = type && type[0].toUpperCase() + type.slice(1);
+		const vName = Form[`is${uCased}AnswerValid`];
+		return Form[vName] || Form.textAnswerValid;
+	}
+
+
+	static isTextAnswerValid(question, answer) {
+		return isString(answer) && answer.trim().length > 0
+			&& answer.length < 2000;
+	}
+
+
+	static isNumberAnswerValid(question, answer) {
+		return isNumber(answer)
+			&& (!question.integer || Number.isInteger(answer));
+	}
+
+
+	static isSelectAnswerValid(question, answer) {
+		if(!isObject(answer)) return false;
+
+		// selected options stored as { [i]: true, [j]: true, ... }
+		// where i, j - option indexes in question.options array.
+		const selected = question.options
+			.map((opt, i) => (i in answer) && opt)
+			.filter(opt => opt);
+
+		if('other' in answer) {
+			if(!question.optionOther) return false;
+			selected.push(answer.other);
+		}
+
+		if(selected.some(opt => (!(isString(opt) && opt.length > 0)))) return false;
+		return question.multiple
+			? selected.length > 0
+			: selected.length === 1;
+	}
+
+
+	static isDateAnswerValid(question, answer) {
+		const time = moment(answer, 'YYYY-MM-DD');
+		return time.isValid();
+	}
+
+
+	static isTimeAnswerValid(question, answer) {
+		const time = moment(answer, 'hh:mm:ss');
+		return time.isValid();
+	}
+
+
+	static checkAnswers(answers) {
+		if(isObject(answers)) {
+			throw new HTTPError(400, 'Invalid response.items structure');
+		}
+
+		const { items, order } = this.scheme;
+		let question;
+		let validator;
+		order.filter(id => items[id] !== 'input')
+			.forEach((id, i) => {
+				question = items[id];
+
+				if(question.required && id in answers === false) {
+					throw new HTTPError(400, `Missing answer to question #${i}`);
+				}
+
+				if(id in answers) {
+					validator = Form.getAnswerValidator(question.type);
+					if(!validator(question, answers[id])) {
+						throw new HTTPError(400, `Invalid answer to ${question.type} question #${i}`)
+					}
+				}
+			});
+	}
+
+
 	/*----------------------------------------------------------------------------
 	------------------------------ INSTANCE METHODS ------------------------------
 	----------------------------------------------------------------------------*/
