@@ -132,9 +132,7 @@ export default (app) => {
 			const props = req.body;
 			const user = new User(props);
 
-			Promise.resolve()
-				.then(() => user.check(props))
-				.then(() => user.save({ author }))
+			user.save({ author })
 				.then(() => user.resetPassword({ author }))
 				.then(() => { mailer.sendRegistrationEmail(user); }) // do not await
 				.then(() => res.json(user))
@@ -177,9 +175,7 @@ export default (app) => {
 			const { user } = req.loaded;
 			const props = req.body;
 
-			Promise.resolve()
-				.then(() => user.check(props))
-				.then(() => user.update({ props, author }))
+			user.update({ props, author })
 				.then(() => res.send(user))
 				.catch(next);
 		},

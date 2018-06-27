@@ -50,9 +50,7 @@ export default (app) => {
 			const props = req.body;
 			const rcpt = new Recipient(props);
 
-			Promise.resolve()
-				.then(() => rcpt.check(props))
-				.then(() => rcpt.save({ author }))
+			rcpt.save({ author })
 				.then(() => res.json(rcpt))
 				.catch((err) => {
 					if(err instanceof PgError) {
@@ -95,9 +93,7 @@ export default (app) => {
 			const { rcpt } = req.loaded;
 			const props = req.body;
 
-			Promise.resolve()
-				.then(() => rcpt.check(props))
-				.then(() => rcpt.update({ props, author }))
+			rcpt.update({ props, author })
 				.then(() => res.json(rcpt))
 				.catch(next);
 		},

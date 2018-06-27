@@ -45,10 +45,8 @@ class AbstractModel {
 		}
 
 		const keys = Object.keys(props);
-		let key;
 		let checker;
-		for (let i = 0; i < keys.length; i += 1) {
-			key = keys[i];
+		keys.forEach((key) => {
 			if(!this.props[key]) {
 				throw new Error(`Unexpected ${this.entityName}.${key} property`);
 			}
@@ -56,7 +54,7 @@ class AbstractModel {
 			if(checker !== undefined && !checker(props[key])) {
 				throw new Error(`Invalid ${this.entityName}.${key} value`);
 			}
-		}
+		});
 	}
 
 
@@ -67,16 +65,17 @@ class AbstractModel {
 	}
 
 
-	save({ author }) {
+	async save({ author }) {
 		const typeConverter = `to_${this.entityName}_full`;
 		const create = `create_${this.entityName}`;
-		const writableProps = this.filterProps(this, 'writable', 'create');
+		const newProps = this.filterProps(this, 'writable', 'create');
+		this.check(newProps); // throws error if new props contain invalid values
 
 		return db.query(
 			`SELECT _new.* FROM ${typeConverter}(
 				${create}($1::json, $2::int)
 			) _new`,
-			[writableProps, author.id],
+			[newProps, author.id],
 		)
 			.then(res => this.assign(res));
 	}
@@ -91,6 +90,7 @@ class AbstractModel {
 		const writableProps = this.filterProps(props, 'writable', 'update');
 		const newProps = diff(this, writableProps);
 		if(isEmpty(newProps)) return this;
+		this.check(newProps); // throws error if new props contain invalid values
 
 		// update only new props
 		return db.query(
