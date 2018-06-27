@@ -99,9 +99,7 @@ class XLSX {
 		const { items, order } = this.scheme;
 		const sysCols = [locales.xlsx['response.created']];
 		const sysColTypes = ['datetime'];
-		const qstnCols = order.filter(id => (
-			items[id].itemType !== 'delimeter'
-		));
+		const qstnCols = order.filter(id => items[id].itemType === 'input');
 
 		this.order = [...sysCols, ...qstnCols];
 
