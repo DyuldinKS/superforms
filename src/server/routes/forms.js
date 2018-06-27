@@ -121,6 +121,21 @@ export default (app) => {
 	);
 
 
+	// update form
+	app.patch(
+		'/api/v1/form/:id',
+		(req, res, next) => {
+			const { author } = req;
+			const { form } = req.loaded;
+			const props = req.body;
+
+			form.update({ props, author })
+				.then(() => res.json(form))
+				.catch(next);
+		},
+	);
+
+
 	app.get(
 		'/api/v1/form/:id/responses',
 		(req, res, next) => {
@@ -139,21 +154,6 @@ export default (app) => {
 
 					res.json(body);
 				})
-				.catch(next);
-		},
-	);
-
-
-	// update form
-	app.patch(
-		'/api/v1/form/:id',
-		(req, res, next) => {
-			const { author } = req;
-			const { form } = req.loaded;
-			const props = req.body;
-
-			form.update({ props, author })
-				.then(() => res.json(form))
 				.catch(next);
 		},
 	);

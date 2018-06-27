@@ -172,6 +172,21 @@ export default (app) => {
 	);
 
 
+	// update org
+	app.patch(
+		'/api/v1/org/:id',
+		(req, res, next) => {
+			const { author } = req;
+			const { org } = req.loaded;
+			const props = req.body;
+
+			org.update({ props, author })
+				.then(() => res.json(org))
+				.catch(next);
+		},
+	);
+
+
 	// find orgs in organization subtree
 	app.get(
 		'/api/v1/org/:id/orgs',
@@ -209,21 +224,6 @@ export default (app) => {
 
 			org.findForms(options)
 				.then(forms => res.json(forms))
-				.catch(next);
-		},
-	);
-
-
-	// update org
-	app.patch(
-		'/api/v1/org/:id',
-		(req, res, next) => {
-			const { author } = req;
-			const { org } = req.loaded;
-			const props = req.body;
-
-			org.update({ props, author })
-				.then(() => res.json(org))
 				.catch(next);
 		},
 	);
