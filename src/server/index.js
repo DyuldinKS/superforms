@@ -32,7 +32,6 @@ if(process.env.NODE_ENV === 'development') {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(logger);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
@@ -47,6 +46,7 @@ app.use(session({
 }));
 
 app.use(deserializeUser);
+app.use(logger);
 router(app);
 app.use(errorHandler);
 
