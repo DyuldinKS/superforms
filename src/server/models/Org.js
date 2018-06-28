@@ -6,6 +6,11 @@ import { HTTPError } from '../errors';
 class Org extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
+	static create({ props }) {
+		return new Org(props);
+	}
+
+
 	static findById(id) {
 		return db.query(
 			'SELECT _org.* FROM to_org_full(get_org($1::int)) _org;',
@@ -87,17 +92,11 @@ class Org extends Recipient {
 
 	async loadDependincies() {
 		if(this.parentOrgIds) return;
-		if(!this.id && !this.parent_id) throw new Error('org.id is not specified');
+		const orgId = this.id || this.parentId;
+		if(!orgId) throw new Error('org.id is not specified');
 
-		const result = await db.query(
-			`SELECT json_agg(parent_id ORDER BY distance) AS "parentIds"
-			FROM org_links
-			WHERE org_id = $1;`,
-			// if org is not created yet load parents for it's parent org
-			[this.id || this.parentId],
-		);
-
-		this.parentOrgIds = result ? result.parentIds : null;
+		this.parentOrgIds = await Org.getParentIds(orgId);
+		return this;
 	}
 
 

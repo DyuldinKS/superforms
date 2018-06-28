@@ -68,7 +68,8 @@ const createInstance = (req, res, next) => {
 
 		const Model = getModelToCreate(req.originalUrl);
 		const { entityName } = Model.prototype;
-		req.created = { [entityName]: new Model(req.body) };
+		const { author } = req;
+		req.created = { [entityName]: Model.create({ props: req.body, author }) };
 		next();
 	} catch (err) {
 		return next(err);

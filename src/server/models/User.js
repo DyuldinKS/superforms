@@ -11,6 +11,11 @@ import { HTTPError } from '../errors';
 class User extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
+	static create({ props }) {
+		return new User(props);
+	}
+
+
 	static findById(id) {
 		return db.query(
 			'SELECT _user.* FROM to_user_full(get_user($1::int)) _user;',
@@ -56,6 +61,22 @@ class User extends Recipient {
 
 
 	// ***************** INSTANCE METHODS ***************** //
+
+	async loadDependincies() {
+		if(this.parentOrgIds) return;
+		if(!this.orgId) throw new Error('org.id is not specified');
+
+		const [org, parentOrgIds] = await Promise.all([
+			Org.findById(this.orgId),
+			Org.getParentIds(this.orgId),
+		]);
+
+		if(!org) throw new Error('user org not found');
+		this.org = org;
+		this.parentOrgIds = parentOrgIds;
+		return this;
+	}
+
 
 	authenticate(password) {
 		return bcrypt.compare(password, this.hash)

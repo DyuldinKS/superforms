@@ -1,9 +1,20 @@
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
+import User from './User';
+import { HTTPError } from '../errors';
 
 
 class Form extends AbstractModel {
 	// ***************** STATIC METHODS ***************** //
+
+	static create({ props, author }) {
+		const extra = {
+			...props,
+			ownerId: author.id,
+		};
+		return new Form(extra);
+	}
+
 
 	static findById(id) {
 		return db.query('SELECT * FROM to_form_full(get_form($1)) form;', [id])
@@ -17,15 +28,13 @@ class Form extends AbstractModel {
 		if(this.parentOrgIds) return;
 		if(!this.ownerId) throw new Error('form.ownerId is not specified');
 
-		const result = await db.query(
-			`SELECT json_agg(link.parent_id ORDER BY link.distance) AS "parentIds"
-			FROM users
-			JOIN org_links link ON link.org_id = users.org_id 
-			WHERE users.id = $1;`,
-			[this.ownerId],
-		);
+		const owner = await User.findById(this.ownerId);
+		if(!owner) throw new Error('form owner not found');
 
-		this.parentOrgIds = result ? result.parentIds : null;
+		await owner.loadDependincies();
+		this.owner = owner;
+		this.parentOrgIds = owner.parentOrgIds;
+		return this;
 	}
 
 
