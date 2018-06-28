@@ -7,25 +7,15 @@ const initialState = {
 
 export default function (state = initialState, action) {
   switch (action.type) {
-    case types.INIT:
-      return handleInit(state, action);
-
-    case types.UPDATE:
-      return handleUpdate(state, action);
+    case types.SET_CREDENTIALS:
+      return handleSetCredentials(state, action);
 
     default:
       return state;
   }
 }
 
-function handleInit(state, { payload }) {
-  return {
-    ...state,
-    ...payload,
-  };
-}
-
-function handleUpdate(state, { payload }) {
+function handleSetCredentials(state, { payload }) {
   return {
     ...state,
     ...payload,

@@ -35,6 +35,21 @@ class Form extends AbstractModel {
 
 		return super.save({ author });
 	}
+
+
+	// get responses in short(default) or full form
+	getResponses(mode) {
+		const cast = `to_response_${mode === 'full' ? 'full' : 'short'}`;
+		return db.queryAll(
+			`SELECT resp_short.* FROM get_responses_by_form($1) resp,
+				${cast}(resp) resp_short;`,
+			[this.id],
+		)
+			.then((responses) => {
+				this.responses = responses;
+				return responses;
+			});
+	}
 }
 
 
@@ -47,7 +62,7 @@ Form.prototype.props = {
 	title: { writable: true, enumerable: true },
 	description: { writable: true, enumerable: true },
 	scheme: { writable: true, enumerable: true },
-	sent: { writable: true, enumerable: true },
+	collecting: { writable: true, enumerable: true },
 	ownerId: { writable: true, enumerable: true },
 	created: { writable: false, enumerable: true },
 	updated: { writable: false, enumerable: true },

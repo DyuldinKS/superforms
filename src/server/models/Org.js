@@ -49,6 +49,8 @@ class Org extends Recipient {
 			'deleted',
 			'minDepth',
 			'maxDepth',
+			'last',
+			'limit',
 		].reduce(
 			(f, prop) => {
 				if(prop in options) f[prop] = options[prop];

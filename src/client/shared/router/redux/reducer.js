@@ -6,6 +6,8 @@ const initialState = {
   search: {},
   hash: '',
   stateObj: {},
+  blocked: false,
+  blockMessage: '',
 };
 
 const typesAsArray = Object.values(types);
@@ -18,7 +20,27 @@ export default function (state = initialState, action) {
   const {
     to,
     stateObj,
+    type,
   } = action;
+
+  switch (type) {
+    case types.BLOCK:
+      return {
+        ...state,
+        blocked: true,
+        blockMessage: action.message,
+      };
+
+    case types.UNBLOCK:
+      return {
+        ...state,
+        blocked: false,
+        blockMessage: '',
+      };
+
+    default:
+      break;
+  }
 
   if (typeof to === 'object') {
     return {

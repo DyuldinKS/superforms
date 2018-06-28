@@ -1,35 +1,121 @@
 import { isActive } from '../middleware/users';
 import loadInstance from '../middleware/loadInstance';
+import preloadReduxStore from '../middleware/preloadReduxStore';
 import Org from '../models/Org';
 import { HTTPError } from '../errors';
+import ssr from '../templates/ssr';
+import { actions as entitiesActions } from '../../client/shared/entities';
+import { actions as orgActions } from '../../client/apps/app/shared/redux/orgs';
 
 
 export default (app) => {
-	// create organization
-	app.post(
-		'/api/v1/org',
-		isActive,
-		(req, res, next) => {
-			
-		},
-		(req, res, next) => {
-			const { author } = req;
-			const org = new Org({ ...req.body });
-
-			return org.save({ author })
-				.then(() => res.json(org))
-				.catch(next);
-		},
-	);
-
-
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/org\/\d{1,8}(\/\w{1,12})?$/, // api
-			/\/org\/\d{1,8}(\/\w{1,12})?$/, // ssr
+			/^\/api\/v\d{1,2}\/org\/\d{1,8}(\/\w{1,12})?$/, // api
+			/^\/org\/\d{1,8}(\/(info|settings|forms|orgs|users))?$/, // ssr
+			/^\/org\/\d{1,8}\/(orgs|users)\/new$/, // ssr
 		],
 		isActive,
 		loadInstance,
+	);
+
+	app.get(
+		[
+			'/org/:id',
+			'/org/:id/info',
+			'/org/:id/orgs/new',
+			'/org/:id/settings',
+			'/org/:id/users/new',
+		],
+		preloadReduxStore,
+		(req, res, next) => {
+			const { org } = req.loaded;
+			const { reduxStore } = req;
+			const entitiesMap = { orgs: org.toStore() };
+			reduxStore.dispatch(entitiesActions.add(entitiesMap));
+
+			res.send(ssr.app(reduxStore));
+		},
+	);
+
+	app.get(
+		'/org/:id/forms',
+		preloadReduxStore,
+		(req, res, next) => {
+			const { org } = req.loaded;
+			const options = req.query;
+			const { reduxStore } = req;
+			const entitiesMap = { orgs: org.toStore() };
+			reduxStore.dispatch(entitiesActions.add(entitiesMap));
+
+			org.findForms(options)
+				.then((forms) => {
+					const action = orgActions.fetchFormsSuccess(
+						org.id,
+						forms.list,
+						forms.entities,
+					);
+					reduxStore.dispatch(action);
+				})
+				.catch((error) => {
+					reduxStore.dispatch(orgActions.fetchFormsFailure(org.id, error));
+				})
+				.then(() => res.send(ssr.app(reduxStore)));
+		},
+	);
+
+	app.get(
+		'/org/:id/orgs',
+		preloadReduxStore,
+		(req, res, next) => {
+			const { org } = req.loaded;
+			const options = req.query;
+			const { reduxStore } = req;
+			const entitiesMap = { orgs: org.toStore() };
+			reduxStore.dispatch(entitiesActions.add(entitiesMap));
+
+			org.findOrgsInSubtree(options)
+				.then((orgs) => {
+					const action = orgActions.fetchAffiliatedOrgsSuccess(
+						org.id,
+						orgs.list,
+						orgs.entities,
+					);
+					reduxStore.dispatch(action);
+				})
+				.catch((error) => {
+					const action = orgActions.fetchAffiliatedOrgsFailure(org.id, error);
+					reduxStore.dispatch(action);
+				})
+				.then(() => res.send(ssr.app(reduxStore)));
+		},
+	);
+
+	app.get(
+		'/org/:id/users',
+		preloadReduxStore,
+		(req, res, next) => {
+			const { org } = req.loaded;
+			const options = req.query;
+			const { reduxStore } = req;
+			const entitiesMap = { orgs: org.toStore() };
+			reduxStore.dispatch(entitiesActions.add(entitiesMap));
+
+			org.findUsersInSubtree(options)
+				.then((users) => {
+					const action = orgActions.fetchAffiliatedUsersSuccess(
+						org.id,
+						users.list,
+						users.entities,
+					);
+					reduxStore.dispatch(action);
+				})
+				.catch((error) => {
+					const action = orgActions.fetchAffiliatedUsersFailure(org.id, error);
+					reduxStore.dispatch(action);
+				})
+				.then(() => res.send(ssr.app(reduxStore)));
+		},
 	);
 
 	// get one org
@@ -87,6 +173,20 @@ export default (app) => {
 
 			org.findForms(options)
 				.then(forms => res.json(forms))
+				.catch(next);
+		},
+	);
+
+	// create organization
+	app.post(
+		'/api/v1/org',
+		isActive,
+		(req, res, next) => {
+			const { author } = req;
+			const org = new Org({ ...req.body });
+
+			return org.save({ author })
+				.then(() => res.json(org))
 				.catch(next);
 		},
 	);

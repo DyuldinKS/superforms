@@ -52,7 +52,7 @@ CREATE TABLE new_forms (
 	title text NOT NULL,
 	description text,
 	scheme json NOT NULL,
-	sent json,
+	collecting json,
 	owner_id integer NOT NULL REFERENCES users(id),
 	created timestamptz NOT NULL DEFAULT now(),
 	updated timestamptz,
@@ -91,12 +91,27 @@ $$
 					WHEN 'integer' THEN 'number'
 					WHEN 'float' THEN 'number'
 					WHEN 'financial' THEN 'number'
+					WHEN 'string' THEN 'text'
+					WHEN 'paragraph' THEN 'text'
+					WHEN 'datetime' THEN 'text'
 					ELSE _item->>'type'
 					END
 				),
 				'integer', (
 					CASE _item->>'type'
 					WHEN 'integer' THEN true
+					ELSE null
+					END
+				),
+				'multiline', (
+					CASE _item->>'type'
+					WHEN 'paragraph' THEN true
+					ELSE null
+					END
+				),
+				'datetime', (
+					CASE _item->>'type'
+					WHEN 'datetime' THEN true
 					ELSE null
 					END
 				),
@@ -138,11 +153,11 @@ $$
 		rebuild_items(template->'items') AS scheme,
 		json_strip_nulls(
 			json_build_object(
-				'time', sent,
+				'start', sent,
 				'expires', expires,
-				'refilling', allowrefill
+				'refilling', nullif(allowrefill, false)
 			)
-		) AS sent,
+		) AS collecting,
 		user_id AS owner_id,
 		created,
 		edited AS updated,
@@ -180,8 +195,7 @@ LANGUAGE SQL STABLE;
 
 CREATE OR REPLACE FUNCTION rebuild_select_answer(
 	answer json,
-	options json,
-	multiple boolean,
+	question json,
 	OUT res json
 ) AS
 $$
@@ -189,14 +203,14 @@ $$
 		answer_as_text text;
 		json_array json;
 	BEGIN
-		IF multiple = true THEN
+		IF (question->>'multiple')::boolean = true THEN
 			answer_as_text := answer::text;
 			IF regexp_matches(answer_as_text, '\A\[.*\]\Z') IS NOT NULL THEN
 				json_array := answer; -- already json array
 			ELSIF regexp_matches(answer_as_text, '\A".*"\Z') IS NOT NULL THEN
 				-- json string
 				json_array := to_json( -- convert array to json
-					regexp_split_to_array(
+					regexp_split_to_array( -- build array from string
 						trim(both '"' from answer_as_text), -- trim double quotes
 						E',\\s+' -- split string
 					)
@@ -209,7 +223,7 @@ $$
 
 		SELECT json_object_agg(i - 1, true)
 		FROM json_array_elements_text(json_array) selected_opt,
-			json_array_elements_text(options)
+			json_array_elements_text(question->'options')
 				WITH ORDINALITY AS opts(value, i)
 		WHERE opts.value = selected_opt
 		INTO res;
@@ -218,18 +232,50 @@ $$
 LANGUAGE plpgsql IMMUTABLE;
 
 
+CREATE OR REPLACE FUNCTION rebuild_plain_answer(
+	answer json,
+	question json,
+	OUT res json
+) RETURNS json AS
+$$
+	DECLARE
+		value text := answer#>>'{}';
+		type text := question->>'type';
+	BEGIN
+		res := CASE
+			-- convert empty strings to null
+			WHEN value = ''
+			THEN null
+			-- remove comma in non-integer numbers
+			WHEN type = 'number'
+			THEN to_json(regexp_replace(value, ',', '.')::float)
+			-- replace timestamp with date only
+			WHEN type = 'date'
+			THEN to_json(to_char(value::timestamp, 'YYYY-MM-DD'))
+			-- replace timestamp with time only
+			WHEN type = 'time'
+			THEN to_json(to_char(value::timestamp, 'HH24:MI'))
+			ELSE answer
+		END;
+	EXCEPTION
+		WHEN invalid_text_representation THEN
+			RAISE NOTICE 'BAD NUMBER - REPLACE % WITH null', answer::text;
+			res := null;
+	END;
+$$
+LANGUAGE plpgsql IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION rebuild_answer(
 	answer json,
-	options json,
-	multiple boolean
+	question json
 ) RETURNS json AS
 $$
 	SELECT CASE
-		WHEN options IS NULL THEN
-			-- convert empty strings to null
-			CASE WHEN answer#>>'{}' = '' THEN null ELSE answer END
+		WHEN question->'options' IS NULL
+		THEN rebuild_plain_answer(answer, question)
 		-- the question type is 'select'
-		ELSE rebuild_select_answer(answer, options, multiple)
+		ELSE rebuild_select_answer(answer, question)
 	END;
 $$
 LANGUAGE SQL IMMUTABLE;
@@ -243,11 +289,7 @@ $$
 		json_strip_nulls(
 			json_object_agg(
 				question.hash,
-				rebuild_answer(
-					answer.body,
-					question.body->'options',
-					(question.body->>'multiple')::boolean
-				)
+				rebuild_answer(answer.body, question.body)
 			)
 		) AS items,
 		null::int,

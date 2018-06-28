@@ -35,7 +35,7 @@ export function isShorterOrEqual(max) {
 }
 
 export function isNumber(value) {
-  return /^(\-|\+)?([0-9]+(\.[0-9]+)?)$/.test(value)
+  return /^(\-|\+)?([0-9]+([.,][0-9]+)?)$/.test(value)
     ? null
     : 'Ответ должен быть числом';
 }

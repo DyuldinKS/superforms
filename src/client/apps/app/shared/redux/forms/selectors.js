@@ -29,3 +29,11 @@ export function getItemsOrder(state, formId) {
 export function getItem(state, formId, itemId) {
   return getItems(state, formId)[itemId] || {};
 }
+
+export function getCollectingSettings(state, formId) {
+  return getFormEntity(state, formId).collecting;
+}
+
+export function getResponses(state, formId) {
+  return getFormEntity(state, formId).responses || {};
+}

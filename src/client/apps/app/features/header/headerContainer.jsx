@@ -19,9 +19,9 @@ function AppHeader(props) {
   return (
     <div className="app-header-outer">
       <header className="container app-header">
-        <a href="/">
+        <Link to="/">
           Super&nbsp;Forms
-        </a>
+        </Link>
 
         <HeaderNavigation orgId={orgId} />
 

@@ -3,10 +3,7 @@ import PropTypes from 'prop-types';
 import { Input } from 'reactstrap';
 import connectInput from './connectInput';
 import BaseInput from './BaseInput';
-import {
-  notEmpty,
-  isShorterOrEqual,
-} from '../../utils/validators';
+import { isShorterOrEqual } from '../../utils/validators';
 import createValidation from '../../utils/createValidation';
 
 const propTypes = {
@@ -22,18 +19,11 @@ const defaultProps = {
 };
 
 class InputString extends BaseInput {
-  createValidation() {
+  getValidateFn() {
     const validators = [];
-    const {
-      maxLength,
-      required,
-    } = this.props;
+    const { maxLength } = this.props;
 
-    if (required === true) {
-      validators.push(notEmpty);
-    }
-
-    if (maxLength !== undefined) {
+    if (maxLength) {
       validators.push(isShorterOrEqual(maxLength));
     }
 
@@ -43,6 +33,7 @@ class InputString extends BaseInput {
   render() {
     const {
       name,
+      readOnly,
       required,
       textarea,
       value,
@@ -53,8 +44,9 @@ class InputString extends BaseInput {
         <Input
           className={this.isErrorVisible() ? 'is-invalid' : ''}
           name={name}
-          onBlur={this.handleBlur}
-          onChange={this.handleChange}
+          onBlur={this.onBlur}
+          onChange={this.onChange}
+          readOnly={readOnly}
           required={required === true}
           type={textarea ? 'textarea' : 'text'}
           value={value}

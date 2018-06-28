@@ -1,4 +1,6 @@
+import diff from 'object-diff';
 import db from '../db/index';
+import { isEmpty } from '../utils/extras';
 
 
 class AbstractModel {
@@ -16,7 +18,6 @@ class AbstractModel {
 		const writable = {};
 
 		Object.keys(props).forEach((prop) => {
-			// leave only model writable props
 			if(prop in this.props
 				&& (type === 'all' || this.props[prop][type])) {
 				writable[prop] = props[prop];
@@ -37,7 +38,7 @@ class AbstractModel {
 	save({ author }) {
 		const typeConverter = `to_${this.entityName}_full`;
 		const create = `create_${this.entityName}`;
-		const writableProps = this.filterProps(this, 'writable');
+		const writableProps = this.filterProps(this, 'all');
 
 		return db.query(
 			`SELECT _new.* FROM ${typeConverter}(
@@ -49,16 +50,20 @@ class AbstractModel {
 	}
 
 
-	update({ props, author }) {
+	async update({ props, author }) {
+		// sql funcs
 		const typeConverter = `to_${this.entityName}_full`;
 		const update = `update_${this.entityName}`;
+		// filter props to update
 		const writableProps = this.filterProps(props, 'writable');
+		const newProps = diff(this, writableProps);
+		if(isEmpty(newProps)) return this;
 
 		return db.query(
 			`SELECT _updated.* FROM ${typeConverter}(
 				${update}($1::int, $2::json, $3::int)
 			) _updated`,
-			[this.id, writableProps, author.id],
+			[this.id, newProps, author.id],
 		)
 			.then(res => this.assign(res));
 	}

@@ -2,6 +2,7 @@ import Recipient from '../models/Recipient';
 import Org from '../models/Org';
 import User from '../models/User';
 import Form from '../models/Form';
+import Response from '../models/Response';
 import { HTTPError } from '../errors';
 
 
@@ -23,6 +24,10 @@ const models = {
 	form: {
 		model: Form,
 		key: 'form',
+	},
+	response: {
+		model: Response,
+		key: 'response',
 	},
 };
 

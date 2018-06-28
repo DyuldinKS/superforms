@@ -1,20 +1,22 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FormGroup, Input } from 'reactstrap';
-import { basePropTypes, baseDefaultProps } from '../BaseInput';
 
 const propTypes = {
-  ...basePropTypes,
   checked: PropTypes.bool,
   invalid: PropTypes.bool,
+  onChange: PropTypes.func.isRequired,
+  readOnly: PropTypes.bool,
+  required: PropTypes.bool,
   type: PropTypes.oneOf(['radio', 'checkbox']),
   value: PropTypes.string,
 };
 
 const defaultProps = {
-  ...baseDefaultProps,
   checked: false,
   invalid: false,
+  readOnly: false,
+  required: false,
   type: 'checkbox',
   value: '',
 };
@@ -70,7 +72,7 @@ class OptionOther extends Component {
     const {
       checked,
       invalid,
-      name,
+      readOnly,
       required,
       type,
       value,
@@ -87,7 +89,7 @@ class OptionOther extends Component {
       >
         <Input
           checked={checked}
-          name={name}
+          disabled={readOnly}
           onChange={this.handleOtherToggle}
           required={required === true}
           type={type}
@@ -97,11 +99,11 @@ class OptionOther extends Component {
           bsSize="sm"
           className={invalid ? 'is-invalid' : ''}
           innerRef={(input) => { this.otherInputEl = input; }}
-          name={`${name}.other`}
           onBlur={this.handleOtherBlur}
           onChange={this.handleOtherInput}
           onFocus={this.handleOtherFocus}
           placeholder="Свой вариант"
+          readOnly={readOnly}
           required={required === true}
           type="text"
           value={value}

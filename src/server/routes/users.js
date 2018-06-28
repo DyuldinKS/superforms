@@ -1,11 +1,14 @@
 import { isNotAuthenticated } from '../middleware/sessions';
 import { isActive } from '../middleware/users';
 import loadInstance from '../middleware/loadInstance';
+import preloadReduxStore from '../middleware/preloadReduxStore';
 import User from '../models/User';
 import Org from '../models/Org';
 import mailer from '../libs/mailer';
 import { HTTPError } from '../errors';
 import ssr from '../templates/ssr';
+import { actions as entitiesActions } from '../../client/shared/entities';
+import { actions as userActions } from '../../client/apps/app/shared/redux/users';
 
 
 export default (app) => {
@@ -84,13 +87,51 @@ export default (app) => {
 
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/user\/\d{1,8}(\/\w{1,12})?$/, // api
-			/\/user\/\d{1,8}(\/\w{1,12})?$/, // ssr
+			/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/\w{1,12})?$/, // api
+			/^\/user\/\d{1,8}(\/(info|settings|forms))?$/, // ssr
 		],
 		isActive,
 		loadInstance,
 	);
 
+	app.get(
+		/^\/user\/\d{1,8}(\/(info|settings))?$/,
+		preloadReduxStore,
+		(req, res, next) => {
+			const { user } = req.loaded;
+			const { reduxStore } = req;
+			const entitiesMap = { users: user.toStore() };
+			reduxStore.dispatch(entitiesActions.add(entitiesMap));
+
+			res.send(ssr.app(reduxStore));
+		},
+	);
+
+	app.get(
+		'/user/:id/forms',
+		preloadReduxStore,
+		(req, res, next) => {
+			const { user } = req.loaded;
+			const options = req.query;
+			const { reduxStore } = req;
+			const entitiesMap = { users: user.toStore() };
+			reduxStore.dispatch(entitiesActions.add(entitiesMap));
+
+			user.findForms(options)
+				.then((forms) => {
+					const action = userActions.fetchFormsSuccess(
+						user.id,
+						forms.list,
+						forms.entities,
+					);
+					reduxStore.dispatch(action);
+				})
+				.catch((error) => {
+					reduxStore.dispatch(userActions.fetchFormsFailure(user.id, error));
+				})
+				.then(() => res.send(ssr.app(reduxStore)));
+		},
+	);
 
 	// get user
 	app.get(
@@ -114,7 +155,6 @@ export default (app) => {
 	app.get(
 		'/api/v1/user/:id/forms',
 		(req, res, next) => {
-			console.log(req.loaded)
 			const { user } = req.loaded;
 			const options = req.query;
 

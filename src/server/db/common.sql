@@ -58,6 +58,27 @@ $$
 LANGUAGE SQL STABLE;
 
 
+/*
+returns: {
+	entries:? integer[], // filtered ordered and limited ids
+	count:? integer // number of all filtered ids
+}
+*/
+CREATE OR REPLACE FUNCTION build_entity_id_list_object(
+	_all_ids integer[],
+	_limited_ids integer[]
+) RETURNS json AS
+$$
+	SELECT json_build_object(
+		'entries',
+		(SELECT coalesce(array_to_json(_limited_ids), '[]')),
+		'count',
+		(SELECT coalesce(array_length(_all_ids, 1), 0))
+	);
+$$
+LANGUAGE SQL STABLE;
+
+
 
 /***********************************  LOGS  ***********************************/
 

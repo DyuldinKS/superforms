@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import db from '../../../src/server/db';
+import passwordGenerator from '../../../src/server/libs/passwordGenerator';
 
 
 const fsReadFile = promisify(fs.readFile);
@@ -142,6 +143,11 @@ const getOrCreateIMCForms = (author) => {
 
 				// replace owner id with corresponding new id
 				record.owner_id = imc.conversion.users[record.owner_id];
+				if(record.collecting.start) {
+					const shared = passwordGenerator(8, 8, ['numbers', 'lowercase']);
+					record.collecting.shared = shared;
+				}
+
 				return db.query(
 					'SELECT id FROM create_form($1::json, $2::int)',
 					[record, author.id],
@@ -165,6 +171,7 @@ const getOrCreateIMCResponses = (author) => {
 	const { responses } = imc;
 	responses.forEach((rspn) => {
 		rspn.form_id = imc.conversion.forms[rspn.form_id];
+		rspn.respondent = {};
 	})
 
 	return db.queryAll(

@@ -1,8 +1,8 @@
 export const constants = {
-  DATE:   'date',
+  TEXT:   'text',
   NUMBER: 'number',
   SELECT: 'select',
-  TEXT:   'string',
+  DATE:   'date',
   TIME:   'time',
 };
 

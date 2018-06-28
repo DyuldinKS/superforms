@@ -1,15 +1,29 @@
 import * as types from './actionTypes';
+import { batchActions as batch } from 'shared/batch';
+import { actions as entitiesActions } from 'shared/entities';
 
-export function init(session) {
+function setCredentials(userId, orgId) {
   return {
-    type: types.INIT,
-    payload: session,
+    type: types.SET_CREDENTIALS,
+    payload: {
+      userId,
+      orgId,
+    },
   };
 }
 
-export function update(updates) {
-  return {
-    type: types.UPDATE,
-    payload: updates,
+export function init(userId, orgId, user, org) {
+  return (dispatch) => {
+    const entitiesMap = {
+      users: user,
+      orgs: org,
+    };
+
+    dispatch(
+      batch(
+        setCredentials(userId, orgId),
+        entitiesActions.add(entitiesMap),
+      ),
+    );
   };
 }

@@ -57,31 +57,6 @@ class User extends Recipient {
 
 	// ***************** INSTANCE METHODS ***************** //
 
-	async loadDependincies() {
-		if(this.parentOrgIds) return;
-		if(!this.orgId) throw new Error('user.orgId is not specified');
-
-		const result = await db.query(
-			`SELECT json_agg(parent_id ORDER BY distance) AS "parentIds"
-			FROM org_links
-			WHERE org_id = $1;`,
-			[this.orgId],
-		);
-
-		this.parentOrgIds = result ? result.parentIds : null;
-	}
-
-
-	async loadOrg() {
-		if(this.org) return this.org;
-		if(!this.orgId) throw new Error('orgId is not specified');
-
-		const org = await Org.findById(this.orgId);
-		this.org = org;
-		return org;
-	}
-
-
 	authenticate(password) {
 		return bcrypt.compare(password, this.hash)
 			.then((isPassValid) => {

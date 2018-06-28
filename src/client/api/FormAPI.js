@@ -2,6 +2,13 @@ import { fetch } from './utils/defaultRequest';
 
 class FormAPI {
   static async create(payload = {}) {
+    if (!payload.scheme) {
+      payload.scheme = {
+        order: [],
+        items: {},
+      };
+    }
+
     const data = await fetch('/api/v1/form', {
       method: 'POST',
       body: payload,
@@ -14,8 +21,18 @@ class FormAPI {
     return data;
   }
 
+  static async getResponses(id) {
+    const data = await fetch(`/api/v1/form/${id}/responses`);
+    return data;
+  }
+
+  static async getResponsesInXLSX(id) {
+    const xlsxBuffer = await fetch(`/api/v1/form/${id}/responses?type=xlsx`);
+    return xlsxBuffer;
+  }
+
   static async update(id, payload = {}) {
-    const data = await fetch(`/api/v1/forms/${id}`, {
+    const data = await fetch(`/api/v1/form/${id}`, {
       method: 'PATCH',
       body: {
         action: 'update',
@@ -25,19 +42,19 @@ class FormAPI {
     return data;
   }
 
-  static async send(id, settings) {
-    const data = await fetch(`/api/v1/forms/${id}`, {
+  static async collect(id, collecting) {
+    const data = await fetch(`/api/v1/form/${id}`, {
       method: 'PATCH',
       body: {
-        action: 'send',
-        settings,
+        action: 'collect',
+        collecting,
       },
     });
     return data;
   }
 
   static async remove(id) {
-    const data = await fetch(`/api/v1/forms/${id}`, {
+    const data = await fetch(`/api/v1/form/${id}`, {
       method: 'PATCH',
       body: { action: 'delete' },
     });

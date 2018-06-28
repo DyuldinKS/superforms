@@ -1,20 +1,22 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Button } from 'reactstrap';
-import createForm from './createForm';
+import { FormText } from 'reactstrap';
 import FormItem from './FormItem';
 import RequiredAsterisk from './RequiredAsterisk';
 
 const propTypes = {
-  errors: PropTypes.object.isRequired,
   form: PropTypes.object.isRequired,
   getRef: PropTypes.func.isRequired,
-  handleSubmit: PropTypes.func.isRequired,
-  valid: PropTypes.bool.isRequired,
-  values: PropTypes.object.isRequired,
+  onSubmit: PropTypes.func,
+  readOnly: PropTypes.bool,
+  submitButton: PropTypes.node,
 };
 
-const defaultProps = {};
+const defaultProps = {
+  onSubmit: () => {},
+  readOnly: false,
+  submitButton: null,
+};
 
 class Form extends Component {
   constructor(props) {
@@ -24,13 +26,19 @@ class Form extends Component {
   }
 
   handleSubmit(event) {
-    this.props.handleSubmit(event);
+    event.preventDefault();
+    this.props.onSubmit(event);
   }
 
   render() {
-    const { getRef, form } = this.props;
-    const { scheme, title } = form;
-    const { items, order } = scheme;
+    const {
+      getRef,
+      form,
+      readOnly,
+      submitButton
+    } = this.props;
+    const { scheme = {}, title, description } = form;
+    const { items = {}, order = [] } = scheme;
 
     return (
       <form
@@ -39,20 +47,28 @@ class Form extends Component {
         noValidate
         onSubmit={this.handleSubmit}
       >
-        <h1>{title}</h1>
-        <p><RequiredAsterisk /> Обязательное поле</p>
+        <header>
+          <h1>{title}</h1>
+          <FormText color="info">
+            {description}
+          </FormText>
+          <FormText color="danger">
+            <RequiredAsterisk /> Обязательное поле
+          </FormText>
+        </header>
 
         {
           order.map(itemId => (
             <FormItem
               key={itemId}
               id={itemId}
+              readOnly={readOnly}
               {...items[itemId]}
             />
           ))
         }
 
-        <Button type="submit" color="primary">Отправить</Button>
+        {submitButton}
       </form>
     );
   }
@@ -61,4 +77,4 @@ class Form extends Component {
 Form.propTypes = propTypes;
 Form.defaultProps = defaultProps;
 
-export default createForm(Form);
+export default Form;

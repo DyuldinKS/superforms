@@ -1,0 +1,10 @@
+.profile-forms-nav-header {
+  padding: 0.5rem $card-spacer-x;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: .8rem;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}

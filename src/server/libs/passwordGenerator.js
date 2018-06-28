@@ -30,19 +30,20 @@ const source = {
 };
 
 
-const allSources = Object.values(source)
-	.reduce((prev, src) => `${prev}${src}`, '');
+const generate = (min = 8, max, srcTypes = 'all') => {
+	const sources = srcTypes === 'all'
+		? Object.values(source)
+		: srcTypes.map(type => source[type]).filter(values => values);
 
+	const summaryLine = sources.join('');
 
-const generate = (min = 8, max) => {
-	const sources = Object.values(source);
 	const chars = sources.map(pickChar);
 
 	if(min > sources.length) {
-		const passLength = max && max > min ? getRandomInt(min, max + 1) : min;
-		Array.from(Array(passLength - sources.length)).forEach(() => {
-			chars.push(allSources.charAt(getRandomInt(0, allSources.length)));
-		});
+		const passLength = max && (max > min) ? getRandomInt(min, max + 1) : min;
+		for (let i = sources.length; i < passLength; i += 1) {
+			chars.push(pickChar(summaryLine));
+		}
 	}
 
 	return shuffle(chars).join('');
@@ -50,4 +51,3 @@ const generate = (min = 8, max) => {
 
 
 export default generate;
-

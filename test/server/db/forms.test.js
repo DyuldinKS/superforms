@@ -42,7 +42,7 @@ describe('forms sql-functions test', () => {
 			title: 'test1',
 			description: 'it should create form',
 			scheme: { order: [], items: {} },
-			sent: null,
+			collecting: null,
 			owner_id: bot.id,
 			created: new Date('2016-08-26T16:02:46.274+03:00'),
 			updated: new Date('2016-08-29T14:48:58.049+03:00'),
@@ -79,7 +79,7 @@ describe('forms sql-functions test', () => {
 					...form,
 					id: actual.id,
 					description: null,
-					sent: null,
+					collecting: null,
 					created: actual.created,
 					updated: null,
 					deleted: null,
@@ -120,7 +120,7 @@ describe('forms sql-functions test', () => {
 				assert(log.operation === 'I') // insert
 
 				form.description = null;
-				form.sent = null;
+				form.collecting = null;
 				form.updated = null;
 				form.deleted = null;
 				form.author_id = bot.id;
@@ -162,7 +162,7 @@ describe('forms sql-functions test', () => {
 			title: 'test6',
 			scheme: {},
 			owner_id: bot.id,
-			sent: { shareable: 'some-uuidv4' },
+			collecting: { shared: 'unique' },
 		};
 
 		return db.query(
@@ -174,7 +174,7 @@ describe('forms sql-functions test', () => {
 					id: actual.id,
 					title: form.title,
 					description: null,
-					sent: form.sent,
+					collecting: form.collecting,
 					ownerId: form.owner_id,
 					created: actual.created,
 					questionCount: 0,
@@ -203,7 +203,7 @@ describe('forms sql-functions test', () => {
 					title: form.title,
 					description: null,
 					scheme: {},
-					sent: null,
+					collecting: null,
 					ownerId: form.owner_id,
 					created: actual.created,
 					updated: null,
@@ -238,7 +238,7 @@ describe('forms sql-functions test', () => {
 				},
 				order: ['d', 'e', 'a', 'b', 'c'],
 			},
-			sent: { shareable: 'uuidv4' },
+			collecting: { shared: 'unique' },
 			created: new Date(null),
 			deleted: new Date(),
 		};
@@ -315,7 +315,7 @@ describe('forms sql-functions test', () => {
 			title: form.title,
 			description: null,
 			scheme: form.scheme,
-			sent: null,
+			collecting: null,
 			owner_id: form.ownerId,
 			created: null,
 			updated: null,

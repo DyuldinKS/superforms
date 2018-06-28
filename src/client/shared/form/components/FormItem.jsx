@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { formItems } from '../utils/constants';
+import { constants } from '../utils/itemTypes';
 import FormInput from './FormInput';
 import FormDelimeter from './FormDelimeter';
 
@@ -15,10 +15,10 @@ function FormItem(props) {
   const { itemType, ...passProps } = props;
 
   switch (itemType) {
-    case formItems.INPUT:
+    case constants.INPUT:
       return <FormInput {...passProps} />;
 
-    case formItems.DELIMETER:
+    case constants.DELIMETER:
       return <FormDelimeter {...passProps} />;
 
     default:

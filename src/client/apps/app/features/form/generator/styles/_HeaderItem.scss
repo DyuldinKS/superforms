@@ -1,0 +1,8 @@
+.header-item {
+  @include generator-item;
+  justify-content: space-between;
+}
+
+.header-item-type {
+  font-size: .85rem;
+}

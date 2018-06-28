@@ -16,8 +16,8 @@
     "supervisor:prod": "cross-env NODE_ENV=production supervisor ./dist/server.js | npx bunyan",
     "server:dev": "cross-env NODE_ENV=development node ./dist/server.js | npx bunyan",
     "server:prod": "cross-env NODE_ENV=production node ./dist/server.js | npx bunyan",
-    "start:dev": "npm run build:server & npm run server:dev",
-    "start:prod": "npm run build:server & npm run build:client:prod & npm run server:prod"
+    "start:dev": "npm run build:server && npm run server:dev",
+    "start:prod": "(npm run build:server & npm run build:client:prod) && npm run server:prod"
   },
   "keywords": [
     "superforms"
@@ -63,6 +63,7 @@
     "sass-loader": "^6.0.6",
     "sinon": "^4.1.3",
     "sinon-chai": "^2.14.0",
+    "source-map-support": "^0.5.6",
     "style-loader": "^0.18.2",
     "supervisor": "^0.12.0",
     "uglify-js": "^3.2.2",
@@ -78,7 +79,7 @@
     "bcrypt": "^1.0.3",
     "body-parser": "^1.18.2",
     "bootstrap": "^4.0.0",
-    "bunyan": "^1.8.12",
+    "bunyan": "^2.0.2",
     "classnames": "^2.2.5",
     "connect-pg-simple": "^4.2.1",
     "convert-layout": "^0.5.1",
@@ -91,6 +92,7 @@
     "handlebars": "^4.0.11",
     "moment": "^2.20.1",
     "nodemailer": "^4.4.1",
+    "object-diff": "0.0.4",
     "pg": "^7.4.0",
     "prop-types": "^15.6.0",
     "react": "^16.2.0",
@@ -101,8 +103,10 @@
     "reactstrap": "^5.0.0-alpha.4",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
+    "rotating-file-stream": "^1.3.6",
     "ssri": "^5.3.0",
     "throttle-debounce": "^1.0.1",
-    "uuid": "^3.1.0"
+    "uuid": "^3.1.0",
+    "xlsx": "^0.12.12"
   }
 }
