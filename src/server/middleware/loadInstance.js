@@ -51,11 +51,7 @@ export default (req, res, next) => {
 				throw new HTTPError(404, `${key} not found`);
 			}
 			req.loaded = { [key]: instance };
-			return instance.loadDependincies();
 		})
-		.then(() => {
-			console.log(req.loaded[key]);
-			next();
-		})
+		.then(next)
 		.catch(next);
 };
