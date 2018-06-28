@@ -73,14 +73,14 @@ class EntityFactory {
 }
 
 const userProps = {
-	'1.1': { orgId: 1, role: 'root' },
-	'1.2': { orgId: 1, role: 'admin' },
-	'1.3': { orgId: 1, role: 'user' },
-	'3.1': { orgId: 3, role: 'root' },
-	'3.2': { orgId: 3, role: 'admin' },
-	'3.3': { orgId: 3, role: 'user' },
-	'4.2': { orgId: 4, role: 'admin' },
-	'4.3': { orgId: 4, role: 'user' },
+	1.1: { orgId: 1, role: 'root' },
+	1.2: { orgId: 1, role: 'admin' },
+	1.3: { orgId: 1, role: 'user' },
+	3.1: { orgId: 3, role: 'root' },
+	3.2: { orgId: 3, role: 'admin' },
+	3.3: { orgId: 3, role: 'user' },
+	4.2: { orgId: 4, role: 'admin' },
+	4.3: { orgId: 4, role: 'user' },
 }
 
 const entityFactory = new EntityFactory;
