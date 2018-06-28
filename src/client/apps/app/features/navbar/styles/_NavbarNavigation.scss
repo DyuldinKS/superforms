@@ -1,0 +1,13 @@
+.navbar-nav {
+  flex-grow: 1;
+  flex-direction: row;
+
+  .nav-link {
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+  }
+}
+
+.navbar-nav .to-right {
+  margin-left: auto;
+}

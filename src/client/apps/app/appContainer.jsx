@@ -2,7 +2,7 @@ import React from 'react';
 import { withRouter, Switch, Route } from 'shared/router/components';
 
 // Import layout components
-import AppHeader from './features/header';
+import AppNavbar from './features/navbar';
 
 // Import routing pages
 import CreateUserRoute from './features/creation/user/createUserRoute';
@@ -15,7 +15,7 @@ import ProfileFormsRoute from './features/profileForms/profileFormsRoute';
 function App() {
   return (
     <div className="app">
-      <AppHeader />
+      <AppNavbar />
 
       <Switch>
         <Route
