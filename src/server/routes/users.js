@@ -1,6 +1,6 @@
 import { isNotAuthenticated } from '../middleware/sessions';
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import { loadInstance, createInstance } from '../middleware/instances';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import User from '../models/User';
 import Org from '../models/Org';
@@ -72,11 +72,12 @@ export default (app) => {
 	app.post(
 		'/api/v1/user',
 		isActive,
+		createInstance,
 		(req, res, next) => {
 			const { author } = req;
-			const user = new User({ ...req.body });
+			const { user } = req.created;
 
-			return user.save({ author })
+			user.save({ author })
 				.then(() => user.resetPassword({ author }))
 				.then(() => mailer.sendRegistrationEmail(user))
 				.then(() => res.json(user))

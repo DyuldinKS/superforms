@@ -1,5 +1,5 @@
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import { loadInstance, createInstance } from '../middleware/instances';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import Org from '../models/Org';
 import { HTTPError } from '../errors';
@@ -181,9 +181,10 @@ export default (app) => {
 	app.post(
 		'/api/v1/org',
 		isActive,
+		createInstance,
 		(req, res, next) => {
 			const { author } = req;
-			const org = new Org({ ...req.body });
+			const { org } = req.created;
 
 			return org.save({ author })
 				.then(() => res.json(org))

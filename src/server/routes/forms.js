@@ -1,5 +1,5 @@
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import { loadInstance, createInstance } from '../middleware/instances';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import Form from '../models/Form';
 import XLSX from '../models/XLSX';
@@ -118,12 +118,12 @@ export default (app) => {
 	app.post(
 		'/api/v1/form',
 		isActive,
+		createInstance,
 		(req, res, next) => {
 			const { author } = req;
-			const props = req.body;
-			const form = new Form(props);
+			const { form } = req.created;
 
-			form.save({ props, author })
+			form.save({ author })
 				.then(() => {	res.send(form); })
 				.catch(next);
 		},

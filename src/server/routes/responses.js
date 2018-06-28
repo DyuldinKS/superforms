@@ -1,5 +1,5 @@
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import { loadInstance, createInstance } from '../middleware/instances';
 import Form from '../models/Form';
 import Response from '../models/Response';
 import { HTTPError } from '../errors';
@@ -42,13 +42,12 @@ export default (app) => {
 	app.post(
 		'/api/v1/response',
 		isActive,
+		createInstance,
 		(req, res, next) => {
 			const { author } = req;
-			const props = {
-				...req.body,
-				respondent: { ip: req.connection.remoteAddress }
-			};
-			const response = new Response(props);
+			const { response } = req.created;
+			response.respondent = { ip: req.connection.remoteAddress };
+
 			if(!response.formId) {
 				return next(new HTTPError(400, '"formId" is not specified.'));
 			}

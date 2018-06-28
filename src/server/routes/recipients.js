@@ -1,5 +1,5 @@
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import { loadInstance, createInstance } from '../middleware/instances';
 import Recipient from '../models/Recipient';
 import { HTTPError, PgError } from '../errors';
 
@@ -79,10 +79,10 @@ export default (app) => {
 	app.post(
 		'/api/v1/recipient',
 		isActive,
+		createInstance,
 		(req, res, next) => {
 			const { author } = req;
-			const { email } = req.body;
-			const rcpt = new Recipient({ email });
+			const { rcpt } = req.created;
 
 			rcpt.save({ author })
 				.then(() => res.json(rcpt))
