@@ -1,5 +1,6 @@
 --colors
 --webpack-config webpack/webpack.test.js
+--require babel-polyfill
 --recursive
 --glob '*.test.js'
 test
