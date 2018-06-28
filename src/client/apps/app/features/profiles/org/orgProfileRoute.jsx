@@ -59,6 +59,7 @@ class OrgProfilePage extends Component {
             />
 
             <OrgProfileNav
+              id={org.id}
               baseUrl={url}
               subpath={subpath}
             />
