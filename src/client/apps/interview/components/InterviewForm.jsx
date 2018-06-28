@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Alert, Button } from 'reactstrap';
 import createForm from 'shared/form/components/createForm';
 import Form from 'shared/form/components/Form';
-import formatValues from '../utils/formatValues';
+import formatValues from 'shared/form/utils/formatValues';
 
 const propTypes = {
   form: PropTypes.object.isRequired,

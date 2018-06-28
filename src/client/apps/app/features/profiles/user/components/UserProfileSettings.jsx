@@ -52,7 +52,13 @@ class UserSettings extends Component {
 
   handleActiveChange() {
     const { active, changeStatus, id } = this.props;
-    changeStatus(id, !active);
+    const action = active ? 'заблокировать' : 'разблокировать';
+
+    const confirm = window.confirm(`Вы действительно хотите ${action} доступ в систему для данного пользователя?`);
+
+    if (confirm) {
+      changeStatus(id, !active);
+    }
   }
 
   handleInfoChange(form) {

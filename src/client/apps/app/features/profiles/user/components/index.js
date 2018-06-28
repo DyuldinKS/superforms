@@ -1,3 +1,4 @@
+export UserProfileBreadcrumb from './UserProfileBreadcrumb';
 export UserProfileFormsList from './UserProfileFormsList';
 export UserProfileHeader from './UserProfileHeader';
 export UserProfileInfo from './UserProfileInfo';
