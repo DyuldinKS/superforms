@@ -1,30 +1,28 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { getActive } from 'apps/app/shared/utils/locales';
+import ProfileHeader from '../../shared/components/ProfileHeader';
 
 const propTypes = {
-  org: PropTypes.object.isRequired,
-  parentOrg: PropTypes.object.isRequired,
+  header: PropTypes.string,
+  breadcrumb: PropTypes.element,
 };
 
-const defaultProps = {};
+const defaultProps = {
+  header: '',
+  breadcrumb: null,
+};
 
-function ProfileHeader(props) {
-  const { org, parentOrg } = props;
-
+function OrgProfileHeader({ header, breadcrumb }) {
   return (
-    <div className="app-profile-header">
-      <h1>{org.label}</h1>
-      <p>{parentOrg.label}</p>
-      <dl>
-        <dt>Статус:</dt>
-        <dd>{getActive(org.active)}</dd>
-      </dl>
-    </div>
+    <ProfileHeader
+      lead="Профиль организации"
+      breadcrumb={breadcrumb}
+      header={header}
+    />
   );
 }
 
-ProfileHeader.propTypes = propTypes;
-ProfileHeader.defaultProps = defaultProps;
+OrgProfileHeader.propTypes = propTypes;
+OrgProfileHeader.defaultProps = defaultProps;
 
-export default ProfileHeader;
+export default OrgProfileHeader;

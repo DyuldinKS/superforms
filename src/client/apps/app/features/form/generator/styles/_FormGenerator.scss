@@ -1,12 +1,12 @@
 .app-form-generator {
-  height: calc(100% - 50px);
+  height: calc(100% - 62px);
 }
 
 .form-generator {
   display: flex;
   position: relative;
   width: 100%;
-  height: calc(100% - 47px - #{$form-generator-header-height});
+  height: calc(100% - 43.2px - 111px);
 }
 
 .form-generator-content {

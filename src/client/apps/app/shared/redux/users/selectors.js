@@ -28,8 +28,8 @@ export function getFullName(state, userId) {
 
 export function getShortName(state, userId) {
   const {
-    firstName,
-    lastName,
+    firstName = '',
+    lastName = '',
     patronymic = '',
   } = getUserEntity(state, userId);
 

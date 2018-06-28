@@ -19,9 +19,7 @@ function updateErrors(errors, name, value) {
 }
 
 export default function createForm(WrappedComponent) {
-  const propTypes = {
-    form: PropTypes.object.isRequired,
-  };
+  const propTypes = {};
 
   const childContextTypes = {
     getInputProps: PropTypes.func.isRequired,
@@ -37,15 +35,23 @@ export default function createForm(WrappedComponent) {
         errors: null,
         submitErrors: null,
         values: {},
+        submitting: false,
+        submitted: false,
+        submitError: null,
       };
 
       this.getInputProps = this.getInputProps.bind(this);
-      this.getRef = this.getRef.bind(this);
-      this.init = this.init.bind(this);
+      this.focusOnFirstError = this.focusOnFirstError.bind(this);
+
       this.setError = this.setError.bind(this);
       this.setValue = this.setValue.bind(this);
+
+      this.getRef = this.getRef.bind(this);
+      this.init = this.init.bind(this);
       this.showErrors = this.showErrors.bind(this);
-      this.focusOnFirstError = this.focusOnFirstError.bind(this);
+      this.handleSubmitRequest = this.handleSubmitRequest.bind(this);
+      this.handleSubmitSuccess = this.handleSubmitSuccess.bind(this);
+      this.handleSubmitFailure = this.handleSubmitFailure.bind(this);
     }
 
     getChildContext() {
@@ -112,29 +118,65 @@ export default function createForm(WrappedComponent) {
     }
 
     focusOnFirstError() {
-      const { order } = this.props.form.scheme;
       const { errors } = this.state;
-      const name = order.find(itemId => errors[itemId]);
-      if (!name) return;
-      const input = this.formRef.elements[name];
-      const formGroup = input.closest('.form-group') || input;
+      const formElements = this.formRef.elements;
+
+      let i = 0;
+      let found;
+      while (i < formElements.length && !found) {
+        const elName = formElements[i].name;
+        found = errors[elName] ? formElements[i] : undefined;
+        i++;
+      }
+
+      if (!found) {
+        return;
+      }
+
+
+      const formGroup = found.closest('.form-group') || found;
       const { top } = getCoords(formGroup);
       window.scrollTo(window.pageXOffset, top - 50);
-      input.focus();
+      found.focus();
+    }
+
+    handleSubmitRequest() {
+      return this.setState({
+        submitting: true,
+        submitted: false,
+        submitError: null,
+      });
+    }
+
+    handleSubmitSuccess() {
+      return this.setState({ submitting: false, submitted: true });
+    }
+
+    handleSubmitFailure(submitError) {
+      return this.setState({ submitting: false, submitError });
     }
 
     render() {
       const {
         errors,
+        submitting,
+        submitted,
+        submitError,
         values,
       } = this.state;
 
       const passProps = {
         errors,
         getRef: this.getRef,
+        handleSubmitRequest: this.handleSubmitRequest,
+        handleSubmitSuccess: this.handleSubmitSuccess,
+        handleSubmitFailure: this.handleSubmitFailure,
         init: this.init,
         invalid: !!errors,
         showErrors: this.showErrors,
+        submitting,
+        submitted,
+        submitError,
         valid: !errors,
         values,
       };

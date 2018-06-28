@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import * as formsModule from 'apps/app/shared/redux/forms';
 import { Switch, Route } from 'shared/router/components';
 import getSubpath from 'shared/router/utils/getSubpath';
+import FormBreadcrumb from './components/FormBreadcrumb';
 import FormHeader from './components/FormHeader';
 import FormNav from './components/FormNav';
 import FormGenerator from './generator/generatorRoute';
@@ -70,12 +71,17 @@ class FormRoute extends Component {
 
     return (
       <div className="app-form-generator">
-        <FormHeader id={id} />
+        <FormBreadcrumb id={id} />
 
-        <FormNav
-          subpath={subpath}
-          baseUrl={match.url}
-        />
+        <div className="app-profile-header-outer">
+          <div className="container">
+            <FormHeader id={id} />
+            <FormNav
+              subpath={subpath}
+              baseUrl={match.url}
+            />
+          </div>
+        </div>
 
         {
           isLoaded
