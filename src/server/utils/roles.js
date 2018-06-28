@@ -134,7 +134,9 @@ const buildRoles = ({
 			org: (subj, org, params = {}) => (
 				isSameOrg(subj, org) && isEqual(params.section, 'forms')
 			),
-			user: withinOrg,
+			user: (subj, user, params) => (
+				withinOrg(subj, user) && isElemOf(params.section, ['info', 'forms'])
+			),
 			form: (subj, form, params) => (
 				isOwner(subj, form) || withinOrg(subj, form)
 			),
