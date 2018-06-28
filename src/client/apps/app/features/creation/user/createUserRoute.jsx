@@ -8,6 +8,7 @@ const propTypes = {
   // from Redux
   parentId: PropTypes.number.isRequired,
   parentOrgName: PropTypes.string.isRequired,
+  sessionRole: PropTypes.string.isRequired,
   createUser: PropTypes.func.isRequired,
 };
 
@@ -18,6 +19,7 @@ function CreateUserRoute(props) {
     createUser,
     parentId,
     parentOrgName,
+    sessionRole,
   } = props;
 
   return (
@@ -27,6 +29,7 @@ function CreateUserRoute(props) {
         <h1>Новый пользователь</h1>
 
         <CreateUserForm
+          sessionRole={sessionRole}
           parentOrgName={parentOrgName}
           onSubmit={createUser}
         />

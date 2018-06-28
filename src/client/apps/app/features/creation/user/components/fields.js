@@ -1,5 +1,6 @@
 import locales from 'Locales/entities';
 import { constants as type } from 'shared/form/utils/inputTypes';
+import ROLES from 'apps/app/shared/redux/users/roles';
 
 const fields = {
   lastName: {
@@ -25,7 +26,7 @@ const fields = {
     title: 'Роль',
     type: type.SELECT,
     required: true,
-    options: Object.values(locales.role),
+    options: Object.values(ROLES),
   },
   org: {
     title: 'Организация',

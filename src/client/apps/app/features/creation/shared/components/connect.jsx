@@ -1,15 +1,32 @@
 import { connect } from 'react-redux';
 import * as orgsModule from 'apps/app/shared/redux/orgs';
 import * as usersModule from 'apps/app/shared/redux/users';
+import { selectors as sessionQuery } from 'apps/app/shared/redux/session';
 
-function mapStateToProps(state, ownProps) {
-  const parentOrgId = ownProps.match.params.orgId;
+function mapStateToPropsForUser(state, ownProps) {
+  const parentOrgId = Number(ownProps.match.params.orgId);
+  const {
+    label: parentOrgName,
+  } = orgsModule.selectors.getOrgEntity(state, parentOrgId);
+
+  const sessionUserId = sessionQuery.getUserId(state);
+  const { role } = usersModule.selectors.getUserEntity(state, sessionUserId);
+
+  return {
+    parentId: parentOrgId,
+    parentOrgName,
+    sessionRole: role,
+  };
+}
+
+function mapStateToPropsForOrg(state, ownProps) {
+  const parentOrgId = Number(ownProps.match.params.orgId);
   const {
     label: parentOrgName,
   } = orgsModule.selectors.getOrgEntity(state, parentOrgId);
 
   return {
-    parentId: Number(parentOrgId),
+    parentId: parentOrgId,
     parentOrgName,
   };
 }
@@ -33,11 +50,11 @@ function mapDispatchToPropsForOrg(dispatch, ownProps) {
 }
 
 export const connectNewUser = connect(
-  mapStateToProps,
+  mapStateToPropsForUser,
   mapDispatchToPropsForUser,
 );
 
 export const connectNewOrg = connect(
-  mapStateToProps,
+  mapStateToPropsForOrg,
   mapDispatchToPropsForOrg,
 );
