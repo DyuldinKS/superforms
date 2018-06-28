@@ -48,6 +48,16 @@ class OrgAPI {
     return data;
   }
 
+  static async getAncestors(id, options = {}) {
+    const url = getURLFromParts({
+      pathname: `/api/v1/org/${id}/parents`,
+      search: options,
+    });
+
+    const data = await fetch(url);
+    return data;
+  }
+
   static async getForms(id, options = {}) {
     const url = getURLFromParts({
       pathname: `/api/v1/org/${id}/forms`,

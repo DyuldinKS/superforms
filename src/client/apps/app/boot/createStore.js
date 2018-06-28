@@ -29,7 +29,7 @@ export default () => {
         routerMiddleware,
         thunk,
       ),
-      injectReduxDevTools(),
+      process.env.NODE_ENV !== 'production' ? injectReduxDevTools() : f => f,
     ),
   );
 };
