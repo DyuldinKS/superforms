@@ -161,8 +161,9 @@ export default (app) => {
 				authorOrgId: req.author.orgId,
 			};
 
-			org.getParents(opts)
-				.then(orgs => res.json(orgs))
+			org.getParents()
+				.then(parents => Org.sliceParents(parents, opts))
+				.then(({ orgs, ids }) => res.json({ orgs, entries: ids }))
 				.catch(next);
 		},
 	);

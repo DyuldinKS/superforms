@@ -26,26 +26,21 @@ class Org extends Recipient {
 	}
 
 
-	getParents(opts) {
-		return db.query(
-			`SELECT build_orgs_object(ids) AS orgs, ids
-			FROM get_parent_org_ids($1) ids;`,
-			[this.id],
-		)
-			.then(({ orgs, ids }) => {
-				// find last org available for ther user
-				const last = ids.indexOf(opts.authorOrgId);
-				// set start & end indexes for the list of parents
-				const start = Number.parseInt(opts.minDist, 10);
-				let end = Number.parseInt(opts.maxDist, 10);
-				end = end > 0 && end <= last ? end : last + 1;
+	static sliceParents(parents, opts) {
+		const { orgs, ids } = parents;
 
-				// filter orgs with specified start and end of list
-				const res = { orgs: {}, entries: [] };
-				res.entries = ids.slice(start, end);
-				res.entries.forEach((id) => { res.orgs[id] = orgs[id]; });
-				return res;
-			});
+		// find last org available for ther user
+		const last = ids.indexOf(opts.authorOrgId);
+		// set start & end indexes for the list of parents
+		const start = Number.parseInt(opts.minDist, 10);
+		let end = Number.parseInt(opts.maxDist, 10);
+		end = end > 0 && end <= last ? end : last + 1;
+
+		// filter orgs with specified start and end of list
+		const res = { orgs: {}, entries: [] };
+		res.entries = ids.slice(start, end);
+		res.entries.forEach((id) => { res.orgs[id] = orgs[id]; });
+		return res;
 	}
 
 
@@ -97,6 +92,15 @@ class Org extends Recipient {
 
 		this.parentOrgIds = await Org.getParentIds(orgId);
 		return this;
+	}
+
+
+	async getParents() {
+		return db.query(
+			`SELECT build_orgs_object(ids) AS orgs, ids
+			FROM get_parent_org_ids($1) ids;`,
+			[this.id],
+		);
 	}
 
 
