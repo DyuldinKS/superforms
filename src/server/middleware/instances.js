@@ -7,26 +7,11 @@ import { HTTPError } from '../errors';
 
 
 const models = {
-	recipient: {
-		model: Recipient,
-		key: 'rcpt',
-	},
-	user: {
-		model: User,
-		key: 'user',
-	},
-	org: {
-		model: Org,
-		key: 'org',
-	},
-	form: {
-		model: Form,
-		key: 'form',
-	},
-	response: {
-		model: Response,
-		key: 'response',
-	},
+	recipient: Recipient,
+	user: User,
+	org: Org,
+	form: Form,
+	response: Response,
 };
 
 const keys = Object.keys(models).join('|');
@@ -40,21 +25,26 @@ const newInstanceRe = new RegExp(`^/api/v\\d{1,2}/(${keys})$`);
 
 const getModelToSearch = (url) => {
 	const match = url.match(instanceIdRE);
-	if(!match) throw new Error('Can not define any instance with id.');
+	if(!match) throw new Error('Can not define any model type or id to load instance');
 	const [, type, id] = match;
-	return { ...models[type], id };
+	return { Model: models[type], id };
 };
 
 
 // load all required data to 'req' object
 const loadInstance = (req, res, next) => {
-	const { model, key, id } = getModelToSearch(req.originalUrl);
-	model.findById(id)
+	let entityName;
+	Promise.resolve()
+		.then(() => getModelToSearch(req.originalUrl))
+		.then(({ Model, id }) => {
+			({ entityName } = Model.prototype);
+			return Model.findById(id);
+		})
 		.then((instance) => {
 			if(!instance) {
-				throw new HTTPError(404, `${key} not found`);
+				throw new HTTPError(404, `${entityName} not found`);
 			}
-			req.loaded = { [key]: instance };
+			req.loaded = { [entityName]: instance };
 		})
 		.then(next)
 		.catch(next);
@@ -65,20 +55,45 @@ const loadInstance = (req, res, next) => {
 
 const getModelToCreate = (url) => {
 	const match = url.match(newInstanceRe);
-	if(!match) throw new Error('Can not define instance to create.');
+	if(!match) throw new Error('Can not define model type to create instance');
 	return models[match[1]]; // get model by it's type name
 };
 
 
 const createInstance = (req, res, next) => {
-	if(req.method !== 'POST') {
-		throw new Error('You should apply generateInstance middleware only to POST requests');
-	}
+	try {
+		if(req.method !== 'POST') {
+			throw new Error('generateInstance middleware applies only to POST requests');
+		}
 
-	const { model, key } = getModelToCreate(req.originalUrl);
-	req.created = { [key]: new model(req.body) };
-	next();
+		const Model = getModelToCreate(req.originalUrl);
+		const { entityName } = Model.prototype;
+		req.created = { [entityName]: new Model(req.body) };
+		next();
+	} catch (err) {
+		return next(err);
+	}
 };
 
 
-export { loadInstance, createInstance };
+/* --------------------------- LOAD DEPENDINCIES ---------------------------- */
+
+const loadDependincies = (req, res, next) => {
+	if(!req.instance) {
+		return next(new Error('No loaded or created model instance found'));
+	}
+
+	const instances = {
+		...(req.loaded || {}),
+		...(req.created || {}),
+	};
+	const loading = Object.values(instances)
+		.map(instance => instance.loadDependincies());
+
+	Promise.all(loading)
+		.then(next)
+		.catch(next);
+};
+
+
+export { loadInstance, createInstance, loadDependincies };
