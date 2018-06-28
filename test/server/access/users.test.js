@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import assert from 'assert';
 import User from 'Server/models/User';
 // import Response from 'Server/models/Response';
-import { can } from 'Server/utils/access';
+import { can } from 'Server/utils/Access';
 import buildRoles from 'Server/utils/roles';
 import rules from 'Server/utils/accessRules';
 import { users as u, parentsByOrg, entityFactory } from './setup';

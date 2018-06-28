@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import assert from 'assert';
 import Org from 'Server/models/Org';
 // import Response from 'Server/models/Response';
-import { can } from 'Server/utils/access';
+import { can } from 'Server/utils/Access';
 import { orgs as o, users as u, entityFactory } from './setup';
 
 const { expect } = chai;
