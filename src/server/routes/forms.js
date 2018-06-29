@@ -1,5 +1,5 @@
 import { isActive } from '../middleware/users';
-import { loadInstance, createInstance } from '../middleware/instances';
+import { loadInstance, createInstance, loadDependincies } from '../middleware/instances';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import Form from '../models/Form';
 import XLSX from '../models/XLSX';
@@ -17,13 +17,14 @@ export default (app) => {
 		],
 		isActive,
 		loadInstance,
+		loadDependincies,
 	);
 
 
 	app.get(
 		'/form/:id',
 		(req, res, next) => {
-			const { form } = req.loaded;
+			const form = req.instance;
 			const { s: shared } = req.query;
 
 			if(!shared) {
@@ -50,7 +51,7 @@ export default (app) => {
 		],
 		preloadReduxStore,
 		(req, res, next) => {
-			const { form } = req.loaded;
+			const form = req.instance;
 			const { reduxStore } = req;
 			const entitiesMap = { forms: form.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
@@ -64,7 +65,7 @@ export default (app) => {
 		'/form/:id/responses',
 		preloadReduxStore,
 		(req, res, next) => {
-			const { form } = req.loaded;
+			const form = req.instance;
 			const { reduxStore } = req;
 			const entitiesMap = { forms: form.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
@@ -86,7 +87,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/form/:id',
 		(req, res, next) => {
-			const { form } = req.loaded;
+			const form = req.instance;
 			res.json(form);
 		},
 	);
@@ -96,7 +97,7 @@ export default (app) => {
 		'/api/v1/form/:id/responses',
 		(req, res, next) => {
 			const { type } = req.query;
-			const { form } = req.loaded;
+			const form = req.instance;
 			// default value
 			let mode = 'short';
 			if(type === 'xlsx' || type === 'full') mode = 'full';
@@ -119,9 +120,10 @@ export default (app) => {
 		'/api/v1/form',
 		isActive,
 		createInstance,
+		loadDependincies,
 		(req, res, next) => {
 			const { author } = req;
-			const { form } = req.created;
+			const form = req.instance;
 
 			form.save({ author })
 				.then(() => {	res.send(form); })
@@ -135,7 +137,7 @@ export default (app) => {
 		'/api/v1/form/:id',
 		(req, res, next) => {
 			const { author } = req;
-			const { form } = req.loaded;
+			const form = req.instance;
 			const props = req.body;
 
 			form.update({ props, author })

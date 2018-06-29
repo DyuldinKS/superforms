@@ -1,5 +1,5 @@
 import { isActive } from '../middleware/users';
-import { loadInstance, createInstance } from '../middleware/instances';
+import { loadInstance, createInstance, loadDependincies } from '../middleware/instances';
 import Recipient from '../models/Recipient';
 import { HTTPError, PgError } from '../errors';
 
@@ -62,6 +62,7 @@ export default (app) => {
 		],
 		isActive,
 		loadInstance,
+		loadDependincies,
 	);
 
 
@@ -70,7 +71,7 @@ export default (app) => {
 		isActive,
 		loadInstance,
 		(req, res, next) => {
-			const { rcpt } = req.loaded;
+			const rcpt = req.instance;
 			res.json(rcpt);
 		},
 	);
@@ -80,9 +81,10 @@ export default (app) => {
 		'/api/v1/recipient',
 		isActive,
 		createInstance,
+		loadDependincies,
 		(req, res, next) => {
 			const { author } = req;
-			const { rcpt } = req.created;
+			const rcpt = req.instance;
 
 			rcpt.save({ author })
 				.then(() => res.json(rcpt))
@@ -107,7 +109,7 @@ export default (app) => {
 		loadInstance,
 		(req, res, next) => {
 			const { author } = req;
-			const { rcpt } = req.loaded;
+			const rcpt = req.instance;
 			const props = req.body;
 
 			rcpt.update({ props, author })

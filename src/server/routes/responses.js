@@ -1,5 +1,5 @@
 import { isActive } from '../middleware/users';
-import { loadInstance, createInstance } from '../middleware/instances';
+import { loadInstance, createInstance, loadDependincies } from '../middleware/instances';
 import Form from '../models/Form';
 import Response from '../models/Response';
 import { HTTPError } from '../errors';
@@ -14,6 +14,7 @@ export default (app) => {
 		],
 		isActive,
 		loadInstance,
+		loadDependincies,
 	);
 
 
@@ -22,7 +23,7 @@ export default (app) => {
 		isActive,
 		loadInstance,
 		(req, res, next) => {
-			const { response } = req.loaded;
+			const response = req.instance;
 			res.send('awesome stub');
 		},
 	);
@@ -33,7 +34,7 @@ export default (app) => {
 		isActive,
 		loadInstance,
 		(req, res, next) => {
-			const { response } = req.loaded;
+			const response = req.instance;
 			res.json(response);
 		},
 	);
@@ -43,9 +44,10 @@ export default (app) => {
 		'/api/v1/response',
 		isActive,
 		createInstance,
+		loadDependincies,
 		(req, res, next) => {
 			const { author } = req;
-			const { response } = req.created;
+			const response = req.instance;
 			response.respondent = { ip: req.connection.remoteAddress };
 
 			if(!response.formId) {

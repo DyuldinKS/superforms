@@ -44,7 +44,7 @@ const loadInstance = (req, res, next) => {
 			if(!instance) {
 				throw new HTTPError(404, `${entityName} not found`);
 			}
-			req.loaded = { [entityName]: instance };
+			req.instance = instance;
 		})
 		.then(next)
 		.catch(next);
@@ -67,9 +67,8 @@ const createInstance = (req, res, next) => {
 		}
 
 		const Model = getModelToCreate(req.originalUrl);
-		const { entityName } = Model.prototype;
 		const { author } = req;
-		req.created = { [entityName]: Model.create({ props: req.body, author }) };
+		req.instance = Model.create({ props: req.body, author });
 		next();
 	} catch (err) {
 		return next(err);
@@ -80,22 +79,15 @@ const createInstance = (req, res, next) => {
 /* --------------------------- LOAD DEPENDINCIES ---------------------------- */
 
 const loadDependincies = (req, res, next) => {
-	if(!req.loaded && !req.instance) {
-		return next(new Error('No loaded or created model instance found'));
-	}
-
-	const instances = {
-		...(req.loaded || {}),
-		...(req.created || {}),
-	};
-	const loading = Object.values(instances)
-		.map(instance => instance.loadDependincies());
-
-	Promise.all(loading)
-		.then(([deps]) => {
-			req.dependincies = deps;
-			next();
+	Promise.resolve()
+		.then(() => {
+			if(!req.instance) {
+				throw new Error('No loaded or created model instance found');
+			}
+			return req.instance.loadDependincies();
 		})
+		.then((result) => { req.dependincies = result; })
+		.then(next)
 		.catch(next);
 };
 
