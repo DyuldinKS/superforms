@@ -101,8 +101,8 @@ class BaseSelect extends PureComponent {
       name,
       readOnly,
       required,
-      value: toggleMap,
     } = this.props;
+    const toggleMap = this.props.value || {};
 
     return (
       <OptionOther

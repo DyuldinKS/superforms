@@ -72,7 +72,7 @@ export default function createForm(WrappedComponent) {
         submitError: !!submitError,
         invalid: !!error,
         valid: !error,
-        value: values[name] || '',
+        value: values[name],
       };
     }
 

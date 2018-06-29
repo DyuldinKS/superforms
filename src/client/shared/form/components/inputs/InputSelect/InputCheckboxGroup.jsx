@@ -18,20 +18,20 @@ class InputCheckboxGroup extends BaseSelect {
       name,
       required,
       setValue,
-      value: toggleMap = {},
     } = this.props;
+    const toggleMap = this.props.value || {};
 
     const { value: optionId } = event.target;
-    let value = {};
+    let nextValue = {};
 
     if (toggleMap[optionId] === undefined) {
-      value = { ...toggleMap, [optionId]: true };
+      nextValue = { ...toggleMap, [optionId]: true };
     } else {
-      value = deleteMapProp(toggleMap, optionId);
+      nextValue = deleteMapProp(toggleMap, optionId);
     }
 
-    const error = validateWrapper(value, required, this.validate);
-    setValue(name, value, error);
+    const error = validateWrapper(nextValue, required, this.validate);
+    setValue(name, nextValue, error);
     this.setState(() => ({ dirty: true }));
   }
 
@@ -40,8 +40,8 @@ class InputCheckboxGroup extends BaseSelect {
       name,
       required,
       setValue,
-      value: toggleMap = {},
     } = this.props;
+    const toggleMap = this.props.value || {};
     let nextValue = {};
 
     if (value !== undefined) {
@@ -62,8 +62,8 @@ class InputCheckboxGroup extends BaseSelect {
       options,
       readOnly,
       required,
-      value: toggleMap,
     } = this.props;
+    const toggleMap = this.props.value || {};
 
     return (
       <div className="input-check-wrapper">
