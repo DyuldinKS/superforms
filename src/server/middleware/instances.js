@@ -14,37 +14,35 @@ const models = {
 	response: Response,
 };
 
-const keys = Object.keys(models).join('|');
-// generate re for urls like /user/432 and /api/v1/form/1337 ...
-const instanceIdRE = new RegExp(`/(${keys})/(\\d{1,8})`);
-// generate re for urls like /api/v1/org and /api/v1/response ...
-const newInstanceRe = new RegExp(`^/api/v\\d{1,2}/(${keys})$`);
+
+/* -------------------------- LOAD INSTANCE PARAMS -------------------------- */
+
+
+const loadParams = (req, res, next) => {
+	const { 0: type, 1: id, 3: section } = req.params;
+	if(!(type in models)) {
+		return next(new HTTPError('Type of instance to load is not defined in url'));
+	}
+	req.loaded = { type, id, section };
+	next();
+};
 
 
 /* ---------------------- LOAD INSTANCE BY TYPE AND ID ---------------------- */
 
-const getModelToSearch = (url) => {
-	const match = url.match(instanceIdRE);
-	if(!match) throw new Error('Can not define any model type or id to load instance');
-	const [, type, id] = match;
-	return { Model: models[type], id };
-};
-
-
-// load all required data to 'req' object
 const loadInstance = (req, res, next) => {
-	let entityName;
-	Promise.resolve()
-		.then(() => getModelToSearch(req.originalUrl))
-		.then(({ Model, id }) => {
-			({ entityName } = Model.prototype);
-			return Model.findById(id);
-		})
+	const { type, id } = req.loaded;
+	if(!type || !id) {
+		return next(new Error('id or type of instance to load is not defined'));
+	}
+
+	const Model = models[type];
+	Model.findById(id)
 		.then((instance) => {
 			if(!instance) {
-				throw new HTTPError(404, `${entityName} not found`);
+				throw new HTTPError(404, `${type} not found`);
 			}
-			req.instance = instance;
+			req.loaded.instance = instance;
 		})
 		.then(next)
 		.catch(next);
@@ -53,25 +51,23 @@ const loadInstance = (req, res, next) => {
 
 /* ----------- CREATE NEW INSTANCE BY TYPE AND REQUEST BODY DATA ------------ */
 
-const getModelToCreate = (url) => {
-	const match = url.match(newInstanceRe);
-	if(!match) throw new Error('Can not define model type to create instance');
-	return models[match[1]]; // get model by it's type name
-};
-
-
 const createInstance = (req, res, next) => {
 	try {
+		const { type } = req.loaded;
 		if(req.method !== 'POST') {
 			throw new Error('generateInstance middleware applies only to POST requests');
 		}
+		if(!type) {
+			throw new Error('type of instance to create is not defined');
+		}
 
-		const Model = getModelToCreate(req.originalUrl);
+		const Model = models[type];
 		const { author } = req;
-		req.instance = Model.create({ props: req.body, author });
+		// can throw an error if props are invalid
+		req.loaded.instance = Model.create({ author, props: req.body });
 		next();
 	} catch (err) {
-		return next(err);
+		next(err);
 	}
 };
 
@@ -79,17 +75,17 @@ const createInstance = (req, res, next) => {
 /* --------------------------- LOAD DEPENDINCIES ---------------------------- */
 
 const loadDependincies = (req, res, next) => {
-	Promise.resolve()
-		.then(() => {
-			if(!req.instance) {
+	Promise.resolve(req.loaded)
+		.then(({ instance }) => {
+			if(!instance) {
 				throw new Error('No loaded or created model instance found');
 			}
-			return req.instance.loadDependincies();
+			return instance.loadDependincies();
 		})
-		.then((result) => { req.dependincies = result; })
+		.then((result) => { req.loaded.dependincies = result; })
 		.then(next)
 		.catch(next);
 };
 
 
-export { loadInstance, createInstance, loadDependincies };
+export { loadParams, loadInstance, createInstance, loadDependincies };
