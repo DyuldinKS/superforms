@@ -11,7 +11,12 @@ import {
   Button,
 } from 'reactstrap';
 import { AccordionItem } from 'shared/ui/accordion';
-import * as usersModule from 'apps/app/shared/redux/users';
+import {
+  actions as userActions,
+  selectors as userQuery,
+} from 'apps/app/shared/redux/users';
+import { selectors as sessionQuery } from 'apps/app/shared/redux/session';
+import RenderIf from 'shared/helpers/RenderIf';
 import { ChangeEmail } from '../../shared/components/forms';
 import { ChangePassword, ChangeRole, ChangeUserInfo } from './forms';
 import UserAPI from 'api/UserAPI';
@@ -19,19 +24,21 @@ import UserAPI from 'api/UserAPI';
 const propTypes = {
   // from Redux
   id: PropTypes.string.isRequired,
+  active: PropTypes.bool.isRequired,
+  changeEmail: PropTypes.func,
+  changeInfo: PropTypes.func,
+  changeRole: PropTypes.func,
+  changeStatus: PropTypes.func,
+  email: PropTypes.string.isRequired,
   firstName: PropTypes.string.isRequired,
+  isSessionUser: PropTypes.bool,
   lastName: PropTypes.string.isRequired,
   patronymic: PropTypes.string,
   role: PropTypes.string.isRequired,
-  active: PropTypes.bool.isRequired,
-  email: PropTypes.string.isRequired,
-  changeInfo: PropTypes.func,
-  changeEmail: PropTypes.func,
-  changeRole: PropTypes.func,
-  changeStatus: PropTypes.func,
 };
 
 const defaultProps = {
+  isSessionUser: true,
   patronymic: '',
   changeInfo: () => {},
   changeEmail: () => {},
@@ -96,24 +103,27 @@ class UserSettings extends Component {
 
   render() {
     const {
-      role,
       email,
       firstName,
+      isSessionUser,
       lastName,
       patronymic,
+      role,
     } = this.props;
 
     return (
       <div>
         <Nav vertical>
-          <NavItem>
-            <Button
-              color="link"
-              onClick={this.handleActiveChange}
-            >
-              {this.renderChangeActiveToggle()}
-            </Button>
-          </NavItem>
+          <RenderIf condition={!isSessionUser}>
+            <NavItem>
+              <Button
+                color="link"
+                onClick={this.handleActiveChange}
+              >
+                {this.renderChangeActiveToggle()}
+              </Button>
+            </NavItem>
+          </RenderIf>
 
           <AccordionItem
             label="Изменить основную информацию"
@@ -126,14 +136,16 @@ class UserSettings extends Component {
             />
           </AccordionItem>
 
-          <AccordionItem
-            label="Изменить роль"
-          >
-            <ChangeRole
-              role={role}
-              onSubmit={this.handleRoleChange}
-            />
-          </AccordionItem>
+          <RenderIf condition={!isSessionUser}>
+            <AccordionItem
+              label="Изменить роль"
+            >
+              <ChangeRole
+                role={role}
+                onSubmit={this.handleRoleChange}
+              />
+            </AccordionItem>
+          </RenderIf>
 
           <AccordionItem
             label="Изменить адрес электронной почты"
@@ -161,8 +173,10 @@ UserSettings.propTypes = propTypes;
 UserSettings.defaultProps = defaultProps;
 
 function mapStateToProps(state, ownProps) {
-  const userId = ownProps.match.params.id;
-  const user = usersModule.selectors.getUser(state, userId);
+  const userId = Number(ownProps.match.params.id);
+  const sessionUserId = sessionQuery.getUserId(state);
+  const isSessionUser = sessionUserId === userId;
+
   const {
     active,
     role,
@@ -170,7 +184,7 @@ function mapStateToProps(state, ownProps) {
     firstName,
     lastName,
     patronymic,
-  } = user.entity;
+  } = userQuery.getUserEntity(state, userId);
 
   return {
     id: userId,
@@ -180,14 +194,15 @@ function mapStateToProps(state, ownProps) {
     firstName,
     lastName,
     patronymic,
+    isSessionUser,
   };
 }
 
 const mapDispatchToProps = {
-  changeStatus: usersModule.actions.changeStatus,
-  changeRole: usersModule.actions.changeRole,
-  changeEmail: usersModule.actions.changeEmail,
-  changeInfo: usersModule.actions.changeInfo,
+  changeStatus: userActions.changeStatus,
+  changeRole: userActions.changeRole,
+  changeEmail: userActions.changeEmail,
+  changeInfo: userActions.changeInfo,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(UserSettings);

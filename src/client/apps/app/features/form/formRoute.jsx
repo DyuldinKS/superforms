@@ -16,7 +16,7 @@ const propTypes = {
   match: PropTypes.object.isRequired,
   location: PropTypes.object.isRequired,
   // from Redux
-  id: PropTypes.string.isRequired,
+  id: PropTypes.number.isRequired,
   isLoaded: PropTypes.bool,
   fetchForm: PropTypes.func.isRequired,
 };
@@ -44,11 +44,6 @@ class FormRoute extends Component {
     return (
       <Switch>
         <Route
-          path={`${path}/preview`}
-          exact
-          component={FormPreview}
-        />
-        <Route
           path={`${path}/distribute`}
           exact
           component={DistributionRoute}
@@ -58,8 +53,13 @@ class FormRoute extends Component {
           component={FormResponses}
         />
         <Route
-          path={`${path}`}
+          path={`${path}/edit`}
+          exact
           component={FormGenerator}
+        />
+        <Route
+          path={`${path}`}
+          component={FormPreview}
         />
       </Switch>
     );
@@ -77,6 +77,7 @@ class FormRoute extends Component {
           <div className="container">
             <FormHeader id={id} />
             <FormNav
+              id={id}
               subpath={subpath}
               baseUrl={match.url}
             />
@@ -97,7 +98,7 @@ FormRoute.propTypes = propTypes;
 FormRoute.defaultProps = defaultProps;
 
 function mapStateToProps(state, ownProps) {
-  const formId = ownProps.match.params.id;
+  const formId = Number(ownProps.match.params.id);
   const { entity, fetchStatus } = formsModule.selectors.getForm(state, formId);
   const { scheme } = entity;
 

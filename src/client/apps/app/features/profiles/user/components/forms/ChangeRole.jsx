@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import {
   Button,
@@ -7,9 +8,13 @@ import {
   Input,
 } from 'reactstrap';
 import locales from 'Locales/entities';
+import ROLES from 'apps/app/shared/redux/users/roles';
+import { selectors as sessionQuery } from 'apps/app/shared/redux/session';
+import { selectors as userQuery } from 'apps/app/shared/redux/users';
 
 const propTypes = {
   role: PropTypes.string.isRequired,
+  sessionRole: PropTypes.string.isRequired,
   onSubmit: PropTypes.func,
 };
 
@@ -17,14 +22,12 @@ const defaultProps = {
   onSubmit: () => {},
 };
 
-const options = Object.keys(locales.role).reverse() || [];
-
 class ChangeRoleForm extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      role: options[0] || null,
+      role: props.role || null,
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);
@@ -52,9 +55,14 @@ class ChangeRoleForm extends Component {
   }
 
   renderOptions() {
-    const currentRole = this.props.role;
-    const availableOptions = options.filter(option => option !== currentRole);
-    return availableOptions.map(option => (
+    const { sessionRole } = this.props;
+    let options = Object.values(ROLES);
+
+    if (sessionRole !== ROLES.ROOT) {
+      options = options.filter(o => o !== ROLES.ROOT);
+    }
+
+    return options.map(option => (
       <option value={option} key={option}>{locales.role[option]}</option>
     ));
   }
@@ -87,4 +95,13 @@ class ChangeRoleForm extends Component {
 ChangeRoleForm.propTypes = propTypes;
 ChangeRoleForm.defaultProps = defaultProps;
 
-export default ChangeRoleForm;
+function mapStateToProps(state, props) {
+  const sessionUserId = sessionQuery.getUserId(state);
+  const { role } = userQuery.getUserEntity(state, sessionUserId);
+
+  return {
+    sessionRole: role,
+  };
+}
+
+export default connect(mapStateToProps)(ChangeRoleForm);
