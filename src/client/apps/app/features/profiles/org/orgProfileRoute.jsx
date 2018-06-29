@@ -37,6 +37,12 @@ class OrgProfilePage extends Component {
     fetchOrg(id);
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.id !== prevProps.id) {
+      this.props.fetchOrg(this.props.id);
+    }
+  }
+
   render() {
     const {
       match,

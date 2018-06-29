@@ -36,6 +36,12 @@ class UserProfilePage extends Component {
     fetchUser(id);
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.id !== prevProps.id) {
+      this.props.fetchUser(this.props.id);
+    }
+  }
+
   render() {
     const {
       id,
