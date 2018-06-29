@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Breadcrumb from 'shared/ui/Breadcrumb';
+import Breadcrumb from 'shared/ui/breadcrumb';
 
 const propTypes = {};
 
