@@ -1,5 +1,10 @@
 import { isActive } from '../middleware/users';
-import { loadInstance, createInstance, loadDependincies } from '../middleware/instances';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
 import Recipient from '../models/Recipient';
 import { HTTPError, PgError } from '../errors';
 
@@ -57,10 +62,11 @@ export default (app) => {
 
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/recipient\/\d{1,8}$/, // api
-			/\/recipient\/\d{1,8}$/, // ssr
+			/\/api\/v\d{1,2}\/(recipient)\/(\d{1,8})$/, // api
+			/\/(recipient)\/(\d{1,8})$/, // ssr
 		],
 		isActive,
+		loadParams, // high cohesion with the regexps above
 		loadInstance,
 		loadDependincies,
 	);
@@ -71,20 +77,21 @@ export default (app) => {
 		isActive,
 		loadInstance,
 		(req, res, next) => {
-			const rcpt = req.instance;
+			const rcpt = req.loaded.instance;
 			res.json(rcpt);
 		},
 	);
 
 
 	app.post(
-		'/api/v1/recipient',
+		/^\/api\/v\d{1,2}\/(recipient)$/, // must be a regexp to set type of new instance
 		isActive,
+		loadParams, // high cohesion with the regexp above
 		createInstance,
 		loadDependincies,
 		(req, res, next) => {
 			const { author } = req;
-			const rcpt = req.instance;
+			const rcpt = req.loaded.instance;
 
 			rcpt.save({ author })
 				.then(() => res.json(rcpt))
@@ -109,7 +116,7 @@ export default (app) => {
 		loadInstance,
 		(req, res, next) => {
 			const { author } = req;
-			const rcpt = req.instance;
+			const rcpt = req.loaded.instance;
 			const props = req.body;
 
 			rcpt.update({ props, author })

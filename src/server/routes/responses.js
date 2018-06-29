@@ -1,5 +1,10 @@
 import { isActive } from '../middleware/users';
-import { loadInstance, createInstance, loadDependincies } from '../middleware/instances';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
 import Form from '../models/Form';
 import Response from '../models/Response';
 import { HTTPError } from '../errors';
@@ -9,10 +14,11 @@ import ssr from '../templates/ssr';
 export default (app) => {
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/response\/\d{1,16}$/, // api
-			/\/response\/\d{1,16}$/, // ssr
+			/\/api\/v\d{1,2}\/(response)\/(\d{1,16})$/, // api
+			/\/(response)\/(\d{1,16})$/, // ssr
 		],
 		isActive,
+		loadParams, // high cohesion with the regexps above
 		loadInstance,
 		loadDependincies,
 	);
@@ -23,7 +29,7 @@ export default (app) => {
 		isActive,
 		loadInstance,
 		(req, res, next) => {
-			const response = req.instance;
+			const response = req.loaded.instance;
 			res.send('awesome stub');
 		},
 	);
@@ -34,20 +40,21 @@ export default (app) => {
 		isActive,
 		loadInstance,
 		(req, res, next) => {
-			const response = req.instance;
+			const response = req.loaded.instance;
 			res.json(response);
 		},
 	);
 
 
 	app.post(
-		'/api/v1/response',
+		/^\/api\/v\d{1,2}\/(response)$/, // must be a regexp to set type of new instance
 		isActive,
+		loadParams, // high cohesion with the regexp above
 		createInstance,
 		loadDependincies,
 		(req, res, next) => {
 			const { author } = req;
-			const response = req.instance;
+			const response = req.loaded.instance;
 			response.respondent = { ip: req.connection.remoteAddress };
 
 			if(!response.formId) {

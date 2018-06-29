@@ -1,5 +1,10 @@
 import { isActive } from '../middleware/users';
-import { loadInstance, createInstance, loadDependincies } from '../middleware/instances';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import Org from '../models/Org';
 import { HTTPError } from '../errors';
@@ -11,11 +16,12 @@ import { actions as orgActions } from '../../client/apps/app/shared/redux/orgs';
 export default (app) => {
 	app.use(
 		[
-			/^\/api\/v\d{1,2}\/org\/\d{1,8}(\/\w{1,12})?$/, // api
-			/^\/org\/\d{1,8}(\/(info|settings|forms|orgs|parents|users))?$/, // ssr
-			/^\/org\/\d{1,8}\/(orgs|users)\/new$/, // ssr
+			/^\/api\/v\d{1,2}\/(org)\/(\d{1,8})(\/(info|settings|forms|orgs|parents|users))?$/, // api
+			/^\/(org)\/(\d{1,8})(\/(info|settings|forms|orgs|users))?$/, // ssr
+			/^\/(org)\/(\d{1,8})\/(orgs|users)\/new$/, // ssr
 		],
 		isActive,
+		loadParams, // high cohesion with the regexps above
 		loadInstance,
 		loadDependincies,
 	);
@@ -30,7 +36,7 @@ export default (app) => {
 		],
 		preloadReduxStore,
 		(req, res, next) => {
-			const org = req.instance;
+			const org = req.loaded.instance;
 			const { reduxStore } = req;
 			const entitiesMap = { orgs: org.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
@@ -43,7 +49,7 @@ export default (app) => {
 		'/org/:id/forms',
 		preloadReduxStore,
 		(req, res, next) => {
-			const org = req.instance;
+			const org = req.loaded.instance;
 			const options = req.query;
 			const { reduxStore } = req;
 			const entitiesMap = { orgs: org.toStore() };
@@ -69,7 +75,7 @@ export default (app) => {
 		'/org/:id/orgs',
 		preloadReduxStore,
 		(req, res, next) => {
-			const org = req.instance;
+			const org = req.loaded.instance;
 			const options = req.query;
 			const { reduxStore } = req;
 			const entitiesMap = { orgs: org.toStore() };
@@ -96,7 +102,7 @@ export default (app) => {
 		'/org/:id/users',
 		preloadReduxStore,
 		(req, res, next) => {
-			const org = req.instance;
+			const org = req.loaded.instance;
 			const options = req.query;
 			const { reduxStore } = req;
 			const entitiesMap = { orgs: org.toStore() };
@@ -123,7 +129,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/org/:id',
 		(req, res, next) => {
-			const org = req.instance;
+			const org = req.loaded.instance;
 			const orgs = { [org.id]: org };
 
 			if(!org.parentId) {
@@ -143,7 +149,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/org/:id/orgs',
 		(req, res, next) => {
-			const org = req.instance;
+			const org = req.loaded.instance;
 			const options = req.query;
 
 			org.findOrgsInSubtree(options)
@@ -156,7 +162,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/org/:id/parents',
 		(req, res, next) => {
-			const org = req.instance;
+			const org = req.loaded.instance;
 			const opts = {
 				...req.query,
 				authorOrgId: req.author.orgId,
@@ -173,7 +179,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/org/:id/users',
 		(req, res, next) => {
-			const org = req.instance;
+			const org = req.loaded.instance;
 			const options = req.query;
 
 			org.findUsersInSubtree(options)
@@ -186,7 +192,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/org/:id/forms',
 		(req, res, next) => {
-			const org = req.instance;
+			const org = req.loaded.instance;
 			const options = req.query;
 
 			org.findForms(options)
@@ -197,13 +203,14 @@ export default (app) => {
 
 	// create organization
 	app.post(
-		'/api/v1/org',
+		/^\/api\/v\d{1,2}\/(org)$/, // must be a regexp to set type of new instance
 		isActive,
+		loadParams, // high cohesion with the regexp above
 		createInstance,
 		loadDependincies,
 		(req, res, next) => {
 			const { author } = req;
-			const org = req.instance;
+			const org = req.loaded.instance;
 
 			return org.save({ author })
 				.then(() => res.json(org))
@@ -216,7 +223,7 @@ export default (app) => {
 		'/api/v1/org/:id',
 		(req, res, next) => {
 			const { author } = req;
-			const org = req.instance;
+			const org = req.loaded.instance;
 			const props = req.body;
 
 			org.update({ props, author })

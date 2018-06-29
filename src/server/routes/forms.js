@@ -1,5 +1,10 @@
 import { isActive } from '../middleware/users';
-import { loadInstance, createInstance, loadDependincies } from '../middleware/instances';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import Form from '../models/Form';
 import XLSX from '../models/XLSX';
@@ -12,10 +17,11 @@ import { actions as formActions } from '../../client/apps/app/shared/redux/forms
 export default (app) => {
 	app.use(
 		[
-			/^\/api\/v\d{1,2}\/form\/\d{1,8}(\/(responses|xlsx))?$/, // api
-			/^\/form\/\d{1,8}(\/(edit|preview|distribute|responses))?$/, // ssr
+			/^\/api\/v\d{1,2}\/(form)\/(\d{1,8})(\/(responses|xlsx))?$/, // api
+			/^\/(form)\/(\d{1,8})(\/(edit|preview|distribute|responses))?$/, // ssr
 		],
 		isActive,
+		loadParams, // high cohesion with the regexps above
 		loadInstance,
 		loadDependincies,
 	);
@@ -24,7 +30,7 @@ export default (app) => {
 	app.get(
 		'/form/:id',
 		(req, res, next) => {
-			const form = req.instance;
+			const form = req.loaded.instance;
 			const { s: shared } = req.query;
 
 			if(!shared) {
@@ -51,7 +57,7 @@ export default (app) => {
 		],
 		preloadReduxStore,
 		(req, res, next) => {
-			const form = req.instance;
+			const form = req.loaded.instance;
 			const { reduxStore } = req;
 			const entitiesMap = { forms: form.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
@@ -65,7 +71,7 @@ export default (app) => {
 		'/form/:id/responses',
 		preloadReduxStore,
 		(req, res, next) => {
-			const form = req.instance;
+			const form = req.loaded.instance;
 			const { reduxStore } = req;
 			const entitiesMap = { forms: form.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
@@ -87,7 +93,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/form/:id',
 		(req, res, next) => {
-			const form = req.instance;
+			const form = req.loaded.instance;
 			res.json(form);
 		},
 	);
@@ -97,7 +103,7 @@ export default (app) => {
 		'/api/v1/form/:id/responses',
 		(req, res, next) => {
 			const { type } = req.query;
-			const form = req.instance;
+			const form = req.loaded.instance;
 			// default value
 			let mode = 'short';
 			if(type === 'xlsx' || type === 'full') mode = 'full';
@@ -117,13 +123,14 @@ export default (app) => {
 
 
 	app.post(
-		'/api/v1/form',
+		/^\/api\/v\d{1,2}\/(form)$/, // must be a regexp to set type of new instance
 		isActive,
+		loadParams, // high cohesion with the regexp above
 		createInstance,
 		loadDependincies,
 		(req, res, next) => {
 			const { author } = req;
-			const form = req.instance;
+			const form = req.loaded.instance;
 
 			form.save({ author })
 				.then(() => {	res.send(form); })
@@ -137,7 +144,7 @@ export default (app) => {
 		'/api/v1/form/:id',
 		(req, res, next) => {
 			const { author } = req;
-			const form = req.instance;
+			const form = req.loaded.instance;
 			const props = req.body;
 
 			form.update({ props, author })

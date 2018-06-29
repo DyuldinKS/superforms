@@ -1,6 +1,11 @@
 import { isNotAuthenticated } from '../middleware/sessions';
 import { isActive } from '../middleware/users';
-import { loadInstance, createInstance, loadDependincies } from '../middleware/instances';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import User from '../models/User';
 import Org from '../models/Org';
@@ -70,13 +75,14 @@ export default (app) => {
 
 	// create user
 	app.post(
-		'/api/v1/user',
+		/^\/api\/v\d{1,2}\/(user)$/, // must be a regexp to set type of new instance
 		isActive,
+		loadParams, // high cohesion with the regexp above
 		createInstance,
 		loadDependincies,
 		(req, res, next) => {
 			const { author } = req;
-			const user = req.instance;
+			const user = req.loaded.instance;
 
 			user.save({ author })
 				.then(() => user.resetPassword({ author }))
@@ -89,19 +95,23 @@ export default (app) => {
 
 	app.use(
 		[
-			/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/\w{1,12})?$/, // api
-			/^\/user\/\d{1,8}(\/(info|settings|forms))?$/, // ssr
+			/^\/api\/v\d{1,2}\/(user)\/(\d{1,8})(\/(info|settings|forms))?$/, // api
+			/^\/(user)\/(\d{1,8})(\/(info|settings|forms))?$/, // ssr
 		],
 		isActive,
+		loadParams, // high cohesion with the regexps above
 		loadInstance,
 		loadDependincies,
 	);
 
 	app.get(
-		/^\/user\/\d{1,8}(\/(info|settings))?$/,
+		[
+			'/user/:id/info',
+			'/user/:id/settings',
+		],
 		preloadReduxStore,
 		(req, res, next) => {
-			const user = req.instance;
+			const user = req.loaded.instance;
 			const { reduxStore } = req;
 			const entitiesMap = { users: user.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
@@ -114,7 +124,7 @@ export default (app) => {
 		'/user/:id/forms',
 		preloadReduxStore,
 		(req, res, next) => {
-			const user = req.instance;
+			const user = req.loaded.instance;
 			const options = req.query;
 			const { reduxStore } = req;
 			const entitiesMap = { users: user.toStore() };
@@ -140,7 +150,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/user/:id',
 		(req, res, next) => {
-			const user = req.instance;
+			const user = req.loaded.instance;
 
 			Org.findById(user.orgId)
 				.then((org) => {
@@ -158,7 +168,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/user/:id/forms',
 		(req, res, next) => {
-			const user = req.instance;
+			const user = req.loaded.instance;
 			const options = req.query;
 
 			user.findForms(options)
@@ -173,7 +183,7 @@ export default (app) => {
 		'/api/v1/user/:id',
 		(req, res, next) => {
 			const { author } = req;
-			const user = req.instance;
+			const user = req.loaded.instance;
 			const props = req.body;
 
 			let updateChain = Promise.resolve();
