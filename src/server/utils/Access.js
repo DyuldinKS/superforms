@@ -4,26 +4,61 @@ import Org from '../models/Org';
 import User from '../models/User';
 import Form from '../models/Form';
 
-const roles = buildRoles(rules);
 
-const defineType = obj => obj.constructor.name.toLowerCase();
+class Access {
+	/* ----------------------------- STATIC PROPS ----------------------------- */
 
-const can = (user) => {
-	if(!user.can) {
-		user.can = new Proxy(
-			{},
-			{
-				get: (o, action) => (
-					(obj, params) => (
-						roles[user.role][action][defineType(obj)](user, obj, params)
-					)
-				),
-			},
-		);
+	static roles = buildRoles(rules);
+
+
+	/* ---------------------------- STATIC METHODS ---------------------------- */
+
+	static defineType(obj) {
+		return obj.constructor.name.toLowerCase();
 	}
 
-	return user.can;
+
+	/* --------------------------- INSTANCE METHODS --------------------------- */
+
+	constructor(user) {
+		this.setSubj(user);
+	}
+
+	setSubj(user) {
+		this.subj = user;
+	}
+
+	setAction(action) {
+		this.action = action;
+	}
+
+	check(obj, props) {
+		const { subj, action } = this;
+		const type = Access.defineType(obj);
+		return Access.roles[subj.role][action][type](subj, obj, props);
+	}
+
+	create(obj, params) {
+		this.setAction('create');
+		return this.check(obj, params);
+	}
+
+	read(obj, params) {
+		this.setAction('read');
+		return this.check(obj, params);
+	}
+
+	update(obj, params) {
+		this.setAction('update');
+		return this.check(obj, params);
+	}
+}
+
+
+const can = user => new Access(user);
+
+
+export {
+	Access as default,
+	can,
 };
-
-
-export { can };
