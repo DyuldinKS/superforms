@@ -268,6 +268,49 @@ export function fetchAffiliatedOrgs(orgId, options) {
   };
 }
 
+function fetchAncestorsRequest(id, options) {
+  return {
+    type: types.FETCH_ANCESTORS_REQUEST,
+    meta: { entityName, id },
+    payload: options,
+  };
+}
+
+export function fetchAncestorsSuccess(id, orgs) {
+  return (dispatch) => {
+    dispatch(batchActions(
+      {
+        type: types.FETCH_ANCESTORS_SUCCESS,
+        meta: { entityName, id },
+        orgs,
+      },
+      entities.add({ orgs }),
+    ));
+  };
+}
+
+export function fetchAncestorsFailure(id, error) {
+  return {
+    type: types.FETCH_ANCESTORS_FAILURE,
+    meta: { entityName, id },
+    error: true,
+    payload: error,
+  };
+}
+
+export function fetchAncestors(id, options) {
+  return async (dispatch) => {
+    dispatch(fetchAncestorsRequest(id, options));
+
+    try {
+      const data = await OrgAPI.getAncestors(id, options);
+      dispatch(fetchAncestorsSuccess(id, data));
+    } catch (error) {
+      dispatch(fetchAncestorsFailure(id, error));
+    }
+  };
+}
+
 export function fetchFormsSuccess(orgId, listObj, entitiesMap) {
   return (dispatch) => {
     const listId = getFormsListId(orgId);

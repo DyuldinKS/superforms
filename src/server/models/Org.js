@@ -15,6 +15,35 @@ class Org extends Recipient {
 	}
 
 
+	static async getParentIds(orgId) {
+		return db.query('SELECT get_parent_org_ids($1) AS ids', [orgId])
+			.then(row => (row ? row.ids : []));
+	}
+
+
+	getParents(opts) {
+		return db.query(
+			`SELECT build_orgs_object(ids) AS orgs, ids
+			FROM get_parent_org_ids($1) ids;`,
+			[this.id],
+		)
+			.then(({ orgs, ids }) => {
+				// find last org available for ther user
+				const last = ids.indexOf(opts.authorOrgId);
+				// set start & end indexes for the list of parents
+				const start = Number.parseInt(opts.minDist, 10);
+				let end = Number.parseInt(opts.maxDist, 10);
+				end = end > 0 && end <= last ? end : last + 1;
+
+				// filter orgs with specified start and end of list
+				const res = { orgs: {}, entries: [] };
+				res.entries = ids.slice(start, end);
+				res.entries.forEach((id) => { res.orgs[id] = orgs[id]; });
+				return res;
+			});
+	}
+
+
 	static buildSearchTemplate(text) {
 		if(text && typeof text === 'string') {
 			const str = text.trim();
