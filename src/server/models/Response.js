@@ -30,10 +30,11 @@ class Response extends AbstractModel {
 		const form = await Form.findById(this.formId);
 		if(!form) throw new HTTPError(400, 'form not found');
 
-		await form.loadDependincies();
+		const dependincies = await form.loadDependincies();
+		dependincies.forms = { [form.id]: form };
 		this.form = form;
 		this.parentOrgIds = form.parentOrgIds;
-		return this;
+		return dependincies;
 	}
 
 

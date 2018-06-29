@@ -80,7 +80,7 @@ const createInstance = (req, res, next) => {
 /* --------------------------- LOAD DEPENDINCIES ---------------------------- */
 
 const loadDependincies = (req, res, next) => {
-	if(!req.instance) {
+	if(!req.loaded && !req.instance) {
 		return next(new Error('No loaded or created model instance found'));
 	}
 
@@ -92,7 +92,10 @@ const loadDependincies = (req, res, next) => {
 		.map(instance => instance.loadDependincies());
 
 	Promise.all(loading)
-		.then(next)
+		.then(([deps]) => {
+			req.dependincies = deps;
+			next();
+		})
 		.catch(next);
 };
 

@@ -66,15 +66,13 @@ class User extends Recipient {
 		if(this.parentOrgIds) return;
 		if(!this.orgId) throw new Error('org.id is not specified');
 
-		const [org, parentOrgIds] = await Promise.all([
-			Org.findById(this.orgId),
-			Org.getParentIds(this.orgId),
-		]);
+		const { orgs, ids } = await Org.getParents(this.orgId);
+		if(!ids || ids.length === 0) throw new Error('parent org not found');
 
-		if(!org) throw new Error('user org not found');
-		this.org = org;
-		this.parentOrgIds = parentOrgIds;
-		return this;
+		const dependincies = { orgs };
+		this.org = orgs[this.orgId];
+		this.parentOrgIds = ids;
+		return dependincies;
 	}
 
 

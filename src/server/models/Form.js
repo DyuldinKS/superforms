@@ -31,10 +31,11 @@ class Form extends AbstractModel {
 		const owner = await User.findById(this.ownerId);
 		if(!owner) throw new Error('form owner not found');
 
-		await owner.loadDependincies();
+		const dependincies = await owner.loadDependincies();
+		dependincies.users = { [owner.id]: owner };
 		this.owner = owner;
 		this.parentOrgIds = owner.parentOrgIds;
-		return this;
+		return dependincies;
 	}
 
 

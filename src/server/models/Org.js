@@ -26,6 +26,15 @@ class Org extends Recipient {
 	}
 
 
+	static getParents(orgId) {
+		return db.query(
+			`SELECT build_orgs_object(ids) AS orgs, ids
+			FROM get_parent_org_ids($1) ids;`,
+			[orgId],
+		);
+	}
+
+
 	static sliceParents(parents, opts) {
 		const { orgs, ids } = parents;
 
@@ -90,17 +99,17 @@ class Org extends Recipient {
 		const orgId = this.id || this.parentId;
 		if(!orgId) throw new Error('org.id is not specified');
 
-		this.parentOrgIds = await Org.getParentIds(orgId);
-		return this;
+		const { orgs, ids } = await Org.getParents(orgId);
+		if(!ids || ids.length === 0) throw new Error('parent org not found');
+
+		const dependincies = { orgs };
+		this.parentOrgIds = ids;
+		return dependincies;
 	}
 
 
 	async getParents() {
-		return db.query(
-			`SELECT build_orgs_object(ids) AS orgs, ids
-			FROM get_parent_org_ids($1) ids;`,
-			[this.id],
-		);
+		return Org.getParents(this.id);
 	}
 
 
