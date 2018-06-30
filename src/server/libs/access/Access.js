@@ -1,17 +1,9 @@
-import buildRoles from './roles';
-import rules from './accessRules';
-import Org from '../models/Org';
-import User from '../models/User';
-import Form from '../models/Form';
-
-
 class Access {
-	/* ----------------------------- STATIC PROPS ----------------------------- */
-
-	static roles = buildRoles(rules);
-
-
 	/* ---------------------------- STATIC METHODS ---------------------------- */
+
+	static setRoles(roles) {
+		Access.roles = roles;
+	}
 
 	static defineType(obj) {
 		return obj.constructor.name.toLowerCase();
@@ -55,10 +47,4 @@ class Access {
 }
 
 
-const can = user => new Access(user);
-
-
-export {
-	Access as default,
-	can,
-};
+export default Access;

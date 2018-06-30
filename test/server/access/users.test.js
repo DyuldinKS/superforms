@@ -2,15 +2,11 @@ import chai from 'chai';
 import sinon from 'sinon';
 import assert from 'assert';
 import User from 'Server/models/User';
-// import Response from 'Server/models/Response';
-import { can } from 'Server/utils/Access';
-import buildRoles from 'Server/utils/roles';
-import rules from 'Server/utils/accessRules';
+import { can } from 'Server/libs/access';
 import { users as u, parentsByOrg, entityFactory } from './setup';
 
 const { expect } = chai;
 
-const roles = buildRoles(rules);
 
 describe('organization access', () => {
 
