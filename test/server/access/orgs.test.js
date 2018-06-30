@@ -29,33 +29,34 @@ describe('organization access', () => {
 			it('can create org in subtree', () => {
 				// all for root in first org
 				assert(creatableInSubtree.every(id => (
-					can(u['1.1']).create(newOrgs[id], props[id])))
+					can(u[1.1]).create(newOrgs[id], { body: props[id] })))
 				);
 
 				// inferior for root in third org
-				assert(can(u['3.1']).create(newOrgs['n3'], props['n3']));
-				assert(can(u['3.1']).create(newOrgs['n4'], props['n4']));
+				assert(can(u[3.1]).create(newOrgs['n3'], { body: props['n3'] }));
+				assert(can(u[3.1]).create(newOrgs['n4'], { body: props['n4'] }));
 			});
 
 			it('can not create org outside subtree', () => {
-				assert(can(u['1.1']).create(newOrgs['n0'], props['n0']) === false);
+				assert(can(u[1.1]).create(newOrgs['n0'], { body: props['n0'] }) === false);
 
-				assert(can(u['3.1']).create(newOrgs['n1'], props['n1']) === false);
-				assert(can(u['3.1']).create(newOrgs['n2'], props['n2']) === false);
+				assert(can(u[3.1]).create(newOrgs['n1'], { body: props['n1'] }) === false);
+				assert(can(u[3.1]).create(newOrgs['n2'], { body: props['n2'] }) === false);
 			});
 
-			it('can not create org with invalid props', () => {
-				assert(can(u['1.1']).create(newOrgs['n3'], {}) === false);
-				assert(can(u['1.1']).create(newOrgs['n1'], ['email', 'created']) === false);
+			it('can not create org with invalid prop keys', () => {
+				// reqired body: { email, orgId, info }
+				assert(can(u[1.1]).create(newOrgs['n3'], { body: {} }) === false);
+				assert(can(u[1.1]).create(newOrgs['n1'], { body: { email: 'some@ema.il' } }) === false);
 			});
 		});
 
 		describe('admin', () => {
 			it('can not create any org', () => {
 				assert(
-					[u['1.2'], u['3.2'], u['4.2']].every(user => (
+					[u[1.2], u[3.2], u[4.2]].every(user => (
 						// all orgs
-						creatable.every(id => !can(user).create(newOrgs[id], { /* any props */ }))
+						creatable.every(id => !can(user).create(newOrgs[id], { body: { /* any props */ } }))
 					)),
 				);
 			});
@@ -65,9 +66,9 @@ describe('organization access', () => {
 			it('can not create any org', () => {
 				assert(
 					// all simple users
-					[u['1.3'], u['3.3'], u['4.3']].every(user => (
+					[u[1.3], u[3.3], u[4.3]].every(user => (
 						// all orgs
-						creatable.every(id => !can(user).create(newOrgs[id], { /* any props */ }))
+						creatable.every(id => !can(user).create(newOrgs[id], { body: { /* any props */ } }))
 					)),
 				);
 			});
@@ -77,84 +78,98 @@ describe('organization access', () => {
 
 	const allInSubtree = Object.values(o);
 
-	describe('to read sections of organization', () => {
-		const sections = ['info', 'orgs', 'users', 'forms', 'settings'];
+	describe('to read subpaths of organization', () => {
+		const subpaths = [
+			undefined, // for api request to read user info
+			'orgs/new', 'users/new', // pages to create org or user
+			'info', 'orgs', 'users', 'forms', 'settings',
+		];
+
 
 		describe('root', () => {
-			it('can read any section of any org in subtree', () => {
-				// all for root in first org
-				assert(allInSubtree.every((org) => (
-					can(u['1.1']).read(org)))
-				);
+			it('can read any subpath of any org in subtree', () => {
+				subpaths.forEach((subpath) => {
+					// all for root in first org
+					allInSubtree.forEach((org) => {
+						assert(can(u[1.1]).read(org, { subpath }));
+					});
 
-				// inferior for root in third org
-				assert(can(u['3.1']).read(o[3]));
-				assert(can(u['3.1']).read(o[4]));
+					// inferior for root in third org
+					assert(can(u[3.1]).read(o[3], { subpath }));
+					assert(can(u[3.1]).read(o[4], { subpath }));
+				});
 			});
 
-			it('can not read org outside subtree', () => {
-				// parent and sibling for third org
-				assert(can(u['3.1']).read(o[1]) === false);
-				assert(can(u['3.1']).read(o[2]) === false);
+			it('can not read any org path outside subtree', () => {
+					// parent and sibling for third org
+				subpaths.forEach((subpath) => {
+					assert(can(u[3.1]).read(o[1], { subpath }) === false);
+					assert(can(u[3.1]).read(o[2], { subpath }) === false);
+				});
 			});
 		});
 
 		describe('admin', () => {
-			it('can read any section of his org', () => {
-				assert(can(u['1.2']).read(o[1]));
-				assert(can(u['3.2']).read(o[3]));
-				assert(can(u['4.2']).read(o[4]));
+			it('can read any subpath of his org except orgs/new', () => {
+				subpaths.filter(sp => sp !== 'orgs/new')
+					.forEach((subpath) => {
+						assert(can(u[1.2]).read(o[1], { subpath }));
+						assert(can(u[3.2]).read(o[3], { subpath }));
+						assert(can(u[4.2]).read(o[4], { subpath }));
+					})
 			});
 
-			it('can not read other orgs', () => {
-				assert(can(u['1.2']).read(o[2]) === false);
+			it('can NOT get page to create orgs (orgs/new)', () => {
+				const subpath = 'orgs/new';
+				assert(can(u[1.2]).read(o[1], { subpath }) === false);
+				assert(can(u[3.2]).read(o[3], { subpath }) === false);
+				assert(can(u[4.2]).read(o[4], { subpath }) === false);
+			})
 
-				assert(can(u['3.2']).read(o[1]) === false);
-				assert(can(u['3.2']).read(o[2]) === false);
-				assert(can(u['3.2']).read(o[4]) === false);
+			it('can NOT read any path of other orgs', () => {
+				subpaths.forEach((subpath) => {
+					assert(can(u[1.2]).read(o[2], { subpath }) === false);
+
+					assert(can(u[3.2]).read(o[1], { subpath }) === false);
+					assert(can(u[3.2]).read(o[2], { subpath }) === false);
+					assert(can(u[3.2]).read(o[4], { subpath }) === false);
+				});
 			});
 		});
 
 		describe('user', () => {
 			const available = ['forms'];
-			const notAvailable = sections.filter(s => !available.includes(s));
+			const notAvailable = subpaths.filter(s => !available.includes(s));
 
-			it('can read \'forms\' section of his org', () => {
-				assert(can(u['1.3']).read(o[1], { section: 'forms' }));
-				assert(can(u['3.3']).read(o[3], { section: 'forms' }));
-				assert(can(u['4.3']).read(o[4], { section: 'forms' }));
+			it('can read all available subpath of his org', () => {
+				available.forEach((subpath) => {
+					assert(can(u[1.3]).read(o[1], { subpath }));
+					assert(can(u[3.3]).read(o[3], { subpath }));
+					assert(can(u[4.3]).read(o[4], { subpath }));
+				})
 			});
 
-			it('can not read other sections of his org', () => {
-				// section is not defined
-				assert.equal(can(u['1.3']).read(o[1]), false);
-				// other sections
-				assert(notAvailable.every(section => (
-					!can(u['1.3']).read(o[1], { section })),
-				));
+			it('can not read other subpaths of his org', () => {
+				// subpath is not defined
+				notAvailable.forEach((subpath) => {
+					assert(can(u[1.3]).read(o[1], { subpath }) === false);
+					assert(can(u[3.3]).read(o[3], { subpath }) === false);
+					assert(can(u[4.3]).read(o[4], { subpath }) === false);
+				})
 			});
 
 			it('can not read other orgs', () => {
-				// section is not defined
-				assert([2, 3, 4].every(id => !can(u['1.3']).read(o[id])));
+				subpaths.forEach((subpath) => {
+					// check all subpaths of other orgs for u[1.3]
+					[2, 3, 4].every((id) => {
+						assert(can(u[1.3]).read(o[id], { subpath }) === false);
+					});
 
-				// check not available sections of other orgs for u['1.3']
-				assert(
-					[2, 3, 4].every(id => (
-						notAvailable.every(section => (
-							!can(u['1.3']).read(o[id], { section })),
-						)
-					))
-				);
-
-				// check not available sections of other orgs for u['1.3']
-				assert(
-					[1, 2, 4].every(id => (
-						notAvailable.every(section => (
-							!can(u['3.3']).read(o[id], { section })),
-						)
-					))
-				)
+					// check all subpaths of other orgs for u[1.3]
+					[1, 2, 4].forEach((id) => {
+						assert(can(u[3.3]).read(o[id], { subpath }) === false);
+					});
+				});
 			});
 		});
 	});
@@ -164,73 +179,77 @@ describe('organization access', () => {
 		// props to update org of the user
 		const updatableInHisOrg = { email: 'new@', info: 'updated' };
 		// props to update other orgs in subtree
-		const allUpdatable = { email: 'new@', active: true, info: 'updated' };
+		const allUpdatable = {
+			email: 'new@',
+			active: true,
+			info: 'updated',
+			deleted: Date.parse('2012-07-13'),
+		};
 
 		describe('root', () => {
 			it('can update his org', () => {
-				assert(can(u['1.1']).update(o[1], updatableInHisOrg));
-				assert(can(u['1.1']).update(o[1], { /* any props */ }));
-				assert(can(u['1.1']).update(o[1], { info: 'only new info' }));
-				assert(can(u['3.1']).update(o[3], updatableInHisOrg));
-				assert(can(u['3.1']).update(o[3], { email: 'only.new.email' }));
+				assert(can(u[1.1]).update(o[1], { body: updatableInHisOrg }));
+				assert(can(u[1.1]).update(o[1], { body: { /* any props */ } }));
+				assert(can(u[1.1]).update(o[1], { body: { info: 'only new info' } }));
+				assert(can(u[3.1]).update(o[3], { body: updatableInHisOrg }));
+				assert(can(u[3.1]).update(o[3], { body: { email: 'only.new.email' } }));
 			});
 
 			it('can update org in subtree', () => {
 				// org subtree
-
-				assert(can(u['1.1']).update(o[2], allUpdatable));
-				assert(can(u['1.1']).update(o[3], allUpdatable));
-				assert(can(u['1.1']).update(o[4], allUpdatable));
-				assert(can(u['3.1']).update(o[4], allUpdatable));
+				assert(can(u[1.1]).update(o[2], { body: allUpdatable }));
+				assert(can(u[1.1]).update(o[3], { body: allUpdatable }));
+				assert(can(u[1.1]).update(o[4], { body: allUpdatable }));
+				assert(can(u[3.1]).update(o[4], { body: allUpdatable }));
 			});
 
 			it('can not update org with invalid props', () => {
 				// all props for user's organization
-				assert.equal(can(u['3.1']).update(o[3], allUpdatable), false);
-				assert.equal(can(u['1.1']).update(o[4], { parentId: 12 }),false);
-				assert.equal(can(u['1.1']).update(o[4], { ...allUpdatable, custom: true }), false);
+				assert.equal(can(u[3.1]).update(o[3], { body: allUpdatable }), false);
+				assert.equal(can(u[1.1]).update(o[4], { body: { parentId: 12 } }),false);
+				assert.equal(can(u[1.1]).update(o[4], { body: { ...allUpdatable, custom: true } }), false);
 			});
 
 			it('can not update org outside subtree', () => {
-				assert.equal(can(u['3.1']).update(o[1], { /* any props */ }), false);
-				assert.equal(can(u['3.1']).update(o[2], { /* any props */ }), false);
+				assert.equal(can(u[3.1]).update(o[1], { body: { /* any props */ } }), false);
+				assert.equal(can(u[3.1]).update(o[2], { body: { /* any props */ } }), false);
 			});
 		});
 
 		describe('admin', () => {
 			it('can update email and info his org', () => {
-				assert(can(u['1.2']).update(o[1], { info: 'some new info' }));
-				assert(can(u['3.2']).update(o[3], updatableInHisOrg));
-				assert(can(u['3.2']).update(o[3], { email: 'only.new.email' }));
+				assert(can(u[1.2]).update(o[1], { body: { info: 'some new info' } }));
+				assert(can(u[3.2]).update(o[3], { body: updatableInHisOrg }));
+				assert(can(u[3.2]).update(o[3], { body: { email: 'only.new.email' } }));
 			});
 
 			it('can not update org with invalid props', () => {
 				// all props for user's organization
-				assert.equal(can(u['3.2']).update(o[3], allUpdatable), false);
-				assert.equal(can(u['1.2']).update(o[1], { parentId: 12 }),false);
-				assert.equal(can(u['1.2']).update(o[1], { ...allUpdatable, custom: true }), false);
+				assert.equal(can(u[3.2]).update(o[3], { body: allUpdatable }), false);
+				assert.equal(can(u[1.2]).update(o[1], { body: { parentId: 12 } }),false);
+				assert.equal(can(u[1.2]).update(o[1], { body: { ...allUpdatable, custom: true } }), false);
 			});
 
 			it('can not update org in subtree', () => {
 				// org subtree
-				assert.equal(can(u['1.2']).update(o[2], { /* any props */ }), false);
-				assert.equal(can(u['3.2']).update(o[4], { /* any props */ }), false);
+				assert.equal(can(u[1.2]).update(o[2], { body: { /* any props */ } }), false);
+				assert.equal(can(u[3.2]).update(o[4], { body: { /* any props */ } }), false);
 			});
 
 			it('can not update org outside subtree', () => {
 				// org subtree
-				assert.equal(can(u['3.2']).update(o[2], { /* any props */ }), false);
-				assert.equal(can(u['3.2']).update(o[1], { /* any props */ }), false);
-				assert.equal(can(u['4.2']).update(o[1], { /* any props */ }), false);
+				assert.equal(can(u[3.2]).update(o[2], { body: { /* any props */ } }), false);
+				assert.equal(can(u[3.2]).update(o[1], { body: { /* any props */ } }), false);
+				assert.equal(can(u[4.2]).update(o[1], { body: { /* any props */ } }), false);
 			});
 		});
 
 		describe('user', () => {
 			it('can not update any org', () => {
-				assert.equal(can(u['3.3']).update(o[1], { /* any props */ }), false);
-				assert.equal(can(u['3.3']).update(o[2], { /* any props */ }), false);
-				assert.equal(can(u['3.3']).update(o[3], { /* any props */ }), false);
-				assert.equal(can(u['3.3']).update(o[4], { /* any props */ }), false);
+				assert.equal(can(u[3.3]).update(o[1], { body: { /* any props */ } }), false);
+				assert.equal(can(u[3.3]).update(o[2], { body: { /* any props */ } }), false);
+				assert.equal(can(u[3.3]).update(o[3], { body: { /* any props */ } }), false);
+				assert.equal(can(u[3.3]).update(o[4], { body: { /* any props */ } }), false);
 			});
 		});
 	})

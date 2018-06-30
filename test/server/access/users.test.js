@@ -32,58 +32,58 @@ describe('organization access', () => {
 		describe('root', () => {
 			it('can create any user in subtree', () => {
 				assert(allNew.every(id => (
-					can(u[1.1]).create(newUsers[id], props[id]))
+					can(u[1.1]).create(newUsers[id], { body: props[id] }))
 				));
 
 				assert(['n3.1', 'n3.2', 'n3.3', 'n4.2', 'n4.3'].every(id => (
-					can(u[3.1]).create(newUsers[id], props[id])
+					can(u[3.1]).create(newUsers[id], { body: props[id] })
 				)))
 			})
 
 			it('can not create users outside subtree', () => {
 				assert(['n1.1', 'n2.2'].every(id => (
-					!can(u[3.1]).create(newUsers[id], props[id])
+					!can(u[3.1]).create(newUsers[id], { body: props[id] })
 				)));
 			});
 
 			it('can not create user with invalid props', () => {
-				// required: ['email', 'orgId', 'info', 'role']
-				assert.equal(can(u[1.1]).create(newUsers['n1.1'], {}), false);
-				assert.equal(can(u[1.1]).create(newUsers['n4.2'], ['email', 'orgId']), false);
-				assert.equal(can(u[1.1]).create(newUsers['n3.3'], ['some', 'trash']), false);
+				// required body keys: ['email', 'orgId', 'info', 'role']
+				assert.equal(can(u[1.1]).create(newUsers['n1.1'], { body: {} }), false);
+				assert.equal(can(u[1.1]).create(newUsers['n4.2'], { body: ['email', 'orgId'] }), false);
+				assert.equal(can(u[1.1]).create(newUsers['n3.3'], { body: ['some', 'trash'] }), false);
 			});
 		});
 
 
 		describe('admin', () => {
 			it('can create any user within his org except root', () => {
-				assert(can(u[3.2]).create(newUsers['n3.2'], props['n3.2']));
-				assert(can(u[3.2]).create(newUsers['n3.3'], props['n3.3']));
+				assert(can(u[3.2]).create(newUsers['n3.2'], { body: props['n3.2'] }));
+				assert(can(u[3.2]).create(newUsers['n3.3'], { body: props['n3.3'] }));
 	
-				assert(can(u[4.2]).create(newUsers['n4.2'], props['n4.2']));
-				assert(can(u[4.2]).create(newUsers['n4.3'], props['n4.3']));
+				assert(can(u[4.2]).create(newUsers['n4.2'], { body: props['n4.2'] }));
+				assert(can(u[4.2]).create(newUsers['n4.3'], { body: props['n4.3'] }));
 			});
 
 			it('can not create user with invalid props', () => {
 				// required: ['email', 'orgId', 'info', 'role']
-				assert.equal(can(u[3.2]).create(newUsers['n3.2'], {}), false);
-				assert.equal(can(u[4.2]).create(newUsers['n4.3'], ['email', 'orgId']), false);
+				assert.equal(can(u[3.2]).create(newUsers['n3.2'], { body: {} }), false);
+				assert.equal(can(u[4.2]).create(newUsers['n4.3'], { body: ['email', 'orgId'] }), false);
 			});
 
 			it('can not create root', () => {
-				assert.equal(can(u[1.2]).create(newUsers['n1.1'], props['n1.1']), false);
-				assert.equal(can(u[3.2]).create(newUsers['n3.1'], props['n3.1']), false);
+				assert.equal(can(u[1.2]).create(newUsers['n1.1'], { body: props['n1.1'] }), false);
+				assert.equal(can(u[3.2]).create(newUsers['n3.1'], { body: props['n3.1'] }), false);
 			});
 
 			it('can not create any user outside his org', () => {
 				// for admin of 3rd org
 				assert(['n1.1', 'n2.2', 'n4.2', 'n4.3'].every(id => (
-					!can(u[3.2]).create(newUsers[id], props[id])
+					!can(u[3.2]).create(newUsers[id], { body: props[id] })
 				)));
 
 				// for admin of 4rd org
 				assert(['n1.1', 'n2.2', 'n3.1', 'n3.2', 'n3.3'].every(id => (
-					!can(u[4.2]).create(newUsers[id], props[id])
+					!can(u[4.2]).create(newUsers[id], { body: props[id] })
 				)));
 			})
 		});
@@ -95,7 +95,7 @@ describe('organization access', () => {
 					[1.3, 3.3, 4.3]
 						.map(id => u[id])
 						.every(author => (
-							allNew.every(id => !can(author).create(newUsers[id], props[id]))
+							allNew.every(id => !can(author).create(newUsers[id], { body: props[id] }))
 						))
 				);
 			});
@@ -105,11 +105,11 @@ describe('organization access', () => {
 
 	const allInSubtree = Object.values(u);
 
-	describe('to read sections of users', () => {
-		const sections = ['info', 'forms', 'settings'];
+	describe('to read subpaths of users', () => {
+		const subpaths = ['info', 'forms', 'settings'];
 
 		describe('root', () => {
-			it('can read any section of any user in subtree', () => {
+			it('can read any subpath of any user in subtree', () => {
 				// all for root in first org
 				allInSubtree.forEach(usr => can(u[1.1]).read(usr));
 
@@ -133,18 +133,25 @@ describe('organization access', () => {
 
 
 		describe('admin', () => {
-			it('can read any section of his own profile', () => {
-				assert(can(u[1.2]).read(u[1.2]));
-				assert(can(u[3.2]).read(u[3.2]));
-				assert(can(u[4.2]).read(u[4.2]));
+			it('can read any subpath of his own profile', () => {
+				[1.2, 3.2, 4.2].forEach((id) => {
+					subpaths.forEach((subpath) => {
+						assert(can(u[id]).read(u[id], { subpath }));
+					})
+				})
 			});
 
-			it('can read any section of his org users', () => {
-				assert(can(u[1.2]).read(u[1.1]));
-				assert(can(u[1.2]).read(u[1.3]));
-				assert(can(u[3.2]).read(u[3.1]));
-				assert(can(u[3.2]).read(u[3.3]));
-				assert(can(u[4.2]).read(u[4.3]));
+			it('can read any subpath of his org users', () => {
+				[1.2, 3.2, 4.2].forEach((id) => {
+					allInSubtree
+						// get users within org of each amdin
+						.filter(usr => usr.orgId === u[id].orgId)
+						.forEach(usr => {
+							subpaths.forEach((subpath) => {
+								assert(can(u[id]).read(usr, { subpath }));
+							})
+						})
+				})
 			});
 
 			it('can NOT read users outside his org', () => {
@@ -153,7 +160,9 @@ describe('organization access', () => {
 						// get users outside org of each amdin
 						.filter(usr => usr.orgId !== u[id].orgId)
 						.forEach((usr) => {
-							assert.equal(can(u[id]).read(usr, {}), false);
+							subpaths.forEach((subpath) => {
+								assert(can(u[id]).read(usr, { subpath }) === false);
+							})
 						})
 				})
 			});
@@ -162,49 +171,39 @@ describe('organization access', () => {
 
 		describe('user', () => {
 			// about himself
-			it('can read personal \'forms\' and \'info\' sections', () => {
-				['forms', 'info'].forEach((section) => {
+			it('can read personal \'forms\' and \'info\' subpaths', () => {
+				['forms', 'info'].forEach((subpath) => {
 					[1.3, 3.3, 4.3].forEach((id) => {
 						// read himself
-						assert(can(u[id]).read(u[id], { section }));
+						assert(can(u[id]).read(u[id], { subpath }));
 					})
 				});
 			});
-
-			it('can NOT read personal \'settings\' section', () => {
-				['settings'].forEach((section) => {
-					[1.3, 3.3, 4.3].forEach((id) => {
-						// read himself
-						assert.equal(can(u[id]).read(u[id], { section }), false);
-					})
-				});
-			});
-
 
 			// relative to other users
-			it('can read \'forms\' and \'info\' section of his org users', () => {
-				['forms', 'info'].forEach((section) => {
+			it('can read \'forms\' and \'info\' subpath of his org users', () => {
+				['forms', 'info'].forEach((subpath) => {
 					// user 1.3
-					assert(can(u[1.3]).read(u[1.1], { section }));
-					assert(can(u[1.3]).read(u[1.2], { section }));
+					assert(can(u[1.3]).read(u[1.1], { subpath }));
+					assert(can(u[1.3]).read(u[1.2], { subpath }));
 					// user 3.3
-					assert(can(u[3.3]).read(u[3.1], { section }));
-					assert(can(u[3.3]).read(u[3.2], { section }));
+					assert(can(u[3.3]).read(u[3.1], { subpath }));
+					assert(can(u[3.3]).read(u[3.2], { subpath }));
 					// user 4.3
-					assert(can(u[4.3]).read(u[4.2], { section }));
+					assert(can(u[4.3]).read(u[4.2], { subpath }));
 				});
 			});
 
-			it('can NOT read \'settings\' section of his org users', () => {
-				['settings'].forEach((section) => {
+			it('can NOT read \'settings\' subpath of his org users', () => {
+				['settings'].forEach((subpath) => {
 					// user 1.3
-					assert.equal(can(u[1.3]).read(u[1.1], { section }), false);
-					assert.equal(can(u[1.3]).read(u[1.2], { section }), false);
+					assert.equal(can(u[1.3]).read(u[1.1], { subpath }), false);
+					assert.equal(can(u[1.3]).read(u[1.2], { subpath }), false);
 					// user 3.3
-					assert.equal(can(u[3.3]).read(u[3.1], { section }), false);
-					assert.equal(can(u[3.3]).read(u[3.2], { section }), false);
+					assert.equal(can(u[3.3]).read(u[3.1], { subpath }), false);
+					assert.equal(can(u[3.3]).read(u[3.2], { subpath }), false);
 					// user 4.3
-					assert.equal(can(u[4.3]).read(u[4.2], { section }), false);
+					assert.equal(can(u[4.3]).read(u[4.2], { subpath }), false);
 				})
 			});
 
