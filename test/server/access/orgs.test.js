@@ -137,7 +137,7 @@ describe('organization access', () => {
 		});
 
 		describe('user', () => {
-			const available = ['forms'];
+			const available = ['info', 'forms'];
 			const notAvailable = subpaths.filter(s => !available.includes(s));
 
 			it('can read all available subpath of his org', () => {
@@ -149,7 +149,6 @@ describe('organization access', () => {
 			});
 
 			it('can not read other subpaths of his org', () => {
-				// subpath is not defined
 				notAvailable.forEach((subpath) => {
 					assert(can(u[1.3]).read(o[1], { subpath }) === false);
 					assert(can(u[3.3]).read(o[3], { subpath }) === false);
