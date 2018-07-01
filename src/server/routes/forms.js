@@ -37,16 +37,15 @@ export default (app) => {
 			const { s: secret } = req.query;
 
 			if(!secret) {
-				if(!form.collecting) {
-					return res.redirect(`/form/${form.id}/edit`);
-				}
-				return res.redirect(`/form/${form.id}/responses`);
+				const subpath = form.isActive() ? 'responses' : 'edit';
+				return res.redirect(`/form/${form.id}/${subpath}`);
 			}
 
-			if(form.collecting === null || form.collecting.shared !== secret) {
-				return next(new HTTPError(404, 'form not found'));
+			if(form.isShared() && form.collecting.shared === secret) {
+				return res.send(ssr.interview({ form }));
 			}
-			res.send(ssr.interview({ form }));
+
+			next(new HTTPError(404, 'form not found'));
 		},
 	);
 

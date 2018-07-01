@@ -1,9 +1,8 @@
 export default ({
+	everywhere,
 	inSubtree,
 	isSameUser,
 	isSameOrg,
-	isFormOfResponseActive,
-	isResponseToSharedForm,
 	isSubset,
 	areEqualSets,
 }) => ({
@@ -24,10 +23,7 @@ export default ({
 				&& isSubset(['title', 'description'], body)
 		),
 
-		response: (subj, response) => (
-			isFormOfResponseActive(subj, response)
-				&& isResponseToSharedForm(subj, response)
-		),
+		response: everywhere,
 	},
 
 	read: {

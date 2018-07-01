@@ -39,16 +39,10 @@ const rules = {
 	isFormUnsent: (subj, form) => form.collecting === null,
 
 	// form is on the stage of collecting responses
-	isFormActive: (subj, form) => (
-		!form.deleted && form.collecting && !form.collecting.inactive
-			&& (!form.collecting.expires
-				|| new Date(form.collecting.expires) > new Date())
-	),
+	isFormActive: (subj, form) => form.isActive(),
 
 	// check by response if form is active
-	isFormOfResponseActive: (subj, response) => (
-		rules.isFormActive(subj, response.form)
-	),
+	isFormOfResponseActive: (subj, response) => response.form.isActive(),
 
 	isResponseToSharedForm: (subj, response) => (
 		response.form.collecting && response.form.collecting.shared

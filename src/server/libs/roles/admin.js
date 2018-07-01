@@ -1,10 +1,9 @@
 export default ({
 	nowhere,
+	everywhere,
 	withinOrg,
 	isSameUser,
 	isSameOrg,
-	isFormOfResponseActive,
-	isResponseToSharedForm,
 	isEqual,
 	isElemOf,
 	isSubset,
@@ -23,10 +22,7 @@ export default ({
 			areEqualSets(body, ['title', 'description', 'scheme'])
 		),
 
-		response: (subj, response) => (
-			isFormOfResponseActive(subj, response)
-				&& isResponseToSharedForm(subj, response)
-		),
+		response: everywhere,
 	},
 
 	read: {

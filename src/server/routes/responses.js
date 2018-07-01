@@ -58,21 +58,14 @@ export default (app) => {
 			const response = req.loaded.instance;
 			response.respondent = { ip: req.connection.remoteAddress };
 
-			if(!response.formId) {
-				return next(new HTTPError(400, '"formId" is not specified.'));
+			const { form } = response;
+
+			if(!form.isShared() || form.collecting.shared !== response.secret) {
+				next(new HTTPError(403, 'No access'));
 			}
 
-			Form.findById(response.formId)
-				.then((form) => {
-					if(!form) throw new HTTPError(404, 'form not found');
-
-					if(form.collecting && (
-						form.collecting.shared === response.secret
-					)) return response.save({ author });
-
-					throw new HTTPError(403, 'No access');
-				})
-				.then(() => {	res.send(response); })
+			response.save({ author })
+				.then(() => { res.status(200).send(); })
 				.catch(next);
 		},
 	);
