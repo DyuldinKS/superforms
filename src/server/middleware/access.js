@@ -6,35 +6,31 @@ const accessError = new HTTPError(403, 'No access');
 const check = (isAccess, next) => (isAccess ? next() : next(accessError));
 
 
-const checkAccessToCreate = (req, res, next) => {
-	const { body } = req;
-	const { instance } = req.loaded;
+const checkAccess = (req, res, next) => {
+	const { method, body, query, params } = req;
+	const { subpath, instance } = req.loaded;
+	let action;
+	console.log({ method, body, query, params });
+
+
+	if(method === 'GET') {
+		action = 'read';
+	} else if(method === 'PATCH' || method === 'PUT') {
+		action = 'update';
+	} else if(method === 'POST') {
+		action = 'create';
+	}	else {
+		return next(new Error('No access check for this request method.'));
+	}
+
+	console.log(action);
+	console.log(instance);
+	console.log(subpath);
 	check(
-		can(req.author).create(instance, { body }),
+		can(req.author)[action](instance, { body, query, params, subpath }),
 		next,
 	);
 };
 
-const checkAccessToRead = (req, res, next) => {
-	const { params, query } = req;
-	const { path } = req.loaded;
-	check(
-		can(req.author).read(req.instance, { params, query, path }),
-		next,
-	);
-};
 
-const checkAccessToUpdate = (req, res, next) => {
-	const { body } = req;
-	check(
-		can(req.author).update(req.instance, { body }),
-		next,
-	);
-};
-
-
-export {
-	checkAccessToCreate,
-	checkAccessToRead,
-	checkAccessToUpdate,
-};
+export { checkAccess, accessError };
