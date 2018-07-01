@@ -17,13 +17,17 @@ const models = {
 
 /* -------------------------- LOAD INSTANCE PARAMS -------------------------- */
 
-
 const loadParams = (req, res, next) => {
-	const { 0: type, 1: id, 3: section } = req.params;
+	const chunks = req.originalUrl.slice(1).split('/');
+	const [type, id, ...subpath] = chunks[0] === 'api' ? chunks.slice(2) : chunks;
 	if(!(type in models)) {
-		return next(new HTTPError('Type of instance to load is not defined in url'));
+		throw new Error('Can not define model type to create instance');
 	}
-	req.loaded = { type, id, section };
+	req.loaded = {
+		type,
+		id: Number.parseInt(id, 10),
+		subpath: subpath.join('/'),
+	};
 	next();
 };
 

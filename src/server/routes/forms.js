@@ -17,11 +17,11 @@ import { actions as formActions } from '../../client/apps/app/shared/redux/forms
 export default (app) => {
 	app.use(
 		[
-			/^\/api\/v\d{1,2}\/(form)\/(\d{1,8})(\/(responses|xlsx))?$/, // api
-			/^\/(form)\/(\d{1,8})(\/(edit|preview|distribute|responses))?$/, // ssr
+			/^\/api\/v\d{1,2}\/form\/\d{1,12}(\/(responses|xlsx))?$/, // api
+			/^\/form\/\d{1,12}(\/(edit|preview|distribute|responses))?$/, // ssr
 		],
 		isActive,
-		loadParams, // high cohesion with the regexps above
+		loadParams,
 		loadInstance,
 		loadDependincies,
 		checkAccess,
@@ -30,18 +30,20 @@ export default (app) => {
 
 	app.get(
 		'/form/:id',
+		loadParams,
+		loadInstance,
 		(req, res, next) => {
 			const form = req.loaded.instance;
-			const { s: shared } = req.query;
+			const { s: secret } = req.query;
 
-			if(!shared) {
+			if(!secret) {
 				if(!form.collecting) {
 					return res.redirect(`/form/${form.id}/edit`);
 				}
-				return res.redirect(`/form/${form.id}/preview`);
+				return res.redirect(`/form/${form.id}/responses`);
 			}
 
-			if(form.collecting === null || form.collecting.shared !== shared) {
+			if(form.collecting === null || form.collecting.shared !== secret) {
 				return next(new HTTPError(404, 'form not found'));
 			}
 			res.send(ssr.interview({ form }));
@@ -124,9 +126,9 @@ export default (app) => {
 
 
 	app.post(
-		/^\/api\/v\d{1,2}\/(form)$/, // must be a regexp to set type of new instance
+		'/api/v1/form',
 		isActive,
-		loadParams, // high cohesion with the regexp above
+		loadParams,
 		createInstance,
 		loadDependincies,
 		checkAccess,

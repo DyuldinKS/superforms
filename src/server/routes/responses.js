@@ -13,11 +13,11 @@ import { HTTPError } from '../errors';
 export default (app) => {
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/(response)\/(\d{1,16})$/, // api
-			/\/(response)\/(\d{1,16})$/, // ssr
+			/\/api\/v\d{1,2}\/response\/\d{1,16}$/, // api
+			/\/response\/\d{1,16}$/, // ssr
 		],
 		isActive,
-		loadParams, // high cohesion with the regexps above
+		loadParams,
 		loadInstance,
 		loadDependincies,
 		checkAccess,
@@ -47,9 +47,9 @@ export default (app) => {
 
 
 	app.post(
-		/^\/api\/v\d{1,2}\/(response)$/, // must be a regexp to set type of new instance
+		'/api/v1/response',
 		isActive,
-		loadParams, // high cohesion with the regexp above
+		loadParams,
 		createInstance,
 		loadDependincies,
 		checkAccess,

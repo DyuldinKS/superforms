@@ -76,9 +76,9 @@ export default (app) => {
 
 	// create user
 	app.post(
-		/^\/api\/v\d{1,2}\/(user)$/, // must be a regexp to set type of new instance
+		'/api/v1/user',
 		isActive,
-		loadParams, // high cohesion with the regexp above
+		loadParams,
 		createInstance,
 		loadDependincies,
 		checkAccess,
@@ -97,11 +97,11 @@ export default (app) => {
 
 	app.use(
 		[
-			/^\/api\/v\d{1,2}\/(user)\/(\d{1,8})(\/(info|settings|forms))?$/, // api
-			/^\/(user)\/(\d{1,8})(\/(info|settings|forms))?$/, // ssr
+			/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/(info|settings|forms))?$/, // api
+			/^\/user\/\d{1,8}(\/(info|settings|forms))?$/, // ssr
 		],
 		isActive,
-		loadParams, // high cohesion with the regexps above
+		loadParams,
 		loadInstance,
 		loadDependincies,
 		checkAccess,

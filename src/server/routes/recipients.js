@@ -63,11 +63,11 @@ export default (app) => {
 
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/(recipient)\/(\d{1,8})$/, // api
-			/\/(recipient)\/(\d{1,8})$/, // ssr
+			/\/api\/v\d{1,2}\/recipient\/\d{1,8}$/, // api
+			/\/recipient\/\d{1,8}$/, // ssr
 		],
 		isActive,
-		loadParams, // high cohesion with the regexps above
+		loadParams,
 		loadInstance,
 		loadDependincies,
 		checkAccess,
@@ -84,9 +84,9 @@ export default (app) => {
 
 
 	app.post(
-		/^\/api\/v\d{1,2}\/(recipient)$/, // must be a regexp to set type of new instance
+		'/api/v1/recipient',
 		isActive,
-		loadParams, // high cohesion with the regexp above
+		loadParams,
 		createInstance,
 		loadDependincies,
 		checkAccess,
