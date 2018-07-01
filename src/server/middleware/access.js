@@ -1,4 +1,4 @@
-import { can } from '../libs/access';
+import { can } from '../libs/Access';
 import { HTTPError } from '../errors';
 
 

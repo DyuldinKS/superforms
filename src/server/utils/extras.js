@@ -16,6 +16,14 @@ const isDate = d => (
 		&& !Number.isNaN(d.getTime())
 );
 
+const isSet = s => (
+	s && Object.prototype.toString.call(s) === '[object Set]'
+);
+
+const isMap = m => (
+	m && Object.prototype.toString.call(m) === '[object Map]'
+);
+
 
 // return length of string/array/Object.keys
 const len = (arg) => {
@@ -51,6 +59,8 @@ export {
 	isArray,
 	isObject,
 	isDate,
+	isSet,
+	isMap,
 	len,
 	isEmpty,
 	deepFind,

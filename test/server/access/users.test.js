@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import assert from 'assert';
 import User from 'Server/models/User';
-import { can } from 'Server/libs/access';
+import { can } from 'Server/libs/Access';
 import { users as u, parentsByOrg, entityFactory } from './setup';
 
 const { expect } = chai;

@@ -1,9 +1,13 @@
-class Access {
-	/* ---------------------------- STATIC METHODS ---------------------------- */
+import roles from './roles';
 
-	static setRoles(roles) {
-		Access.roles = roles;
-	}
+
+class Access {
+	/* ----------------------------- STATIC PROPS ----------------------------- */
+
+	static roles = roles;
+
+
+	/* ---------------------------- STATIC METHODS ---------------------------- */
 
 	static defineType(obj) {
 		return obj.constructor.name.toLowerCase();
@@ -47,4 +51,10 @@ class Access {
 }
 
 
-export default Access;
+const can = user => new Access(user);
+
+
+export {
+	Access as default,
+	can,
+};
