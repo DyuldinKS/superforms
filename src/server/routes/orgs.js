@@ -5,6 +5,7 @@ import {
 	loadInstance,
 	loadDependincies,
 } from '../middleware/instances';
+import { checkAccess } from '../middleware/access';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import Org from '../models/Org';
 import { HTTPError } from '../errors';
@@ -24,6 +25,7 @@ export default (app) => {
 		loadParams, // high cohesion with the regexps above
 		loadInstance,
 		loadDependincies,
+		checkAccess,
 	);
 
 	app.get(
@@ -208,6 +210,7 @@ export default (app) => {
 		loadParams, // high cohesion with the regexp above
 		createInstance,
 		loadDependincies,
+		checkAccess,
 		(req, res, next) => {
 			const { author } = req;
 			const org = req.loaded.instance;

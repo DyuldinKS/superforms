@@ -5,6 +5,7 @@ import {
 	loadInstance,
 	loadDependincies,
 } from '../middleware/instances';
+import { checkAccess } from '../middleware/access';
 import Recipient from '../models/Recipient';
 import { HTTPError, PgError } from '../errors';
 
@@ -69,13 +70,12 @@ export default (app) => {
 		loadParams, // high cohesion with the regexps above
 		loadInstance,
 		loadDependincies,
+		checkAccess,
 	);
 
 
 	app.get(
 		'/api/v1/recipient/:id',
-		isActive,
-		loadInstance,
 		(req, res, next) => {
 			const rcpt = req.loaded.instance;
 			res.json(rcpt);
@@ -89,6 +89,7 @@ export default (app) => {
 		loadParams, // high cohesion with the regexp above
 		createInstance,
 		loadDependincies,
+		checkAccess,
 		(req, res, next) => {
 			const { author } = req;
 			const rcpt = req.loaded.instance;
@@ -112,8 +113,6 @@ export default (app) => {
 	// update recipients
 	app.patch(
 		'/api/v1/recipient/:id',
-		isActive,
-		loadInstance,
 		(req, res, next) => {
 			const { author } = req;
 			const rcpt = req.loaded.instance;

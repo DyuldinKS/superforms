@@ -6,6 +6,7 @@ import {
 	loadInstance,
 	loadDependincies,
 } from '../middleware/instances';
+import { checkAccess } from '../middleware/access';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import User from '../models/User';
 import Org from '../models/Org';
@@ -80,6 +81,7 @@ export default (app) => {
 		loadParams, // high cohesion with the regexp above
 		createInstance,
 		loadDependincies,
+		checkAccess,
 		(req, res, next) => {
 			const { author } = req;
 			const user = req.loaded.instance;
@@ -102,6 +104,7 @@ export default (app) => {
 		loadParams, // high cohesion with the regexps above
 		loadInstance,
 		loadDependincies,
+		checkAccess,
 	);
 
 	app.get(

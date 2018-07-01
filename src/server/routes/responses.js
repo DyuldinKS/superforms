@@ -5,10 +5,9 @@ import {
 	loadInstance,
 	loadDependincies,
 } from '../middleware/instances';
+import { checkAccess } from '../middleware/access';
 import Form from '../models/Form';
-import Response from '../models/Response';
 import { HTTPError } from '../errors';
-import ssr from '../templates/ssr';
 
 
 export default (app) => {
@@ -21,6 +20,7 @@ export default (app) => {
 		loadParams, // high cohesion with the regexps above
 		loadInstance,
 		loadDependincies,
+		checkAccess,
 	);
 
 
@@ -52,6 +52,7 @@ export default (app) => {
 		loadParams, // high cohesion with the regexp above
 		createInstance,
 		loadDependincies,
+		checkAccess,
 		(req, res, next) => {
 			const { author } = req;
 			const response = req.loaded.instance;
