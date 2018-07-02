@@ -1,4 +1,5 @@
 export default ({
+	nowhere,
 	everywhere,
 	inSubtree,
 	isSameUser,
@@ -24,6 +25,7 @@ export default ({
 		),
 
 		response: everywhere,
+		recipient: nowhere,
 	},
 
 	read: {
@@ -31,6 +33,7 @@ export default ({
 		user: inSubtree,
 		form: inSubtree,
 		response: inSubtree,
+		recipient: everywhere,
 	},
 
 	update: {
@@ -56,5 +59,7 @@ export default ({
 			// soft deletion or recovering
 			inSubtree(subj, response) && areEqualSets(body, ['deleted'])
 		),
+
+		recipient: nowhere,
 	},
 });

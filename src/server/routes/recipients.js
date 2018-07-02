@@ -62,10 +62,7 @@ export default (app) => {
 
 
 	app.use(
-		[
-			/\/api\/v\d{1,2}\/recipient\/\d{1,8}\/?$/, // api
-			/\/recipient\/\d{1,8}\/?$/, // ssr
-		],
+		/\/api\/v\d{1,2}\/recipient\/\d{1,8}\/?$/, // api
 		isActive,
 		loadParams,
 		loadInstance,

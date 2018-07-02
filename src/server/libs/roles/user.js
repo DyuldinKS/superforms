@@ -14,11 +14,12 @@ export default ({
 		org: nowhere,
 		user: nowhere,
 
-		form: (subj, form, params) => (
-			areEqualSets(params, ['title', 'description', 'scheme'])
+		form: (subj, form, { body }) => (
+			areEqualSets(body, ['title', 'description', 'scheme'])
 		),
 
 		response: everywhere,
+		recipient: nowhere,
 	},
 
 	read: {
@@ -45,6 +46,7 @@ export default ({
 		),
 
 		response: isFormOwner,
+		recipient: nowhere,
 	},
 
 	update: {
@@ -68,5 +70,7 @@ export default ({
 			// soft deletion or recovering
 			withinOrg(subj, response) && areEqualSets(body, ['deleted'])
 		),
+
+		recipient: nowhere,
 	},
 });

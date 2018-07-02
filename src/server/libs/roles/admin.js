@@ -23,6 +23,7 @@ export default ({
 		),
 
 		response: everywhere,
+		recipient: nowhere,
 	},
 
 	read: {
@@ -31,9 +32,11 @@ export default ({
 				&& (!isElemOf(subpath, ['orgs/new', 'users'])
 					|| (isEqual(subpath, 'users') && isEqual(query.maxDepth, '1')))
 		),
+
 		user: withinOrg,
 		form: withinOrg,
 		response: withinOrg,
+		recipient: everywhere,
 	},
 
 	update: {
@@ -55,5 +58,7 @@ export default ({
 			// soft deletion or recovering
 			withinOrg(subj, response) && areEqualSets(body, ['deleted'])
 		),
+
+		recipient: nowhere,
 	},
 });
