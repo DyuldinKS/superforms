@@ -26,8 +26,10 @@ export default ({
 	},
 
 	read: {
-		org: (subj, org, { subpath }) => (
-			isSameOrg(subj, org) && !isEqual(subpath, 'orgs/new')
+		org: (subj, org, { query, subpath }) => (
+			isSameOrg(subj, org)
+				&& (!isElemOf(subpath, ['orgs/new', 'users'])
+					|| (isEqual(subpath, 'users') && isEqual(query.maxDepth, '1')))
 		),
 		user: withinOrg,
 		form: withinOrg,

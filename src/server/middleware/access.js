@@ -10,8 +10,6 @@ const checkAccess = (req, res, next) => {
 	const { method, body, query, params } = req;
 	const { subpath, instance } = req.loaded;
 	let action;
-	console.log({ method, body, query, params });
-
 
 	if(method === 'GET') {
 		action = 'read';
@@ -23,9 +21,6 @@ const checkAccess = (req, res, next) => {
 		return next(new Error('No access check for this request method.'));
 	}
 
-	console.log(action);
-	console.log(instance);
-	console.log(subpath);
 	check(
 		can(req.author)[action](instance, { body, query, params, subpath }),
 		next,

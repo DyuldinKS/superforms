@@ -5,16 +5,15 @@ import {
 	loadInstance,
 	loadDependincies,
 } from '../middleware/instances';
-import { checkAccess } from '../middleware/access';
+import { checkAccess, accessError } from '../middleware/access';
 import Form from '../models/Form';
-import { HTTPError } from '../errors';
 
 
 export default (app) => {
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/response\/\d{1,16}$/, // api
-			/\/response\/\d{1,16}$/, // ssr
+			/\/api\/v\d{1,2}\/response\/\d{1,16}\/?$/, // api
+			/\/response\/\d{1,16}\/?$/, // ssr
 		],
 		isActive,
 		loadParams,
@@ -61,7 +60,7 @@ export default (app) => {
 			const { form } = response;
 
 			if(!form.isShared() || form.collecting.shared !== response.secret) {
-				next(new HTTPError(403, 'No access'));
+				next(accessError);
 			}
 
 			response.save({ author })

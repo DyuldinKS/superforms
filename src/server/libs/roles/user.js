@@ -23,25 +23,25 @@ export default ({
 
 	read: {
 		org: (subj, org, { subpath }) => (
-			isSameOrg(subj, org) && isElemOf(subpath, ['forms', 'info'])
+			isSameOrg(subj, org) && isElemOf(subpath, ['', 'forms', 'info'])
 		),
 
 		user: (subj, user, { subpath }) => (
 			// reads another user in his org
 			(withinOrg(subj, user) && !isSameUser(subj, user)
-				&& isElemOf(subpath, [undefined, 'info', 'forms']))
+				&& isElemOf(subpath, ['', 'info', 'forms']))
 			// reads himself
-			// subpath is undefined for api request to get user
+			// subpath === '' for api request to get user
 			|| (isSameUser(subj, user)
-					&& isElemOf(subpath, [undefined, 'info', 'forms', 'settings']))
+					&& isElemOf(subpath, ['', 'info', 'forms', 'settings']))
 		),
 
 		form: (subj, form, { subpath }) => (
 			isFormOwner(subj, form)
 				// only preview of foreign forms
-				// subpath === undefined for interview page or api request to get form
+				// subpath === '' for interview page or api request to get form
 				|| (withinOrg(subj, form) && !isFormOwner(subj, form)
-					&& isSubset(subpath, [undefined, 'preview']))
+					&& isElemOf(subpath, ['', 'preview']))
 		),
 
 		response: isFormOwner,

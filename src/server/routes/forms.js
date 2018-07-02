@@ -17,8 +17,9 @@ import { actions as formActions } from '../../client/apps/app/shared/redux/forms
 export default (app) => {
 	app.use(
 		[
-			/^\/api\/v\d{1,2}\/form\/\d{1,12}(\/(responses|xlsx))?$/, // api
-			/^\/form\/\d{1,12}(\/(edit|preview|distribute|responses))?$/, // ssr
+			/^\/api\/v\d{1,2}\/form\/\d{1,12}(\/(responses|xlsx))?\/?$/, // api
+			// excluding /form/:id (interview page)
+			/^\/form\/\d{1,12}\/(edit|preview|distribute|responses)\/?$/,
 		],
 		isActive,
 		loadParams,
@@ -37,7 +38,11 @@ export default (app) => {
 			const { s: secret } = req.query;
 
 			if(!secret) {
-				const subpath = form.isActive() ? 'responses' : 'edit';
+				const { author } = req;
+				let subpath = form.isActive() ? 'responses' : 'edit';
+				if(author && author.isSimpleUser() && form.ownerId !== author.id) {
+					subpath = 'preview';
+				}
 				return res.redirect(`/form/${form.id}/${subpath}`);
 			}
 

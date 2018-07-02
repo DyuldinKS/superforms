@@ -17,12 +17,12 @@ import { actions as orgActions } from '../../client/apps/app/shared/redux/orgs';
 export default (app) => {
 	app.use(
 		[
-			/^\/api\/v\d{1,2}\/org\/\d{1,8}(\/(info|settings|forms|orgs|parents|users))?$/, // api
-			/^\/org\/\d{1,8}(\/(info|settings|forms|orgs|users))?$/, // ssr
-			/^\/org\/\d{1,8}\/(orgs|users)\/new$/, // ssr
+			/^\/api\/v\d{1,2}\/org\/\d{1,8}(\/(forms|orgs|parents|users))?\/?$/, // api
+			/^\/org\/\d{1,8}(\/(info|settings|forms|orgs|users))?\/?$/, // ssr
+			/^\/org\/\d{1,8}\/(orgs|users)\/new\/?$/, // ssr
 		],
 		isActive,
-		loadParams, // high cohesion with the regexps above
+		loadParams,
 		loadInstance,
 		loadDependincies,
 		checkAccess,

@@ -165,6 +165,21 @@ class User extends Recipient {
 			[this.id, filter],
 		);
 	}
+
+
+	isRoot() {
+		return this.role === 'root';
+	}
+
+
+	isAdmin() {
+		return this.role === 'user';
+	}
+
+
+	isSimpleUser() {
+		return this.role === 'user';
+	}
 }
 
 

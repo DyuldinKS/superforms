@@ -18,10 +18,13 @@ const models = {
 /* -------------------------- LOAD INSTANCE PARAMS -------------------------- */
 
 const loadParams = (req, res, next) => {
-	const chunks = req.originalUrl.slice(1).split('/');
+	// get rid of query part
+	const [url] = req.originalUrl.split('?');
+	// cut off first and last (if exists) slash and split
+	const chunks = url.slice(1, url.slice(-1) === '/' ? -1 : undefined).split('/');
 	const [type, id, ...subpath] = chunks[0] === 'api' ? chunks.slice(2) : chunks;
 	if(!(type in models)) {
-		throw new Error('Can not define model type to create instance');
+		throw new Error('Can not define model type to load instance');
 	}
 	req.loaded = {
 		type,

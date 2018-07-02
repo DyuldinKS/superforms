@@ -97,8 +97,8 @@ export default (app) => {
 
 	app.use(
 		[
-			/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/(info|settings|forms))?$/, // api
-			/^\/user\/\d{1,8}(\/(info|settings|forms))?$/, // ssr
+			/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/(forms))?\/?$/, // api
+			/^\/user\/\d{1,8}(\/(info|settings|forms))?\/?$/, // ssr
 		],
 		isActive,
 		loadParams,
