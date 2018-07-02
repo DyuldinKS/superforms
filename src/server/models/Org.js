@@ -6,6 +6,11 @@ import { HTTPError } from '../errors';
 class Org extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
+	static create({ props }) {
+		return new Org(props);
+	}
+
+
 	static findById(id) {
 		return db.query(
 			'SELECT _org.* FROM to_org_full(get_org($1::int)) _org;',
@@ -21,26 +26,30 @@ class Org extends Recipient {
 	}
 
 
-	getParents(opts) {
+	static getParents(orgId) {
 		return db.query(
 			`SELECT build_orgs_object(ids) AS orgs, ids
 			FROM get_parent_org_ids($1) ids;`,
-			[this.id],
-		)
-			.then(({ orgs, ids }) => {
-				// find last org available for ther user
-				const last = ids.indexOf(opts.authorOrgId);
-				// set start & end indexes for the list of parents
-				const start = Number.parseInt(opts.minDist, 10);
-				let end = Number.parseInt(opts.maxDist, 10);
-				end = end > 0 && end <= last ? end : last + 1;
+			[orgId],
+		);
+	}
 
-				// filter orgs with specified start and end of list
-				const res = { orgs: {}, entries: [] };
-				res.entries = ids.slice(start, end);
-				res.entries.forEach((id) => { res.orgs[id] = orgs[id]; });
-				return res;
-			});
+
+	static sliceParents(parents, opts) {
+		const { orgs, ids } = parents;
+
+		// find last org available for ther user
+		const last = ids.indexOf(opts.authorOrgId);
+		// set start & end indexes for the list of parents
+		const start = Number.parseInt(opts.minDist, 10);
+		let end = Number.parseInt(opts.maxDist, 10);
+		end = end > 0 && end <= last ? end : last + 1;
+
+		// filter orgs with specified start and end of list
+		const res = { orgs: {}, entries: [] };
+		res.entries = ids.slice(start, end);
+		res.entries.forEach((id) => { res.orgs[id] = orgs[id]; });
+		return res;
 	}
 
 
@@ -84,6 +93,25 @@ class Org extends Recipient {
 
 
 	// ***************** INSTANCE METHODS ***************** //
+
+	async loadDependincies() {
+		if(this.parentOrgIds) return;
+		const orgId = this.id || this.parentId;
+		if(!orgId) throw new Error('org.id is not specified');
+
+		const { orgs, ids } = await Org.getParents(orgId);
+		if(!ids || ids.length === 0) throw new Error('parent org not found');
+
+		const dependincies = { orgs };
+		this.parentOrgIds = ids;
+		return dependincies;
+	}
+
+
+	async getParents() {
+		return Org.getParents(this.id);
+	}
+
 
 	// @implements
 	save({ author }) {
@@ -150,6 +178,7 @@ Org.prototype.props = {
 	...Recipient.prototype.props,
 	id: { writable: false, enumerable: true },
 	parentId: { writable: true, enumerable: true },
+	parentOrgIds: { writable: false, enumerable: false },
 	info: { writable: true, enumerable: true },
 };
 

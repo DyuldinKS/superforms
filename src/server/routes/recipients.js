@@ -1,5 +1,11 @@
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
+import { checkAccess } from '../middleware/access';
 import Recipient from '../models/Recipient';
 import { HTTPError, PgError } from '../errors';
 
@@ -56,21 +62,19 @@ export default (app) => {
 
 
 	app.use(
-		[
-			/\/api\/v\d{1,2}\/recipient\/\d{1,8}$/, // api
-			/\/recipient\/\d{1,8}$/, // ssr
-		],
+		/\/api\/v\d{1,2}\/recipient\/\d{1,8}\/?$/, // api
 		isActive,
+		loadParams,
 		loadInstance,
+		loadDependincies,
+		checkAccess,
 	);
 
 
 	app.get(
 		'/api/v1/recipient/:id',
-		isActive,
-		loadInstance,
 		(req, res, next) => {
-			const { rcpt } = req.loaded;
+			const rcpt = req.loaded.instance;
 			res.json(rcpt);
 		},
 	);
@@ -79,10 +83,13 @@ export default (app) => {
 	app.post(
 		'/api/v1/recipient',
 		isActive,
+		loadParams,
+		createInstance,
+		loadDependincies,
+		checkAccess,
 		(req, res, next) => {
 			const { author } = req;
-			const { email } = req.body;
-			const rcpt = new Recipient({ email });
+			const rcpt = req.loaded.instance;
 
 			rcpt.save({ author })
 				.then(() => res.json(rcpt))
@@ -103,11 +110,9 @@ export default (app) => {
 	// update recipients
 	app.patch(
 		'/api/v1/recipient/:id',
-		isActive,
-		loadInstance,
 		(req, res, next) => {
 			const { author } = req;
-			const { rcpt } = req.loaded;
+			const rcpt = req.loaded.instance;
 			const props = req.body;
 
 			rcpt.update({ props, author })

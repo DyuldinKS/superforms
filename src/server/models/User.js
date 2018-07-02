@@ -11,6 +11,11 @@ import { HTTPError } from '../errors';
 class User extends Recipient {
 	// ***************** STATIC METHODS ***************** //
 
+	static create({ props }) {
+		return new User(props);
+	}
+
+
 	static findById(id) {
 		return db.query(
 			'SELECT _user.* FROM to_user_full(get_user($1::int)) _user;',
@@ -56,6 +61,20 @@ class User extends Recipient {
 
 
 	// ***************** INSTANCE METHODS ***************** //
+
+	async loadDependincies() {
+		if(this.parentOrgIds) return;
+		if(!this.orgId) throw new Error('org.id is not specified');
+
+		const { orgs, ids } = await Org.getParents(this.orgId);
+		if(!ids || ids.length === 0) throw new Error('parent org not found');
+
+		const dependincies = { orgs };
+		this.org = orgs[this.orgId];
+		this.parentOrgIds = ids;
+		return dependincies;
+	}
+
 
 	authenticate(password) {
 		return bcrypt.compare(password, this.hash)
@@ -146,6 +165,21 @@ class User extends Recipient {
 			[this.id, filter],
 		);
 	}
+
+
+	isRoot() {
+		return this.role === 'root';
+	}
+
+
+	isAdmin() {
+		return this.role === 'user';
+	}
+
+
+	isSimpleUser() {
+		return this.role === 'user';
+	}
 }
 
 
@@ -158,6 +192,7 @@ User.prototype.props = {
 	...Recipient.prototype.props,
 	id: { writable: false, enumerable: true },
 	orgId: { writable: true, enumerable: true },
+	parentOrgIds: { writable: false, enumerable: false },
 	org: { writable: false, enumerable: false },
 	info: { writable: true, enumerable: true },
 	role: { writable: true, enumerable: true },

@@ -1,9 +1,20 @@
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
+import User from './User';
+import { HTTPError } from '../errors';
 
 
 class Form extends AbstractModel {
 	// ***************** STATIC METHODS ***************** //
+
+	static create({ props, author }) {
+		const extra = {
+			...props,
+			ownerId: author.id,
+		};
+		return new Form(extra);
+	}
+
 
 	static findById(id) {
 		return db.query('SELECT * FROM to_form_full(get_form($1)) form;', [id])
@@ -12,6 +23,21 @@ class Form extends AbstractModel {
 
 
 	// ***************** INSTANCE METHODS ***************** //
+
+	async loadDependincies() {
+		if(this.parentOrgIds) return;
+		if(!this.ownerId) throw new Error('form.ownerId is not specified');
+
+		const owner = await User.findById(this.ownerId);
+		if(!owner) throw new Error('form owner not found');
+
+		const dependincies = await owner.loadDependincies();
+		dependincies.users = { [owner.id]: owner };
+		this.owner = owner;
+		this.parentOrgIds = owner.parentOrgIds;
+		return dependincies;
+	}
+
 
 	// @implements
 	save({ author }) {
@@ -33,6 +59,18 @@ class Form extends AbstractModel {
 				this.responses = responses;
 				return responses;
 			});
+	}
+
+	// is stage of response collecting
+	isActive() {
+		const { deleted, collecting } = this;
+		return !deleted && collecting && !collecting.inactive
+			&& (!collecting.expires	|| new Date(collecting.expires) > new Date());
+	}
+
+
+	isShared() {
+		return this.collecting && this.collecting.shared;
 	}
 }
 

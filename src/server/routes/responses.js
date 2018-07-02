@@ -1,19 +1,25 @@
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
+import { checkAccess, accessError } from '../middleware/access';
 import Form from '../models/Form';
-import Response from '../models/Response';
-import { HTTPError } from '../errors';
-import ssr from '../templates/ssr';
 
 
 export default (app) => {
 	app.use(
 		[
-			/\/api\/v\d{1,2}\/response\/\d{1,16}$/, // api
-			/\/response\/\d{1,16}$/, // ssr
+			/\/api\/v\d{1,2}\/response\/\d{1,16}\/?$/, // api
+			/\/response\/\d{1,16}\/?$/, // ssr
 		],
 		isActive,
+		loadParams,
 		loadInstance,
+		loadDependincies,
+		checkAccess,
 	);
 
 
@@ -22,7 +28,7 @@ export default (app) => {
 		isActive,
 		loadInstance,
 		(req, res, next) => {
-			const { response } = req.loaded;
+			const response = req.loaded.instance;
 			res.send('awesome stub');
 		},
 	);
@@ -33,7 +39,7 @@ export default (app) => {
 		isActive,
 		loadInstance,
 		(req, res, next) => {
-			const { response } = req.loaded;
+			const response = req.loaded.instance;
 			res.json(response);
 		},
 	);
@@ -42,28 +48,23 @@ export default (app) => {
 	app.post(
 		'/api/v1/response',
 		isActive,
+		loadParams,
+		createInstance,
+		loadDependincies,
+		checkAccess,
 		(req, res, next) => {
 			const { author } = req;
-			const props = {
-				...req.body,
-				respondent: { ip: req.connection.remoteAddress }
-			};
-			const response = new Response(props);
-			if(!response.formId) {
-				return next(new HTTPError(400, '"formId" is not specified.'));
+			const response = req.loaded.instance;
+			response.respondent = { ip: req.connection.remoteAddress };
+
+			const { form } = response;
+
+			if(!form.isShared() || form.collecting.shared !== response.secret) {
+				next(accessError);
 			}
 
-			Form.findById(response.formId)
-				.then((form) => {
-					if(!form) throw new HTTPError(404, 'form not found');
-
-					if(form.collecting && (
-						form.collecting.shared === response.secret
-					)) return response.save({ author });
-
-					throw new HTTPError(403, 'No access');
-				})
-				.then(() => {	res.send(response); })
+			response.save({ author })
+				.then(() => { res.status(200).send(); })
 				.catch(next);
 		},
 	);

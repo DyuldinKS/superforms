@@ -8,6 +8,11 @@ import { HTTPError } from '../errors';
 class Recipient extends AbstractModel {
 	// ***************** STATIC METHODS ***************** //
 
+	static create({ props }) {
+		return new Recipient(props);
+	}
+
+
 	static findById(id) {
 		return db.query(
 			'SELECT (_found::rcpt_full).* FROM get_rcpt($1::int) _found;',
@@ -40,6 +45,10 @@ class Recipient extends AbstractModel {
 
 
 	// ***************** INSTANCE METHODS ***************** //
+
+	async loadDependincies() {
+		// stub
+	}
 
 	isUnregistered() {
 		return this.type === 'rcpt';

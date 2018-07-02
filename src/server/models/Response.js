@@ -1,9 +1,16 @@
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
+import Form from './Form';
+import { HTTPError } from '../errors';
 
 
 class Response extends AbstractModel {
 	// ***************** STATIC METHODS ***************** //
+
+	static create({ props }) {
+		return new Response(props);
+	}
+
 
 	static findById(id) {
 		return db.query(
@@ -15,6 +22,21 @@ class Response extends AbstractModel {
 
 
 	// ***************** INSTANCE METHODS ***************** //
+
+	async loadDependincies() {
+		if(this.parentOrgIds) return;
+		if(!this.formId) throw new Error('form.ownerId is not specified');
+
+		const form = await Form.findById(this.formId);
+		if(!form) throw new HTTPError(400, 'form not found');
+
+		const dependincies = await form.loadDependincies();
+		dependincies.forms = { [form.id]: form };
+		this.form = form;
+		this.parentOrgIds = form.parentOrgIds;
+		return dependincies;
+	}
+
 
 	// @implements
 	save({ author }) {

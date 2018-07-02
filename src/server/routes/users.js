@@ -1,6 +1,12 @@
 import { isNotAuthenticated } from '../middleware/sessions';
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
+import { checkAccess } from '../middleware/access';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import User from '../models/User';
 import Org from '../models/Org';
@@ -72,11 +78,15 @@ export default (app) => {
 	app.post(
 		'/api/v1/user',
 		isActive,
+		loadParams,
+		createInstance,
+		loadDependincies,
+		checkAccess,
 		(req, res, next) => {
 			const { author } = req;
-			const user = new User({ ...req.body });
+			const user = req.loaded.instance;
 
-			return user.save({ author })
+			user.save({ author })
 				.then(() => user.resetPassword({ author }))
 				.then(() => mailer.sendRegistrationEmail(user))
 				.then(() => res.json(user))
@@ -87,18 +97,24 @@ export default (app) => {
 
 	app.use(
 		[
-			/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/\w{1,12})?$/, // api
-			/^\/user\/\d{1,8}(\/(info|settings|forms))?$/, // ssr
+			/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/(forms))?\/?$/, // api
+			/^\/user\/\d{1,8}(\/(info|settings|forms))?\/?$/, // ssr
 		],
 		isActive,
+		loadParams,
 		loadInstance,
+		loadDependincies,
+		checkAccess,
 	);
 
 	app.get(
-		/^\/user\/\d{1,8}(\/(info|settings))?$/,
+		[
+			'/user/:id/info',
+			'/user/:id/settings',
+		],
 		preloadReduxStore,
 		(req, res, next) => {
-			const { user } = req.loaded;
+			const user = req.loaded.instance;
 			const { reduxStore } = req;
 			const entitiesMap = { users: user.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
@@ -111,7 +127,7 @@ export default (app) => {
 		'/user/:id/forms',
 		preloadReduxStore,
 		(req, res, next) => {
-			const { user } = req.loaded;
+			const user = req.loaded.instance;
 			const options = req.query;
 			const { reduxStore } = req;
 			const entitiesMap = { users: user.toStore() };
@@ -137,7 +153,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/user/:id',
 		(req, res, next) => {
-			const { user } = req.loaded;
+			const user = req.loaded.instance;
 
 			Org.findById(user.orgId)
 				.then((org) => {
@@ -155,7 +171,7 @@ export default (app) => {
 	app.get(
 		'/api/v1/user/:id/forms',
 		(req, res, next) => {
-			const { user } = req.loaded;
+			const user = req.loaded.instance;
 			const options = req.query;
 
 			user.findForms(options)
@@ -170,7 +186,7 @@ export default (app) => {
 		'/api/v1/user/:id',
 		(req, res, next) => {
 			const { author } = req;
-			const { user } = req.loaded;
+			const user = req.loaded.instance;
 			const props = req.body;
 
 			let updateChain = Promise.resolve();

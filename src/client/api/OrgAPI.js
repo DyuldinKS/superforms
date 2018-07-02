@@ -70,6 +70,24 @@ class OrgAPI {
     return data;
   }
 
+  static async setEmail(id, email) {
+    const data = await fetch(`/api/v1/org/${id}`, {
+      method: 'PATCH',
+      body: { email },
+    });
+
+    return data;
+  }
+
+  static async setActive(id, active) {
+    const data = await fetch(`/api/v1/org/${id}`, {
+      method: 'PATCH',
+      body: { active },
+    });
+
+    return data;
+  }
+
   static async updateInfo(id, payload) {
     const data = await fetch(`/api/v1/org/${id}`, {
       method: 'PATCH',
