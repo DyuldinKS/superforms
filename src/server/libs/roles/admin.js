@@ -30,9 +30,9 @@ export default ({
 		org: (subj, org, { query, subpath }) => (
 			isSameOrg(subj, org)
 				&& (!isElemOf(subpath, ['orgs/new', 'users'])
-					|| (isEqual(subpath, 'users') && isEqual(query.maxDepth, '1')))
+					// can not change default maxDepth = 0
+					|| (isEqual(subpath, 'users') && !isElemOf('maxDepth', query)))
 		),
-
 		user: withinOrg,
 		form: withinOrg,
 		response: withinOrg,

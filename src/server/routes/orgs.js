@@ -105,12 +105,13 @@ export default (app) => {
 		preloadReduxStore,
 		(req, res, next) => {
 			const org = req.loaded.instance;
-			const options = req.query;
+			const opts = req.query;
 			const { reduxStore } = req;
 			const entitiesMap = { orgs: org.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
+			opts.maxDepth = opts.maxDepth ? Number.parseInt(opts.maxDepth, 10) : 0;
 
-			org.findUsersInSubtree(options)
+			org.findUsersInSubtree(opts)
 				.then((users) => {
 					const action = orgActions.fetchAffiliatedUsersSuccess(
 						org.id,
@@ -182,9 +183,10 @@ export default (app) => {
 		'/api/v1/org/:id/users',
 		(req, res, next) => {
 			const org = req.loaded.instance;
-			const options = req.query;
+			const opts = req.query;
+			opts.maxDepth = opts.maxDepth ? Number.parseInt(opts.maxDepth, 10) : 0;
 
-			org.findUsersInSubtree(options)
+			org.findUsersInSubtree(opts)
 				.then(users => res.json(users))
 				.catch(next);
 		},
