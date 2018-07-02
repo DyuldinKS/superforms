@@ -102,7 +102,7 @@ describe('organization access', () => {
 	const allInSubtree = Object.values(u);
 
 	describe('to read subpaths of users', () => {
-		const subpaths = ['info', 'forms', 'settings'];
+		const subpaths = ['', 'info', 'forms', 'settings'];
 
 		describe('root', () => {
 			it('can read any subpath of any user in subtree', () => {

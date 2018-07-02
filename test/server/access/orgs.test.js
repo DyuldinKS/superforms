@@ -79,7 +79,7 @@ describe('organization access', () => {
 
 	describe('to read subpaths of organization', () => {
 		const subpaths = [
-			undefined, // for api request to read user info
+			'', // for api request to read user info
 			'orgs/new', 'users/new', // pages to create org or user
 			'info', 'orgs', 'users', 'forms', 'settings',
 		];
@@ -108,13 +108,14 @@ describe('organization access', () => {
 			});
 		});
 
+
 		describe('admin', () => {
 			it('can read any subpath of his org except orgs/new', () => {
 				subpaths.filter(sp => sp !== 'orgs/new')
 					.forEach((subpath) => {
-						assert(can(u[1.2]).read(o[1], { subpath }));
-						assert(can(u[3.2]).read(o[3], { subpath }));
-						assert(can(u[4.2]).read(o[4], { subpath }));
+						assert(can(u[1.2]).read(o[1], { subpath, query: {} }));
+						assert(can(u[3.2]).read(o[3], { subpath, query: {} }));
+						assert(can(u[4.2]).read(o[4], { subpath, query: {} }));
 					})
 			});
 
@@ -123,7 +124,14 @@ describe('organization access', () => {
 				assert(can(u[1.2]).read(o[1], { subpath }) === false);
 				assert(can(u[3.2]).read(o[3], { subpath }) === false);
 				assert(can(u[4.2]).read(o[4], { subpath }) === false);
-			})
+			});
+
+			it('can NOT set maxDepth option for user search', () => {
+				const subpath = 'users';
+				assert(can(u[1.2]).read(o[1], { subpath, query: { maxDepth: 4 } }) === false);
+				assert(can(u[3.2]).read(o[3], { subpath, query: { maxDepth: 1 } }) === false);
+				assert(can(u[4.2]).read(o[4], { subpath, query: { maxDepth: null } }) === false);
+			});
 
 			it('can NOT read any path of other orgs', () => {
 				subpaths.forEach((subpath) => {
@@ -136,8 +144,9 @@ describe('organization access', () => {
 			});
 		});
 
+
 		describe('user', () => {
-			const available = ['info', 'forms'];
+			const available = ['', 'info', 'forms'];
 			const notAvailable = subpaths.filter(s => !available.includes(s));
 
 			it('can read all available subpath of his org', () => {
