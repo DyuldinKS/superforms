@@ -48,8 +48,7 @@ class Form extends AbstractModel {
 
 	static getAnswerValidator(type) {
 		const uCased = type && type[0].toUpperCase() + type.slice(1);
-		const vName = Form[`is${uCased}AnswerValid`];
-		return Form[vName] || Form.textAnswerValid;
+		return Form[`is${uCased}AnswerValid`] || Form.textAnswerValid;
 	}
 
 
@@ -67,60 +66,39 @@ class Form extends AbstractModel {
 
 	static isSelectAnswerValid(question, answer) {
 		if(!isObject(answer)) return false;
+		const opts = question.options;
+		const indexSet = new Set(opts.map((e, i) => i));
+		const selected = Object.keys(answer).filter(key => key !== 'other');
 
 		// selected options stored as { [i]: true, [j]: true, ... }
 		// where i, j - option indexes in question.options array.
-		const selected = question.options
-			.map((opt, i) => (i in answer) && opt)
-			.filter(opt => opt);
 
-		if('other' in answer) {
-			if(!question.optionOther) return false;
-			selected.push(answer.other);
+		// all props in answer (except 'other') should be in opt set and be a true
+		if(selected.some(i => !indexSet.has(+i) || answer[i] !== true)) return false;
+
+		let optCount = selected.length;
+		// other option value should be a non empty string
+		const { other } = answer;
+		if(other) {
+			if(!(isString(other) && other.length > 0)) return false;
+			if(question.optionOther) optCount += 1;
 		}
 
-		if(selected.some(opt => (!(isString(opt) && opt.length > 0)))) return false;
-		return question.multiple
-			? selected.length > 0
-			: selected.length === 1;
+		return question.multiple ? optCount > 0 : optCount === 1;
 	}
 
 
 	static isDateAnswerValid(question, answer) {
-		const time = moment(answer, 'YYYY-MM-DD');
+		if(!isString(answer)) return false;
+		const time = moment(answer, 'YYYY-MM-DD', true);
 		return time.isValid();
 	}
 
 
 	static isTimeAnswerValid(question, answer) {
+		if(!isString(answer)) return false;
 		const time = moment(answer, 'hh:mm:ss');
 		return time.isValid();
-	}
-
-
-	static checkAnswers(answers) {
-		if(isObject(answers)) {
-			throw new HTTPError(400, 'Invalid response.items structure');
-		}
-
-		const { items, order } = this.scheme;
-		let question;
-		let validator;
-		order.filter(id => items[id] !== 'input')
-			.forEach((id, i) => {
-				question = items[id];
-
-				if(question.required && id in answers === false) {
-					throw new HTTPError(400, `Missing answer to question #${i}`);
-				}
-
-				if(id in answers) {
-					validator = Form.getAnswerValidator(question.type);
-					if(!validator(question, answers[id])) {
-						throw new HTTPError(400, `Invalid answer to ${question.type} question #${i}`)
-					}
-				}
-			});
 	}
 
 
@@ -147,6 +125,34 @@ class Form extends AbstractModel {
 			.then((responses) => {
 				this.responses = responses;
 				return responses;
+			});
+	}
+
+
+	checkAnswers(answers) {
+		if(!isObject(answers)) {
+			throw new HTTPError(400, 'Invalid response.items structure');
+		}
+
+		const { items, order } = this.scheme;
+		let question;
+		let type;
+		let validator;
+		order.filter(id => items[id].itemType === 'input')
+			.forEach((id, i) => {
+				question = items[id];
+
+				if(question.required && !(id in answers)) {
+					throw new HTTPError(400, `Missing answer to question #${i + 1}`);
+				}
+
+				({ type } = question);
+				if(id in answers) {
+					validator = Form.getAnswerValidator(type);
+					if(!validator(question, answers[id])) {
+						throw new HTTPError(400, `Invalid answer to ${type} question #${i + 1}`);
+					}
+				}
 			});
 	}
 }
