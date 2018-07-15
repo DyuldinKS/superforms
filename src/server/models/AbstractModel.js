@@ -1,6 +1,7 @@
 import diff from 'object-diff';
 import db from '../db/index';
 import { isEmpty } from '../utils/extras';
+import { HTTPError } from '../errors';
 
 
 class AbstractModel {
@@ -52,7 +53,7 @@ class AbstractModel {
 			}
 			checker = this.props[key].check;
 			if(checker !== undefined && !checker(props[key])) {
-				throw new Error(`Invalid ${this.entityName}.${key} value`);
+				throw new HTTPError(500, `Invalid ${this.entityName}.${key} value`);
 			}
 		});
 	}
