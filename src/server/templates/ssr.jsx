@@ -69,6 +69,7 @@ function renderApp(ReactEntry, assets, state = {}) {
 		...getAssets(assets),
 		preloadedState,
 		reactHTML,
+		disableRDT: process.env.NODE_ENV === 'production',
 	});
 }
 
@@ -91,6 +92,7 @@ function renderAppWithRedux(ReactEntry, assets, store) {
 		...getAssets(assets),
 		preloadedState,
 		reactHTML,
+		disableRDT: process.env.NODE_ENV === 'production',
 	});
 }
 

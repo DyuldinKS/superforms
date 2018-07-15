@@ -7,6 +7,7 @@ import { Switch, Route } from 'shared/router/components';
 import * as orgsModule from 'apps/app/shared/redux/orgs';
 import {
   OrgProfileHeader,
+  OrgProfileBreadcrumb,
   OrgProfileInfo,
   OrgProfileNav,
   OrgProfileFormsList,
@@ -36,6 +37,12 @@ class OrgProfilePage extends Component {
     fetchOrg(id);
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.id !== prevProps.id) {
+      this.props.fetchOrg(this.props.id);
+    }
+  }
+
   render() {
     const {
       match,
@@ -49,14 +56,16 @@ class OrgProfilePage extends Component {
 
     return (
       <Page>
+        <OrgProfileBreadcrumb id={org.id} />
+
         <div className="app-profile-header-outer">
           <div className="container">
             <OrgProfileHeader
-              org={org}
-              parentOrg={parentOrg}
+              header={org.label}
             />
 
             <OrgProfileNav
+              id={org.id}
               baseUrl={url}
               subpath={subpath}
             />

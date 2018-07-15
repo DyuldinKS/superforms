@@ -12,6 +12,21 @@
 	</head>
 	<body>
 		<div id="react-root">{{{reactHTML}}}</div>
+		{{#if disableRDT}}
+			{{!-- disable React Dev tools --}}
+			<script type="text/javascript" id="disableReactDevTools">
+				const devTools = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+				if(typeof devTools === 'object') {
+					Object.keys(devTools).forEach((key) => {
+						devTools[key] = typeof devTools[key] === 'function'
+							? () => {}
+							: null;
+					});
+				}
+				const node = document.getElementById('disableReactDevTools');
+				node.parentNode.removeChild(node);
+			</script>
+		{{/if}}
 		{{!-- initial Redux state injection --}}
 		<script type="text/javascript" id="preloadedState">
 			{{{preloadedState}}}

@@ -16,8 +16,8 @@ export default (app) => {
 	app.use(
 		// all static routes with specified org id
 		[
-			/^\/org\/\d{1,8}(\/(info|settings|forms|orgs|users))?$/,
-			/^\/org\/\d{1,8}\/(orgs|users)\/new$/,
+			/^\/org\/\d{1,8}(\/(info|settings|forms|orgs|parents|users))?$/, // ssr
+			/^\/org\/\d{1,8}\/(orgs|users)\/new$/, // ssr
 		],
 		isActive,
 		loadInstance,
@@ -195,6 +195,23 @@ export default (app) => {
 			const options = req.query;
 
 			org.findOrgsInSubtree(options)
+				.then(orgs => res.json(orgs))
+				.catch(next);
+		},
+	);
+
+
+	// get parents of the organization
+	app.get(
+		'/api/v1/org/:id/parents',
+		(req, res, next) => {
+			const { org } = req.loaded;
+			const opts = {
+				...req.query,
+				authorOrgId: req.author.orgId,
+			};
+
+			org.getParents(opts)
 				.then(orgs => res.json(orgs))
 				.catch(next);
 		},

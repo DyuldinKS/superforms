@@ -34,7 +34,7 @@ Response.prototype.entityName = 'response';
 
 Response.prototype.props = {
 	// values received from client
-	formId: { writable: false, readable: true, check: isNatural },
+	formId: { writable: true, readable: true, check: isNatural },
 	items: { writable: true, readable: true, check: Form.checkAnswers },
 	secret: { writable: false, readable: false }, // password for filling form
 

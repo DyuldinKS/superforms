@@ -11,13 +11,19 @@ import {
   Button,
 } from 'reactstrap';
 import { AccordionItem } from 'shared/ui/accordion';
-import * as orgsModule from 'apps/app/shared/redux/orgs';
+import {
+  actions as orgActions,
+  selectors as orgQuery,
+} from 'apps/app/shared/redux/orgs';
+import { selectors as sessionQuery } from 'apps/app/shared/redux/session';
+import RenderIf from 'shared/helpers/RenderIf';
 import { ChangeEmail } from '../../shared/components/forms';
 import { ChangeOrgInfo } from './forms';
 
 const propTypes = {
   // from Redux
   id: PropTypes.string.isRequired,
+  isSessionOrg: PropTypes.bool,
   fullName: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
   active: PropTypes.bool.isRequired,
@@ -28,6 +34,7 @@ const propTypes = {
 };
 
 const defaultProps = {
+  isSessionOrg: true,
   changeInfo: () => {},
   changeEmail: () => {},
   changeStatus: () => {},
@@ -44,7 +51,13 @@ class OrgSettings extends Component {
 
   handleActiveChange() {
     const { active, changeStatus, id } = this.props;
-    changeStatus(id, !active);
+    const action = active ? 'заблокировать' : 'разблокировать';
+
+    const confirm = window.confirm(`Вы действительно хотите ${action} доступ в систему для данной организации?`);
+
+    if (confirm) {
+      changeStatus(id, !active);
+    }
   }
 
   handleInfoChange(form) {
@@ -68,20 +81,23 @@ class OrgSettings extends Component {
     const {
       email,
       fullName,
+      isSessionOrg,
       label,
     } = this.props;
 
     return (
       <div>
         <Nav vertical>
-          <NavItem>
-            <Button
-              color="link"
-              onClick={this.handleActiveChange}
-            >
-              {this.renderChangeActiveToggle()}
-            </Button>
-          </NavItem>
+          <RenderIf condition={!isSessionOrg}>
+            <NavItem>
+              <Button
+                color="link"
+                onClick={this.handleActiveChange}
+              >
+                {this.renderChangeActiveToggle()}
+              </Button>
+            </NavItem>
+          </RenderIf>
 
           <AccordionItem
             label="Изменить основную информацию"
@@ -111,14 +127,16 @@ OrgSettings.propTypes = propTypes;
 OrgSettings.defaultProps = defaultProps;
 
 function mapStateToProps(state, ownProps) {
-  const orgId = ownProps.match.params.id;
-  const org = orgsModule.selectors.getOrg(state, orgId);
+  const orgId = Number(ownProps.match.params.id);
+  const sessionOrgId = sessionQuery.getOrgId(state);
+  const isSessionOrg = sessionOrgId === orgId;
+
   const {
     active,
     email,
     fullName,
     label,
-  } = org.entity;
+  } = orgQuery.getOrgEntity(state, orgId);
 
   return {
     id: orgId,
@@ -126,13 +144,14 @@ function mapStateToProps(state, ownProps) {
     email,
     fullName,
     label,
+    isSessionOrg,
   };
 }
 
 const mapDispatchToProps = {
-  changeStatus: orgsModule.actions.changeStatus,
-  changeEmail: orgsModule.actions.changeEmail,
-  changeInfo: orgsModule.actions.changeInfo,
+  changeStatus: orgActions.changeStatus,
+  changeEmail: orgActions.changeEmail,
+  changeInfo: orgActions.changeInfo,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OrgSettings);

@@ -10,8 +10,8 @@ export default (req, res, next) => {
 	try {
 		store.dispatch(routerActions.init(req.url));
 		store.dispatch(sessionActions.init(
-			`${user.id}`,
-			`${user.org.id}`,
+			user.id,
+			user.org.id,
 			user.toStore(),
 			user.org.toStore(),
 		));
