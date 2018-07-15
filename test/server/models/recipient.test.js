@@ -47,9 +47,9 @@ describe('Recipient model', () => {
 			const rcpt = new Recipient({ id: 13 });
 			// props that can be updated
 			const writable = {
-				email: 'e@mail',
+				email: 'e@mail.org',
 				active: true,
-				deleted: false,
+				deleted: new Date(),
 			};
 			// props that can not be updated
 			const unwritable = {

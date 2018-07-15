@@ -137,7 +137,7 @@ Recipient.prototype.props = {
 	type: { writable: false, readable: true, check: Recipient.checkType },
 	created: { writable: false, readable: true, check: isDate },
 	updated: { writable: false, readable: true, check: isDate },
-	deleted: { writable: false, readable: true, check: isDate },
+	deleted: { writable: true, readable: true, check: d => d === null || isDate(d) },
 
 };
 

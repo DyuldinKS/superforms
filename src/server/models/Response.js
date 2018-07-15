@@ -1,7 +1,7 @@
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
 import Form from './Form';
-import { isNatural } from '../utils/extras';
+import { isNatural, isDate } from '../utils/extras';
 
 
 class Response extends AbstractModel {
@@ -47,7 +47,7 @@ Response.prototype.props = {
 	id: { writable: false, readable: true },
 	created: { writable: false, readable: true },
 	updated: { writable: false, readable: true },
-	deleted: { writable: false, readable: true },
+	deleted: { writable: false, readable: true, check: d => d === null || isDate(d) },
 };
 
 

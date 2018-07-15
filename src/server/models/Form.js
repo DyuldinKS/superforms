@@ -171,6 +171,7 @@ Form.prototype.props = {
 	title: { writable: true, readable: true, check: Form.checkTitle },
 	description: { writable: true, readable: true, check: isString },
 	scheme: { writable: true, readable: true, check: Form.checkScheme },
+	deleted: { writable: false, readable: true, check: d => d === null || isDate(d) },
 
 	// values set by model
 	collecting: { writable: true, readable: true, check: Form.checkCollecting },
@@ -181,7 +182,6 @@ Form.prototype.props = {
 	id: { writable: false, readable: true, check: isNatural },
 	created: { writable: false, readable: true, check: isDate },
 	updated: { writable: false, readable: true, check: isDate },
-	deleted: { writable: false, readable: true, check: isDate },
 	questionCount: { writable: false, readable: true },
 	responseCount: { writable: false, readable: true },
 };

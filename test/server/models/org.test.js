@@ -12,10 +12,6 @@ const { expect } = chai;
 describe('Org model', () => {
 	const author = { id: 1 };
 
-	before(() => sinon.stub(db, 'query').resolves({}));
-
-	after(() => db.query.restore());
-
 	it('should be instance of Org, Recipient and AbstractModel', () => {
 		const org = new Org({});
 		assert(org instanceof Org);
@@ -47,38 +43,42 @@ describe('Org model', () => {
 	})
 
 	
-	it('should update only writable props', () => {
-		const org = new Org({ id: 13 });
-		// props that can be updated
-		const writable = {
-			email: 'w@mc.com',
-			info: { fullName: 'Massachusetts Institute of Technology', label: 'MIT' },
-			active: false,
-			deleted: false,
-			parentId: 111,
-		};
-		// props that can not be updated
-		const unwritable = {
-			id: 14,
-			type: 'rcpt',
-		};
+	describe('update()', () => {
+		beforeEach(() => sinon.stub(db, 'query').resolves({}));
 
-		// pass all props
-		const props = { ...writable, ...unwritable };
+		afterEach(() => db.query.restore());
 
-		return org.update({ props, author })
-			.then(() => {
-				assert(db.query.calledOnce === true);
+		it('should update only writable props', () => {
+			const org = new Org({ id: 13 });
+			// props that can be updated
+			const writable = {
+				email: 'w@mc.com',
+				info: { fullName: 'Massachusetts Institute of Technology', label: 'MIT' },
+				active: false,
+				deleted: new Date(),
+			};
+			// props that can not be updated
+			const unwritable = {
+				id: 14,
+				type: 'rcpt',
+				parentId: 111,
+			};
 
-				const [query, [id, updated, authorId]] = db.query.firstCall.args;
+			// pass all props
+			const props = { ...writable, ...unwritable };
 
-				assert(query.includes('update_org'));
-				assert(id === 13);
-				assert(authorId === author.id);
+			return org.update({ props, author })
+				.then(() => {
+					assert(db.query.calledOnce === true);
+					const [query, [id, updatedProps, authorId]] = db.query.firstCall.args;
+					assert(query.includes('update_org'));
+					assert(id === 13);
+					assert(authorId === author.id);
 
-				const result = { ...writable };
-				assert.deepStrictEqual(updated, result);
-			});
+					const result = { ...writable };
+					assert.deepStrictEqual(updatedProps, result);
+				});
+		});
 	});
 
 	describe('toJSON()', () => {

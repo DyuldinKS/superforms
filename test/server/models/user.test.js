@@ -13,11 +13,6 @@ const { expect } = chai;
 describe('User model', () => {
 	const author = { id: 1 };
 
-	beforeEach(() => sinon.stub(db, 'query').resolves({}));
-
-	afterEach(() => db.query.restore());
-
-
 	it('should be instance of User, Recipient and AbstractModel', () => {
 		const user = new User({});
 		assert(user instanceof User);
@@ -111,6 +106,10 @@ describe('User model', () => {
 
 
 	describe('update()', () => {
+		beforeEach(() => sinon.stub(db, 'query').resolves({}));
+
+		afterEach(() => db.query.restore());
+
 		it('should update only writable props', () => {
 			const user = new User({ id: 13 });
 			// props that can be updated
@@ -118,7 +117,7 @@ describe('User model', () => {
 				email: 'w@mc.com',
 				role: 'root',
 				info: { firstName: 'W', lastName: 'MC' },
-				deleted: true,
+				deleted: new Date(),
 			};
 			// props that can not be updated
 			const unwritable = {
@@ -137,7 +136,6 @@ describe('User model', () => {
 				.then(() => {
 					assert(db.query.calledOnce);
 					const [query, [id, updatedProps, authorId]] = db.query.firstCall.args;
-
 					assert(query.includes('update_user'));
 					assert(id === 13);
 					assert(authorId === author.id);
