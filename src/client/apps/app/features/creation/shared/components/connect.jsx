@@ -32,7 +32,7 @@ function mapStateToPropsForOrg(state, ownProps) {
 }
 
 function mapDispatchToPropsForUser(dispatch, ownProps) {
-  const parentOrgId = ownProps.match.params.orgId;
+  const parentOrgId = Number(ownProps.match.params.orgId);
 
   return {
     createUser: payload =>
@@ -41,7 +41,7 @@ function mapDispatchToPropsForUser(dispatch, ownProps) {
 }
 
 function mapDispatchToPropsForOrg(dispatch, ownProps) {
-  const parentOrgId = ownProps.match.params.orgId;
+  const parentOrgId = Number(ownProps.match.params.orgId);
 
   return {
     createOrg: payload =>
