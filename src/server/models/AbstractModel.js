@@ -40,7 +40,7 @@ class AbstractModel {
 	}
 
 
-	check(props) {
+	check(props = this) {
 		if(typeof props !== 'object') {
 			throw new Error('Argument must be an object with properties');
 		}
@@ -53,7 +53,7 @@ class AbstractModel {
 			}
 			checker = this.props[key].check;
 			if(checker !== undefined && !checker(props[key])) {
-				throw new HTTPError(500, `Invalid ${this.entityName}.${key} value`);
+				throw new HTTPError(500, `Invalid ${key} value`);
 			}
 		});
 	}
@@ -85,7 +85,7 @@ class AbstractModel {
 	async update({ props, author }) {
 		// sql funcs
 		const typeConverter = `to_${this.entityName}_full`;
-		const update = `update_${this.entityName}`;
+		const updateFunc = `update_${this.entityName}`;
 
 		// filter props to update
 		const writableProps = this.filterProps(props, 'writable', 'update');
@@ -96,7 +96,7 @@ class AbstractModel {
 		// update only new props
 		return db.query(
 			`SELECT _updated.* FROM ${typeConverter}(
-				${update}($1::int, $2::json, $3::int)
+				${updateFunc}($1::int, $2::json, $3::int)
 			) _updated`,
 			[this.id, newProps, author.id],
 		)

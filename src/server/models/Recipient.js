@@ -62,17 +62,15 @@ class Recipient extends AbstractModel {
 	------------------------------ INSTANCE METHODS ------------------------------
 	----------------------------------------------------------------------------*/
 
-	saveIfNotExists({ author }) {
-		return Promise.resolve()
-			.then(() => {
-				if(!this.email) throw new HTTPError(400, 'Missing email');
+	async saveIfNotExists({ author }) {
+		if(!this.email) throw new HTTPError(400, 'Missing email');
 
-				return db.query(
-					'SELECT (_rcpt::rcpt_full).* FROM get_or_create_rcpt($1, $2) _rcpt',
-					[this, author.id],
-				);
-			})
-			.then(rcpt => this.assign(rcpt));
+		const rcpt = await db.query(
+			'SELECT (_rcpt::rcpt_full).* FROM get_or_create_rcpt($1, $2) _rcpt',
+			[this, author.id],
+		);
+
+		return this.assign(rcpt);
 	}
 
 

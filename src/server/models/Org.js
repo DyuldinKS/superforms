@@ -101,24 +101,23 @@ class Org extends Recipient {
 	----------------------------------------------------------------------------*/
 
 	// @implements
-	save({ author }) {
+	async save({ author }) {
 		const rcpt = new Recipient(this);
+		await rcpt.saveIfNotExists({ author });
 
-		return rcpt.saveIfNotExists({ author })
-			.then(() => {
-				if(rcpt.type !== 'rcpt' || !rcpt.active || rcpt.deleted) {
-					throw new HTTPError(403, 'This email is not available');
-				}
+		if(!rcpt.isActive() || !rcpt.isUnregistered()) {
+			throw new HTTPError(403, 'This email is not available');
+		}
 
-				const writableProps = this.filterProps(this, 'writable');
-				return db.query(
-					`SELECT _new.* FROM to_org_full(
-						create_org($1::int, $2::json, $3::int)
-					) _new`,
-					[rcpt.id, writableProps, author.id],
-				);
-			})
-			.then(user => this.assign(user));
+		const writableProps = this.filterProps(this, 'writable', 'create');
+		const org = await db.query(
+			`SELECT _new.* FROM to_org_full(
+				create_org($1::int, $2::json, $3::int)
+			) _new`,
+			[rcpt.id, writableProps, author.id],
+		);
+
+		return this.assign(org);
 	}
 
 

@@ -96,12 +96,14 @@ class User extends Recipient {
 
 	// @overrides
 	async save({ author }) {
-		const rcpt = await new Recipient(this).saveIfNotExists({ author });
-		if(!rcpt.active || !rcpt.isUnregistered()) {
+		const rcpt = new Recipient(this);
+		await rcpt.saveIfNotExists({ author });
+
+		if(!rcpt.isActive() || !rcpt.isUnregistered()) {
 			throw new HTTPError(403, 'This email is not available');
 		}
 
-		const writableProps = this.filterProps(this, 'writable');
+		const writableProps = this.filterProps(this, 'writable', 'create');
 		const user = await db.query(
 			`SELECT _new.* FROM to_user_full(
 				create_user($1::int, $2::json, $3::int)
