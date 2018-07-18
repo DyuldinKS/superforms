@@ -6,7 +6,6 @@ import {
 	loadDependincies,
 } from '../middleware/instances';
 import { checkAccess, accessError } from '../middleware/access';
-import Form from '../models/Form';
 
 
 export default (app) => {
@@ -35,7 +34,7 @@ export default (app) => {
 						throw accessError;
 					}
 				})
-				.then(() => form.checkAnswers)
+				.then(() => form.checkAnswers(response.items))
 				.then(() => response.save({ author }))
 				.then(() => res.send(response))
 				.catch(next);
