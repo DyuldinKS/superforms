@@ -22,7 +22,9 @@ class User extends Recipient {
 	----------------------------------------------------------------------------*/
 
 	static create({ props }) {
-		return new User(props);
+		const user = new User(props);
+		user.check();
+		return user;
 	}
 
 

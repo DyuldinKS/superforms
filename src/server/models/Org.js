@@ -10,7 +10,9 @@ class Org extends Recipient {
 	----------------------------------------------------------------------------*/
 
 	static create({ props }) {
-		return new Org(props);
+		const org = new Org(props);
+		org.check();
+		return org;
 	}
 
 

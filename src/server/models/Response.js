@@ -11,7 +11,9 @@ class Response extends AbstractModel {
 	----------------------------------------------------------------------------*/
 
 	static create({ props }) {
-		return new Response(props);
+		const rspn = new Response(props);
+		rspn.check();
+		return rspn;
 	}
 
 

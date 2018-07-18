@@ -20,7 +20,9 @@ class Recipient extends AbstractModel {
 	----------------------------------------------------------------------------*/
 
 	static create({ props }) {
-		return new Recipient(props);
+		const rcpt = new Recipient(props);
+		rcpt.check();
+		return rcpt;
 	}
 
 

@@ -23,7 +23,9 @@ class Form extends AbstractModel {
 			...props,
 			ownerId: author.id,
 		};
-		return new Form(extra);
+		const form = new Form(extra);
+		form.check();
+		return form;
 	}
 
 
