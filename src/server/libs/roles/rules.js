@@ -97,7 +97,7 @@ const rules = {
 
 	areEqualSets: (a, b) => {
 		const [setA, setB] = toSetAll(a, b);
-		return setA.size === setB.size && isSubset(a, b);
+		return setA.size === setB.size && isSubset(setA, setB);
 	},
 };
 

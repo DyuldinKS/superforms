@@ -15,7 +15,8 @@ export default ({
 		user: nowhere,
 
 		form: (subj, form, { body }) => (
-			areEqualSets(body, ['title', 'description', 'scheme'])
+			isSubset(body, ['title', 'description', 'scheme'])
+				&& isSubset(['title', 'scheme'], body)
 		),
 
 		response: everywhere,
@@ -63,7 +64,7 @@ export default ({
 					(isFormUnsent(subj, form) && !isElemOf('ownerId', body))
 					// if responses collecting started
 					|| (!isFormUnsent(subj, form)
-						&& isSubset(body, ['title', 'description', 'collecting'])))
+						&& isSubset(body, ['action', 'title', 'description', 'collecting'])))
 		),
 
 		response: (subj, response, { body }) => (

@@ -19,7 +19,8 @@ export default ({
 		),
 
 		form: (subj, form, { body }) => (
-			areEqualSets(body, ['title', 'description', 'scheme'])
+			isSubset(body, ['title', 'description', 'scheme'])
+				&& isSubset(['title', 'scheme'], body)
 		),
 
 		response: everywhere,
@@ -29,7 +30,7 @@ export default ({
 	read: {
 		org: (subj, org, { query, subpath }) => (
 			isSameOrg(subj, org)
-				&& (!isElemOf(subpath, ['orgs/new', 'users'])
+				&& (!isElemOf(subpath, ['orgs/new', 'orgs', 'users'])
 					// can not change default maxDepth = 0
 					|| (isEqual(subpath, 'users') && !isElemOf('maxDepth', query)))
 		),

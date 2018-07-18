@@ -21,7 +21,7 @@ export default ({
 
 		form: (subj, form, { body }) => (
 			isSubset(body, ['title', 'description', 'scheme'])
-				&& isSubset(['title', 'description'], body)
+				&& isSubset(['title', 'scheme'], body)
 		),
 
 		response: everywhere,
