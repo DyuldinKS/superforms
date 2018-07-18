@@ -8,7 +8,7 @@ export default (req, res, next) => {
 	const user = req.author;
 
 	try {
-		store.dispatch(routerActions.init(req.url));
+		store.dispatch(routerActions.init(req.originalUrl));
 		store.dispatch(sessionActions.init(
 			user.id,
 			user.org.id,

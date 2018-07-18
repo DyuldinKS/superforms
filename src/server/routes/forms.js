@@ -8,24 +8,27 @@ import {
 import { checkAccess } from '../middleware/access';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import XLSX from '../models/XLSX';
-import { HTTPError } from '../errors';
 import ssr from '../templates/ssr';
 import { actions as entitiesActions } from '../../client/shared/entities';
 import { actions as formActions } from '../../client/apps/app/shared/redux/forms';
+import { HTTPError } from '../errors';
 
 
 export default (app) => {
+	/*----------------------------------------------------------------------------
+	---------------------------- SERVER SIDE RENDERING ---------------------------
+	----------------------------------------------------------------------------*/
+
 	app.use(
-		[
-			/^\/api\/v\d{1,2}\/form\/\d{1,12}(\/(responses|xlsx))?\/?$/, // api
-			// excluding /form/:id (interview page)
-			/^\/form\/\d{1,12}\/(edit|preview|distribute|responses)\/?$/,
-		],
+		// all static routes with specified form id
+		// excluding /form/:id (interview page)
+		/^\/form\/\d{1,12}\/(edit|preview|distribute|responses)\/?$/,
 		isActive,
 		loadParams,
 		loadInstance,
 		loadDependincies,
 		checkAccess,
+		preloadReduxStore,
 	);
 
 
@@ -57,12 +60,10 @@ export default (app) => {
 
 	app.get(
 		[
-			'/form/:id',
 			'/form/:id/edit',
 			'/form/:id/preview',
 			'/form/:id/distribute',
 		],
-		preloadReduxStore,
 		(req, res, next) => {
 			const form = req.loaded.instance;
 			const { reduxStore } = req;
@@ -76,7 +77,6 @@ export default (app) => {
 
 	app.get(
 		'/form/:id/responses',
-		preloadReduxStore,
 		(req, res, next) => {
 			const form = req.loaded.instance;
 			const { reduxStore } = req;
@@ -97,38 +97,11 @@ export default (app) => {
 	);
 
 
-	app.get(
-		'/api/v1/form/:id',
-		(req, res, next) => {
-			const form = req.loaded.instance;
-			res.json(form);
-		},
-	);
+	/*----------------------------------------------------------------------------
+	---------------------------------- API ---------------------------------------
+	----------------------------------------------------------------------------*/
 
-
-	app.get(
-		'/api/v1/form/:id/responses',
-		(req, res, next) => {
-			const { type } = req.query;
-			const form = req.loaded.instance;
-			// default value
-			let mode = 'short';
-			if(type === 'xlsx' || type === 'full') mode = 'full';
-
-			form.getResponses(mode)
-				.then((responses) => {
-					// send xlsx buffer or responses as JSON
-					const body = (type === 'xlsx')
-						? new XLSX(form, responses).write()
-						: responses;
-
-					res.json(body);
-				})
-				.catch(next);
-		},
-	);
-
-
+	// create new form
 	app.post(
 		'/api/v1/form',
 		isActive,
@@ -147,6 +120,26 @@ export default (app) => {
 	);
 
 
+	app.use(
+		// all api routes with specified form id
+		/^\/api\/v\d{1,2}\/form\/\d{1,12}(\/(responses|xlsx))?\/?$/, // api
+		isActive,
+		loadParams,
+		loadInstance,
+		loadDependincies,
+		checkAccess,
+	);
+
+
+	app.get(
+		'/api/v1/form/:id',
+		(req, res, next) => {
+			const form = req.loaded.instance;
+			res.json(form);
+		},
+	);
+
+
 	// update form
 	app.patch(
 		'/api/v1/form/:id',
@@ -157,6 +150,28 @@ export default (app) => {
 
 			form.update({ props, author })
 				.then(() => res.json(form))
+				.catch(next);
+		},
+	);
+
+
+	app.get(
+		'/api/v1/form/:id/responses',
+		(req, res, next) => {
+			const { type } = req.query;
+			const form = req.loaded.instance;
+			let mode = 'short'; // default value
+			if(type === 'xlsx' || type === 'full') mode = 'full';
+
+			form.getResponses(mode)
+				.then((responses) => {
+					// send xlsx buffer or responses as JSON
+					const body = (type === 'xlsx')
+						? new XLSX(form, responses).write()
+						: responses;
+
+					res.json(body);
+				})
 				.catch(next);
 		},
 	);

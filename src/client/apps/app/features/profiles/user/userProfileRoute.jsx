@@ -19,7 +19,7 @@ const propTypes = {
   match: PropTypes.object.isRequired,
   location: PropTypes.object.isRequired,
   // from Redux
-  id: PropTypes.string.isRequired,
+  id: PropTypes.number.isRequired,
   fullName: PropTypes.string,
   org: PropTypes.object,
   fetchUser: PropTypes.func.isRequired,
@@ -34,6 +34,12 @@ class UserProfilePage extends Component {
   componentDidMount() {
     const { id, fetchUser } = this.props;
     fetchUser(id);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.id !== prevProps.id) {
+      this.props.fetchUser(this.props.id);
+    }
   }
 
   render() {
@@ -59,6 +65,7 @@ class UserProfilePage extends Component {
 
             <UserProfileNav
               baseUrl={url}
+              id={id}
               subpath={subpath}
             />
           </div>

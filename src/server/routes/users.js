@@ -19,7 +19,7 @@ import { actions as userActions } from '../../client/apps/app/shared/redux/users
 
 export default (app) => {
 	/*----------------------------------------------------------------------------
-	---------------------------------- API ---------------------------------------
+	------------------------------- SENDING EMAIL --------------------------------
 	----------------------------------------------------------------------------*/
 
 	// send email for password reset
@@ -43,7 +43,7 @@ export default (app) => {
 	);
 
 
-	// send email with new password
+	// get email with new password
 	app.get(
 		'/user/password',
 		isNotAuthenticated,
@@ -74,45 +74,27 @@ export default (app) => {
 	);
 
 
-	// create user
-	app.post(
-		'/api/v1/user',
-		isActive,
-		loadParams,
-		createInstance,
-		loadDependincies,
-		checkAccess,
-		(req, res, next) => {
-			const { author } = req;
-			const user = req.loaded.instance;
-
-			user.save({ author })
-				.then(() => user.resetPassword({ author }))
-				.then(() => mailer.sendRegistrationEmail(user))
-				.then(() => res.json(user))
-				.catch(next);
-		},
-	);
-
+	/*----------------------------------------------------------------------------
+	---------------------------- SERVER SIDE RENDERING ---------------------------
+	----------------------------------------------------------------------------*/
 
 	app.use(
-		[
-			/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/(forms))?\/?$/, // api
-			/^\/user\/\d{1,8}(\/(info|settings|forms))?\/?$/, // ssr
-		],
+		/^\/user\/\d{1,8}(\/(info|settings|forms))?\/?$/, // ssr
 		isActive,
 		loadParams,
 		loadInstance,
 		loadDependincies,
 		checkAccess,
+		preloadReduxStore,
 	);
 
+
 	app.get(
+		// all static routes with specified user id
 		[
 			'/user/:id/info',
 			'/user/:id/settings',
 		],
-		preloadReduxStore,
 		(req, res, next) => {
 			const user = req.loaded.instance;
 			const { reduxStore } = req;
@@ -123,9 +105,9 @@ export default (app) => {
 		},
 	);
 
+
 	app.get(
 		'/user/:id/forms',
-		preloadReduxStore,
 		(req, res, next) => {
 			const user = req.loaded.instance;
 			const options = req.query;
@@ -149,6 +131,43 @@ export default (app) => {
 		},
 	);
 
+
+	/*----------------------------------------------------------------------------
+	---------------------------------- API ---------------------------------------
+	----------------------------------------------------------------------------*/
+
+	// create user
+	app.post(
+		'/api/v1/user',
+		isActive,
+		loadParams,
+		createInstance,
+		loadDependincies,
+		checkAccess,
+		(req, res, next) => {
+			const { author } = req;
+			const user = req.loaded.instance;
+
+			user.save({ author })
+				.then(() => user.resetPassword({ author }))
+				.then(() => { mailer.sendRegistrationEmail(user); }) // do not await
+				.then(() => res.json(user))
+				.catch(next);
+		},
+	);
+
+
+	app.use(
+		// all api routes with user id
+		/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/(forms))?\/?$/, // api
+		isActive,
+		loadParams,
+		loadInstance,
+		loadDependincies,
+		checkAccess,
+	);
+
+
 	// get user
 	app.get(
 		'/api/v1/user/:id',
@@ -167,6 +186,21 @@ export default (app) => {
 	);
 
 
+	// update user
+	app.patch(
+		'/api/v1/user/:id',
+		(req, res, next) => {
+			const { author } = req;
+			const user = req.loaded.instance;
+			const props = req.body;
+
+			user.update({ props, author })
+				.then(() => res.send(user))
+				.catch(next);
+		},
+	);
+
+
 	// find forms of specified user
 	app.get(
 		'/api/v1/user/:id/forms',
@@ -176,30 +210,6 @@ export default (app) => {
 
 			user.findForms(options)
 				.then(forms => res.json(forms))
-				.catch(next);
-		},
-	);
-
-
-	// update user
-	app.patch(
-		'/api/v1/user/:id',
-		(req, res, next) => {
-			const { author } = req;
-			const user = req.loaded.instance;
-			const props = req.body;
-
-			let updateChain = Promise.resolve();
-			const { password } = props;
-			if(password) {
-				updateChain = updateChain
-					.then(() => User.encrypt(password))
-					.then((hash) => { props.hash = hash; });
-			}
-
-			updateChain
-				.then(() => user.update({ props, author }))
-				.then(() => res.send(user))
 				.catch(next);
 		},
 	);

@@ -1,50 +1,84 @@
 import diff from 'object-diff';
 import db from '../db/index';
 import { isEmpty } from '../utils/extras';
+import { HTTPError } from '../errors';
 
 
 class AbstractModel {
-	// ***************** INSTANCE METHODS ***************** //
+	/*----------------------------------------------------------------------------
+	------------------------------ INSTANCE METHODS ------------------------------
+	----------------------------------------------------------------------------*/
 
 	constructor(props) {
-		if(props) {
-			this.assign(props);
+		if(typeof props !== 'object') {
+			throw new TypeError(`${this.constructor.name} accepts only object with properties`);
 		}
+		this.assign(props);
 	}
 
 
-	filterProps(props, type) {
+	filterProps(props, type, action) {
 		if(!props) return null;
-		const writable = {};
+		let filter = () => true;
+		if(type === 'readable') {
+			// filter props available for a client
+			filter = prop => this.props[prop].readable;
+		} else if(type === 'writable') {
+			// filter writable props
+			// or props that can be written only on create or update
+			filter = prop => (
+				this.props[prop].writable || this.props[prop].writableOn === action
+			);
+		}
 
+		const filtered = {};
 		Object.keys(props).forEach((prop) => {
-			if(prop in this.props
-				&& (type === 'all' || this.props[prop][type])) {
-				writable[prop] = props[prop];
+			if(this.props[prop] && filter(prop)) {
+				filtered[prop] = props[prop];
 			}
 		});
 
-		return writable;
+		return filtered;
+	}
+
+
+	check(props = this) {
+		if(typeof props !== 'object') {
+			throw new Error('Argument must be an object with properties');
+		}
+
+		const keys = Object.keys(props);
+		let checker;
+		keys.forEach((key) => {
+			if(!this.props[key]) {
+				throw new Error(`Unexpected ${this.entityName}.${key} property`);
+			}
+			checker = this.props[key].check;
+			if(checker !== undefined && !checker(props[key])) {
+				throw new HTTPError(500, `Invalid ${key} value`);
+			}
+		});
 	}
 
 
 	assign(props) {
-		if(!props) return null;
-
-		return Object.assign(this, this.filterProps(props, 'all'));
+		return props
+			? Object.assign(this, this.filterProps(props))
+			: null;
 	}
 
 
-	save({ author }) {
+	async save({ author }) {
 		const typeConverter = `to_${this.entityName}_full`;
 		const create = `create_${this.entityName}`;
-		const writableProps = this.filterProps(this, 'all');
+		const newProps = this.filterProps(this, 'writable', 'create');
+		this.check(newProps); // throws error if new props contain invalid values
 
 		return db.query(
 			`SELECT _new.* FROM ${typeConverter}(
 				${create}($1::json, $2::int)
 			) _new`,
-			[writableProps, author.id],
+			[newProps, author.id],
 		)
 			.then(res => this.assign(res));
 	}
@@ -53,15 +87,18 @@ class AbstractModel {
 	async update({ props, author }) {
 		// sql funcs
 		const typeConverter = `to_${this.entityName}_full`;
-		const update = `update_${this.entityName}`;
+		const updateFunc = `update_${this.entityName}`;
+
 		// filter props to update
-		const writableProps = this.filterProps(props, 'writable');
+		const writableProps = this.filterProps(props, 'writable', 'update');
 		const newProps = diff(this, writableProps);
 		if(isEmpty(newProps)) return this;
+		this.check(newProps); // throws error if new props contain invalid values
 
+		// update only new props
 		return db.query(
 			`SELECT _updated.* FROM ${typeConverter}(
-				${update}($1::int, $2::json, $3::int)
+				${updateFunc}($1::int, $2::json, $3::int)
 			) _updated`,
 			[this.id, newProps, author.id],
 		)
@@ -70,7 +107,7 @@ class AbstractModel {
 
 
 	toJSON() {
-		return this.filterProps(this, 'enumerable');
+		return this.filterProps(this, 'readable');
 	}
 
 

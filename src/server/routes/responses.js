@@ -10,41 +10,11 @@ import Form from '../models/Form';
 
 
 export default (app) => {
-	app.use(
-		[
-			/\/api\/v\d{1,2}\/response\/\d{1,16}\/?$/, // api
-			/\/response\/\d{1,16}\/?$/, // ssr
-		],
-		isActive,
-		loadParams,
-		loadInstance,
-		loadDependincies,
-		checkAccess,
-	);
+	/*----------------------------------------------------------------------------
+	---------------------------------- API ---------------------------------------
+	----------------------------------------------------------------------------*/
 
-
-	app.get(
-		'/response/:id',
-		isActive,
-		loadInstance,
-		(req, res, next) => {
-			const response = req.loaded.instance;
-			res.send('awesome stub');
-		},
-	);
-
-
-	app.get(
-		'/api/v1/response/:id',
-		isActive,
-		loadInstance,
-		(req, res, next) => {
-			const response = req.loaded.instance;
-			res.json(response);
-		},
-	);
-
-
+	// create response (save filled form)
 	app.post(
 		'/api/v1/response',
 		isActive,
@@ -59,13 +29,47 @@ export default (app) => {
 
 			const { form } = response;
 
-			if(!form.isShared() || form.collecting.shared !== response.secret) {
-				next(accessError);
-			}
-
-			response.save({ author })
-				.then(() => { res.status(200).send(); })
+			Promise.resolve()
+				.then(() => {
+					if(!form.isShared() || form.collecting.shared !== response.secret) {
+						throw accessError;
+					}
+				})
+				.then(() => form.checkAnswers)
+				.then(() => response.save({ author }))
+				.then(() => res.send(response))
 				.catch(next);
+		},
+	);
+
+
+	app.use(
+		/\/api\/v\d{1,2}\/response\/\d{1,16}\/?$/, // api
+		isActive,
+		loadParams,
+		loadInstance,
+		loadDependincies,
+		checkAccess,
+	);
+
+
+	app.get(
+		'/api/v1/response/:id',
+		isActive,
+		loadInstance,
+		(req, res, next) => {
+			const response = req.loaded.instance;
+			res.json(response);
+		},
+	);
+
+	app.get(
+		'/api/v1/response/:id',
+		isActive,
+		loadInstance,
+		(req, res, next) => {
+			const response = req.loaded.instance;
+			res.json(response);
 		},
 	);
 };

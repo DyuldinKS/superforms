@@ -5,11 +5,21 @@ import db from '../db/index';
 import Recipient from './Recipient';
 import Org from './Org';
 import passwordGenerator from '../libs/passwordGenerator';
+import { isNatural, isObject, isString, isEmpty } from '../utils/extras';
 import { HTTPError } from '../errors';
 
 
 class User extends Recipient {
-	// ***************** STATIC METHODS ***************** //
+	/*----------------------------------------------------------------------------
+	-------------------------------- STATIC PROPS --------------------------------
+	----------------------------------------------------------------------------*/
+
+	static roles = new Set(['root', 'admin', 'user', 'respondent'])
+
+
+	/*----------------------------------------------------------------------------
+	------------------------------- STATIC METHODS -------------------------------
+	----------------------------------------------------------------------------*/
 
 	static create({ props }) {
 		return new User(props);
@@ -23,6 +33,7 @@ class User extends Recipient {
 		)
 			.then(found => (found ? new User(found) : null));
 	}
+
 
 	// for authentication or password recovery
 	static findByEmail(email, mode = null) {
@@ -55,12 +66,70 @@ class User extends Recipient {
 	}
 
 
-	static encrypt(password) {
+	static checkInfo(info) {
+		if(!isObject(info)) return false;
+
+		const {
+			firstName, lastName, patronymic, ...unexpected
+		} = info;
+
+		return (firstName && isString(firstName)
+				&& lastName && isString(lastName)
+				&& (patronymic === undefined || isString(patronymic))
+				&& isEmpty(unexpected));
+	}
+
+
+	static checkRole(role) {
+		return User.roles.has(role);
+	}
+
+
+	static checkPassword(p) {
+		return isString(p) && p.length >= 8 && p.length <= 64;
+	}
+
+
+	static async encrypt(password) {
 		return bcrypt.hash(password, config.bcrypt.saltRound);
 	}
 
 
-	// ***************** INSTANCE METHODS ***************** //
+	/*----------------------------------------------------------------------------
+	------------------------------ INSTANCE METHODS ------------------------------
+	----------------------------------------------------------------------------*/
+
+	// @overrides
+	async save({ author }) {
+		const rcpt = new Recipient(this);
+		await rcpt.saveIfNotExists({ author });
+
+		if(!rcpt.isActive() || !rcpt.isUnregistered()) {
+			throw new HTTPError(403, 'This email is not available');
+		}
+
+		const writableProps = this.filterProps(this, 'writable', 'create');
+		const user = await db.query(
+			`SELECT _new.* FROM to_user_full(
+				create_user($1::int, $2::json, $3::int)
+			) _new;`,
+			[rcpt.id, writableProps, author.id],
+		);
+
+		return this.assign(user);
+	}
+
+
+	// @overrides
+	async update({ props, author }) {
+		const { password } = props;
+		if(password) {
+			props.hash = await User.encrypt(password);
+		}
+
+		return super.update({ props, author });
+	}
+
 
 	async loadDependincies() {
 		if(this.parentOrgIds) return;
@@ -113,36 +182,11 @@ class User extends Recipient {
 
 	resetPassword({ password, author }) {
 		this.password = password || passwordGenerator(8);
+		const props = { password: this.password };
 
-		return User.encrypt(this.password)
-			.then(hash => this.update({ props: { hash }, author }))
+		return this.update({ props, author })
 			.then(() => this.deleteToken())
 			.then(() => this);
-	}
-
-
-	// @implements
-	save({ author }) {
-		return Promise.resolve()
-			.then(() => {
-				if(!this.role) throw new HTTPError(400, 'Missing user role');
-
-				return new Recipient(this).saveIfNotExists({ author });
-			})
-			.then((rcpt) => {
-				if(!rcpt.active || rcpt.type !== 'rcpt') {
-					throw new HTTPError(403, 'This email is not available');
-				}
-
-				const writableProps = this.filterProps(this, 'writable');
-				return db.query(
-					`SELECT _new.* FROM to_user_full(
-						create_user($1::int, $2::json, $3::int)
-					) _new;`,
-					[rcpt.id, writableProps, author.id],
-				);
-			})
-			.then(user => this.assign(user));
 	}
 
 
@@ -183,22 +227,31 @@ class User extends Recipient {
 }
 
 
-// ***************** PROTOTYPE PROPERTIES ***************** //
+/*------------------------------------------------------------------------------
+----------------------------- PROTOTYPE PROPERTIES -----------------------------
+------------------------------------------------------------------------------*/
 
 User.prototype.tableName = 'users';
 User.prototype.entityName = 'user';
 
 User.prototype.props = {
+	// @inherits
 	...Recipient.prototype.props,
-	id: { writable: false, enumerable: true },
-	orgId: { writable: true, enumerable: true },
-	parentOrgIds: { writable: false, enumerable: false },
-	org: { writable: false, enumerable: false },
-	info: { writable: true, enumerable: true },
-	role: { writable: true, enumerable: true },
-	token: { writable: false, enumerable: false },
-	password: { writable: false, enumerable: false },
-	hash: { writable: true, enumerable: false },
+
+	// values received from client
+	orgId: { writableOn: 'create', readable: true, check: isNatural },
+	info: { writable: true, readable: true, check: User.checkInfo },
+	role: { writable: true, readable: true, check: User.checkRole },
+	password: { writable: false, readable: false, check: User.checkPassword },
+
+	// values generated by model
+	id: { writableOn: 'create', readable: true, check: isNatural }, // @override Recipient id opts
+	hash: { writable: true, readable: false },
+
+	// external model dependincies (from another db tables)
+	token: { writable: false, readable: false },
+	org: { writable: false, readable: false },
+	parentOrgIds: { writable: false, readable: false },
 };
 
 Object.freeze(User);
