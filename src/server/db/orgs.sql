@@ -184,7 +184,7 @@ $$
 		PERFORM update_rcpt(_rcpt_id, '{"type":"org"}'::json, _author_id, _time);
 
 		_links := _props::org_links;
-		PERFORM set_org_parent(_rcpt_id, _links.parent_id, _author_id);
+		PERFORM set_org_parent(_rcpt_id, _links.parent_id, _author_id, _time);
 
 		SELECT * FROM get_org(_rcpt_id) INTO _inserted;
 	END;
@@ -235,11 +235,13 @@ LANGUAGE plpgsql;
 /***********************************  SEARCH **********************************/
 
 
-CREATE OR REPLACE FUNCTION get_parent_org_id(_org_id integer)
-	RETURNS integer AS
+
+CREATE OR REPLACE FUNCTION get_parent_org_ids(_id integer)
+	RETURNS integer[] AS
 $$
-	SELECT parent_id FROM org_links
-	WHERE org_id = _org_id AND distance = 1;
+	SELECT array_agg(parent_id ORDER BY distance) AS ids
+	FROM org_links
+	WHERE org_id = _id;
 $$
 LANGUAGE SQL STABLE;
 

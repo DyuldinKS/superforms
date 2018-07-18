@@ -17,15 +17,10 @@ class InputRadioGroup extends BaseSelect {
       name,
       required,
       setValue,
-      values: toggleMap = {},
     } = this.props;
 
     const { value: optionId } = event.target;
-    let nextValue = null;
-
-    if (toggleMap[optionId] === undefined) {
-      nextValue = { [optionId]: true };
-    }
+    const nextValue = { [optionId]: true };
 
     const error = validateWrapper(nextValue, required, this.validate);
     setValue(name, nextValue, error);
@@ -56,8 +51,8 @@ class InputRadioGroup extends BaseSelect {
       options,
       required,
       readOnly,
-      value: toggleMap,
     } = this.props;
+    const toggleMap = this.props.value || {};
 
     return (
       <div className="input-check-wrapper">

@@ -1,10 +1,20 @@
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
+import { checkAccess } from '../middleware/access';
 import Recipient from '../models/Recipient';
 import { HTTPError, PgError } from '../errors';
 
 
 export default (app) => {
+	/*----------------------------------------------------------------------------
+	---------------------------------- API ---------------------------------------
+	----------------------------------------------------------------------------*/
+
 	app.post(
 		'/api/v1/recipient/verification',
 		isActive,
@@ -15,74 +25,39 @@ export default (app) => {
 				return next(new HTTPError(400, 'Invalid email'));
 			}
 
-			Promise.all([
+			return Promise.all([
 				Recipient.verifyEmail(email),
 				Recipient.find({ email }),
 			])
 				.then(([verification, rcpt]) => {
 					const result = { ...verification };
-					result.available = (mode === 'signUp')
-						? rcpt === null || (rcpt && rcpt.isUnregistered() && rcpt.isActive())
-						: rcpt === null || (rcpt && rcpt.isActive());
+
+					if(!rcpt) {
+						result.available = true;
+					} else {
+						result.available = (mode === 'signUp')
+							? rcpt.isUnregistered() && rcpt.isActive()
+							: rcpt.isActive();
+					}
+
 					res.send(result);
-				})
-				.catch((err) => {
-					next(err);
-				});
-		},
-	);
-
-
-	app.post(
-		'/api/v1/recipient/search',
-		isActive,
-		(req, res, next) => {
-			let promiseToFind;
-			if(Array.isArray(req.body)) {
-				const emails = req.body;
-				promiseToFind = Recipient.findAll(emails);
-			} else {
-				const { email } = req.body;
-				promiseToFind = Recipient.find({ email });
-			}
-			promiseToFind
-				.then((result) => {
-					if(!result) throw new HTTPError(404);
-					res.json(result);
 				})
 				.catch(next);
 		},
 	);
 
 
-	app.use(
-		[
-			/\/api\/v\d{1,2}\/recipient\/\d{1,8}$/, // api
-			/\/recipient\/\d{1,8}$/, // ssr
-		],
-		isActive,
-		loadInstance,
-	);
-
-
-	app.get(
-		'/api/v1/recipient/:id',
-		isActive,
-		loadInstance,
-		(req, res, next) => {
-			const { rcpt } = req.loaded;
-			res.json(rcpt);
-		},
-	);
-
-
+	// create recipient
 	app.post(
 		'/api/v1/recipient',
 		isActive,
+		loadParams,
+		createInstance,
+		loadDependincies,
+		checkAccess,
 		(req, res, next) => {
 			const { author } = req;
-			const { email } = req.body;
-			const rcpt = new Recipient({ email });
+			const rcpt = req.loaded.instance;
 
 			rcpt.save({ author })
 				.then(() => res.json(rcpt))
@@ -100,14 +75,33 @@ export default (app) => {
 		},
 	);
 
-	// update recipients
+
+	app.use(
+		// all api routes with specified recipient id
+		/\/api\/v\d{1,2}\/recipient\/\d{1,8}\/?$/,
+		isActive,
+		loadParams,
+		loadInstance,
+		loadDependincies,
+		checkAccess,
+	);
+
+
+	app.get(
+		'/api/v1/recipient/:id',
+		(req, res, next) => {
+			const rcpt = req.loaded.instance;
+			res.json(rcpt);
+		},
+	);
+
+
+	// update recipient
 	app.patch(
 		'/api/v1/recipient/:id',
-		isActive,
-		loadInstance,
 		(req, res, next) => {
 			const { author } = req;
-			const { rcpt } = req.loaded;
+			const rcpt = req.loaded.instance;
 			const props = req.body;
 
 			rcpt.update({ props, author })

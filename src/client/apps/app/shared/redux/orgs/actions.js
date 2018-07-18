@@ -4,7 +4,7 @@ import { actions as entity } from 'shared/entities/entity';
 import { actions as entities } from 'shared/entities';
 import { actions as router } from 'shared/router/redux';
 import { batchActions } from 'shared/batch';
-import { OrgAPI, RecipientAPI } from 'api/';
+import { OrgAPI } from 'api/';
 import entityName from './constants';
 import * as types from './actionTypes';
 import {
@@ -91,7 +91,7 @@ export function changeStatus(id, active) {
     dispatch(changeStatusRequest(id, active));
 
     try {
-      const data = await RecipientAPI.setActive(id, active);
+      const data = await OrgAPI.setActive(id, active);
       dispatch(changeStatusSuccess(id, data));
     } catch (error) {
       dispatch(changeStatusFailure(id, error));
@@ -130,7 +130,7 @@ export function changeEmail(id, email) {
     dispatch(changeEmailRequest(id, email));
 
     try {
-      const data = await RecipientAPI.setEmail(id, email);
+      const data = await OrgAPI.setEmail(id, email);
       dispatch(changeEmailSuccess(id, data));
     } catch (error) {
       dispatch(changeEmailFailure(id, error));
@@ -264,6 +264,49 @@ export function fetchAffiliatedOrgs(orgId, options) {
       ));
     } catch (error) {
       dispatch(list.fetchFailure(listId, error));
+    }
+  };
+}
+
+function fetchAncestorsRequest(id, options) {
+  return {
+    type: types.FETCH_ANCESTORS_REQUEST,
+    meta: { entityName, id },
+    payload: options,
+  };
+}
+
+export function fetchAncestorsSuccess(id, orgs) {
+  return (dispatch) => {
+    dispatch(batchActions(
+      {
+        type: types.FETCH_ANCESTORS_SUCCESS,
+        meta: { entityName, id },
+        orgs,
+      },
+      entities.add({ orgs }),
+    ));
+  };
+}
+
+export function fetchAncestorsFailure(id, error) {
+  return {
+    type: types.FETCH_ANCESTORS_FAILURE,
+    meta: { entityName, id },
+    error: true,
+    payload: error,
+  };
+}
+
+export function fetchAncestors(id, options) {
+  return async (dispatch) => {
+    dispatch(fetchAncestorsRequest(id, options));
+
+    try {
+      const data = await OrgAPI.getAncestors(id, options);
+      dispatch(fetchAncestorsSuccess(id, data));
+    } catch (error) {
+      dispatch(fetchAncestorsFailure(id, error));
     }
   };
 }

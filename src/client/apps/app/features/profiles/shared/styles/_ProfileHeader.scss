@@ -1,17 +1,4 @@
 .app-profile-header {
-  flex-grow: 1;
-  padding-top: 25px;
-
-  dl {
-    display: flex;
-    flex-wrap: wrap;
-
-    dt {
-      margin-right: 10px;
-    }
-
-    dd {
-      margin-right: 40px;
-    }
-  }
+  margin-bottom: $spacer * 1.5;
+  padding-top: $spacer * 1.5;
 }

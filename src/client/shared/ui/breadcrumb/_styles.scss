@@ -1,0 +1,11 @@
+.breadcrumb {
+  padding-right: 0;
+  padding-left: 0;
+  border-radius: 0;
+  background-color: transparent;
+  font-size: $small-font-size;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: ">";
+}

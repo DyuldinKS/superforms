@@ -4,7 +4,7 @@ import { actions as entity } from 'shared/entities/entity';
 import { actions as entities } from 'shared/entities';
 import { actions as router } from 'shared/router/redux';
 import { batchActions } from 'shared/batch';
-import { UserAPI, RecipientAPI } from 'api/';
+import { UserAPI } from 'api/';
 import entityName from './constants';
 import * as types from './actionTypes';
 import { getFormsListId } from './utils';
@@ -87,7 +87,7 @@ export function changeStatus(id, active) {
     dispatch(changeStatusRequest(id, active));
 
     try {
-      const data = await RecipientAPI.setActive(id, active);
+      const data = await UserAPI.setActive(id, active);
       dispatch(changeStatusSuccess(id, data));
     } catch (error) {
       dispatch(changeStatusFailure(id, error));
@@ -166,7 +166,7 @@ export function changeEmail(id, email) {
     dispatch(changeEmailRequest(id, email));
 
     try {
-      const data = await RecipientAPI.setEmail(id, email);
+      const data = await UserAPI.setEmail(id, email);
       dispatch(changeEmailSuccess(id, data));
     } catch (error) {
       dispatch(changeEmailFailure(id, error));

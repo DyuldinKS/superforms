@@ -25,14 +25,16 @@ class XLSX {
 	}
 
 
-	static getCellConverter(type) {
-		// question.type is on of [text, number, select, date, time]
+	static createCellConverter(type) {
+		// question.type is elem of [text, number, select, date, time]
 		const converterName = `${type}ToXLSX`;
 		return XLSX[converterName] || XLSX.textToXLSX;
 	}
 
 
 	static textToXLSX(question, text) {
+		if(!text) return null;
+		// question is null for header cells, there is only text
 		return question && question.datetime
 			? XLSX.datetimeToXLSX(question, text) // compatibility with old data
 			: { t: 's', v: text };
@@ -40,17 +42,23 @@ class XLSX {
 
 
 	static numberToXLSX(question, num) {
+		if(typeof num !== 'number') return null;
+
 		const cell = { t: 'n', v: num };
 		if(!question.integer) cell.z = '0.00';
 		return cell;
 	}
 
 
-	static selectToXLSX(question, selectedOpts) {
+	static selectToXLSX(question, answers) {
+		if(typeof answers !== 'object') return null;
+
 		return {
 			t: 's',
-			v: question.options
-				.map((opt, i) => selectedOpts && selectedOpts[i] && opt)
+			v: [
+				...question.options.map((opt, i) => answers[i] && opt),
+				answers.other,
+			]
 				.filter(val => val)
 				.join('; '),
 		};
@@ -91,9 +99,7 @@ class XLSX {
 		const { items, order } = this.scheme;
 		const sysCols = [locales.xlsx['response.created']];
 		const sysColTypes = ['datetime'];
-		const qstnCols = order.filter(id => (
-			items[id].itemType !== 'delimeter'
-		));
+		const qstnCols = order.filter(id => items[id].itemType === 'input');
 
 		this.order = [...sysCols, ...qstnCols];
 
@@ -117,9 +123,9 @@ class XLSX {
 
 		// cell converter list
 		this.converters = [
-			...sysColTypes.map(type => XLSX.getCellConverter(type)),
+			...sysColTypes.map(type => XLSX.createCellConverter(type)),
 			...qstnCols.map(qstn => (
-				XLSX.getCellConverter((qstn && qstn.type) || 'text')
+				XLSX.createCellConverter((qstn && qstn.type) || 'text')
 			)),
 		];
 	}
@@ -131,7 +137,7 @@ class XLSX {
 		let id; // question id
 		let title; // question title
 		const ws = { '!cols': [] }; // worksheet
-		const textConverter = XLSX.getCellConverter('text');
+		const textConverter = XLSX.createCellConverter('text');
 		let converter; // col data converter
 		const headRowNum = 1;
 		const widthLimit = 20; // max chars for each column
@@ -145,13 +151,16 @@ class XLSX {
 			ws[addr] = textConverter(null, title);
 
 			// fill body
-			converter = XLSX.getCellConverter(questions[id].type);
+			let cell;
+			let val;
+			converter = XLSX.createCellConverter(questions[id].type);
 			for (let r = 0; r < responses.length; r += 1) {
 				addr = xlsx.utils.encode_cell({ c, r: r + headRowNum });
-				ws[addr] = converter(
-					questions[id],
-					responses[r].items[id],
-				) || null;
+				val = responses[r].items[id];
+				if(val !== undefined && val !== null) {
+					cell = converter(questions[id], responses[r].items[id]);
+					if(cell) ws[addr] = cell;
+				}
 			}
 
 			// set col width

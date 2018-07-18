@@ -7,6 +7,11 @@ export default function formatValues(items, values = {}) {
     const inputType = items[inputId].type;
     const value = values[inputId];
 
+    if (!value) {
+      delete formatted[inputId];
+      return;
+    }
+
     if (inputType === constants.NUMBER) {
       const preformat = value.trim().replace(',', '.');
       const toNumber = Number(preformat);

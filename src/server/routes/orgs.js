@@ -1,23 +1,38 @@
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
+import { checkAccess } from '../middleware/access';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import Org from '../models/Org';
-import { HTTPError } from '../errors';
 import ssr from '../templates/ssr';
 import { actions as entitiesActions } from '../../client/shared/entities';
 import { actions as orgActions } from '../../client/apps/app/shared/redux/orgs';
+import { HTTPError } from '../errors';
 
 
 export default (app) => {
+	/*----------------------------------------------------------------------------
+	---------------------------- SERVER SIDE RENDERING ---------------------------
+	----------------------------------------------------------------------------*/
+
 	app.use(
+		// all static routes with specified org id
 		[
-			/^\/api\/v\d{1,2}\/org\/\d{1,8}(\/\w{1,12})?$/, // api
-			/^\/org\/\d{1,8}(\/(info|settings|forms|orgs|users))?$/, // ssr
-			/^\/org\/\d{1,8}\/(orgs|users)\/new$/, // ssr
+			/^\/org\/\d{1,8}(\/(info|settings|forms|orgs|users))?\/?$/, // ssr
+			/^\/org\/\d{1,8}\/(orgs|users)\/new\/?$/, // ssr
 		],
 		isActive,
+		loadParams,
 		loadInstance,
+		loadDependincies,
+		checkAccess,
+		preloadReduxStore,
 	);
+
 
 	app.get(
 		[
@@ -27,9 +42,8 @@ export default (app) => {
 			'/org/:id/settings',
 			'/org/:id/users/new',
 		],
-		preloadReduxStore,
 		(req, res, next) => {
-			const { org } = req.loaded;
+			const org = req.loaded.instance;
 			const { reduxStore } = req;
 			const entitiesMap = { orgs: org.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
@@ -38,11 +52,11 @@ export default (app) => {
 		},
 	);
 
+
 	app.get(
 		'/org/:id/forms',
-		preloadReduxStore,
 		(req, res, next) => {
-			const { org } = req.loaded;
+			const org = req.loaded.instance;
 			const options = req.query;
 			const { reduxStore } = req;
 			const entitiesMap = { orgs: org.toStore() };
@@ -64,11 +78,11 @@ export default (app) => {
 		},
 	);
 
+
 	app.get(
 		'/org/:id/orgs',
-		preloadReduxStore,
 		(req, res, next) => {
-			const { org } = req.loaded;
+			const org = req.loaded.instance;
 			const options = req.query;
 			const { reduxStore } = req;
 			const entitiesMap = { orgs: org.toStore() };
@@ -91,17 +105,18 @@ export default (app) => {
 		},
 	);
 
+
 	app.get(
 		'/org/:id/users',
-		preloadReduxStore,
 		(req, res, next) => {
-			const { org } = req.loaded;
-			const options = req.query;
+			const org = req.loaded.instance;
+			const opts = req.query;
 			const { reduxStore } = req;
 			const entitiesMap = { orgs: org.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
+			opts.maxDepth = opts.maxDepth ? Number.parseInt(opts.maxDepth, 10) : 0;
 
-			org.findUsersInSubtree(options)
+			org.findUsersInSubtree(opts)
 				.then((users) => {
 					const action = orgActions.fetchAffiliatedUsersSuccess(
 						org.id,
@@ -118,11 +133,46 @@ export default (app) => {
 		},
 	);
 
+
+	/*----------------------------------------------------------------------------
+	---------------------------------- API ---------------------------------------
+	----------------------------------------------------------------------------*/
+
+	// create organization
+	app.post(
+		'/api/v1/org',
+		isActive,
+		loadParams,
+		createInstance,
+		loadDependincies,
+		checkAccess,
+		(req, res, next) => {
+			const { author } = req;
+			const org = req.loaded.instance;
+
+			return org.save({ author })
+				.then(() => res.json(org))
+				.catch(next);
+		},
+	);
+
+
+	app.use(
+		// all api routes with specified org id
+		/^\/api\/v\d{1,2}\/org\/\d{1,8}(\/(forms|orgs|parents|users))?\/?$/, // api
+		isActive,
+		loadParams,
+		loadInstance,
+		loadDependincies,
+		checkAccess,
+	);
+
+
 	// get one org
 	app.get(
 		'/api/v1/org/:id',
 		(req, res, next) => {
-			const { org } = req.loaded;
+			const org = req.loaded.instance;
 			const orgs = { [org.id]: org };
 
 			if(!org.parentId) {
@@ -138,11 +188,27 @@ export default (app) => {
 		},
 	);
 
+
+	// update org
+	app.patch(
+		'/api/v1/org/:id',
+		(req, res, next) => {
+			const { author } = req;
+			const org = req.loaded.instance;
+			const props = req.body;
+
+			org.update({ props, author })
+				.then(() => res.json(org))
+				.catch(next);
+		},
+	);
+
+
 	// find orgs in organization subtree
 	app.get(
 		'/api/v1/org/:id/orgs',
 		(req, res, next) => {
-			const { org } = req.loaded;
+			const org = req.loaded.instance;
 			const options = req.query;
 
 			org.findOrgsInSubtree(options)
@@ -151,56 +217,49 @@ export default (app) => {
 		},
 	);
 
+
+	// get parents of the organization
+	app.get(
+		'/api/v1/org/:id/parents',
+		(req, res, next) => {
+			const org = req.loaded.instance;
+			const opts = {
+				...req.query,
+				authorOrgId: req.author.orgId,
+			};
+
+			org.getParents()
+				.then(parents => Org.sliceParents(parents, opts))
+				.then(({ orgs, ids }) => res.json({ orgs, entries: ids }))
+				.catch(next);
+		},
+	);
+
+
 	// find users in organization subtree
 	app.get(
 		'/api/v1/org/:id/users',
 		(req, res, next) => {
-			const { org } = req.loaded;
-			const options = req.query;
+			const org = req.loaded.instance;
+			const opts = req.query;
+			opts.maxDepth = opts.maxDepth ? Number.parseInt(opts.maxDepth, 10) : 0;
 
-			org.findUsersInSubtree(options)
+			org.findUsersInSubtree(opts)
 				.then(users => res.json(users))
 				.catch(next);
 		},
 	);
 
+
 	// find forms in specified organization
 	app.get(
 		'/api/v1/org/:id/forms',
 		(req, res, next) => {
-			const { org } = req.loaded;
+			const org = req.loaded.instance;
 			const options = req.query;
 
 			org.findForms(options)
 				.then(forms => res.json(forms))
-				.catch(next);
-		},
-	);
-
-	// create organization
-	app.post(
-		'/api/v1/org',
-		isActive,
-		(req, res, next) => {
-			const { author } = req;
-			const org = new Org({ ...req.body });
-
-			return org.save({ author })
-				.then(() => res.json(org))
-				.catch(next);
-		},
-	);
-
-	// update org
-	app.patch(
-		'/api/v1/org/:id',
-		(req, res, next) => {
-			const { author } = req;
-			const { org } = req.loaded;
-			const props = req.body;
-
-			org.update({ props, author })
-				.then(() => res.json(org))
 				.catch(next);
 		},
 	);

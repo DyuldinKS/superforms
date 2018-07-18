@@ -8,35 +8,34 @@ const NODE_ENV = process.env.NODE_ENV;
 const excludedBodyProps = ['password'];
 const EXCLUDED = '[excluded]';
 
+
 const excludeProps = (body) => {
-	switch (typeof body) {
-	case 'object': {
-		const cleaned = { ...body };
-		excludedBodyProps.forEach((prop) => {
-			if(cleaned[prop]) cleaned[prop] = EXCLUDED;
-		});
-		return cleaned;
-	}
-	case 'string': {
-		return excludedBodyProps.some(prop => body.includes(prop))
-			? EXCLUDED
-			: body;
-	}
-	default: return undefined;
-	}
+	const cleaned = { ...body };
+	excludedBodyProps.forEach((prop) => {
+		if(cleaned[prop]) cleaned[prop] = EXCLUDED;
+	});
+	return cleaned;
 };
 
+
 const devSerializers = {
-	req: req => (
-		req && req.connection
-			? {
-				url: req.url,
-				method: req.method,
-				body: req.body,
-				remoteAddress: req.connection.remoteAddress,
-			}
-			: req
-	),
+	req: (req) => {
+		if(!req || !req.connection) return req;
+		let author;
+		if(req.author) {
+			const { id, orgId, role, active } = req.author;
+			author = { id, orgId, role, active };
+		} else {
+			author = null;
+		}
+		return {
+			url: req.url,
+			method: req.method,
+			author,
+			body: req.body,
+			remoteAddress: req.connection.remoteAddress,
+		};
+	},
 
 	res: res => (
 		res
@@ -60,6 +59,7 @@ const prodSerializers = {
 			url: req.url,
 			method: req.method,
 			headers: req.headers,
+			author: req.session.user,
 			body: excludeProps(req.body),
 			remoteAddress: req.connection.remoteAddress,
 			remotePort: req.connection.remotePort,
@@ -110,12 +110,7 @@ if(NODE_ENV === 'production') {
 		},
 	);
 
-	// here are reported blocking errors
-	// once this event is emitted, the stream will be closed as well
 	stream.on('error', (err) => { logger.error('Rotation error:', err); });
-
-	// no rotated file is open (emitted after each rotation as well)
-	// filename: useful if immutable option is true
 	stream.on('open', (filename) => {	logger.info('Open rotated file:', filename); });
 
 	// rotation job removed the specified old rotated file

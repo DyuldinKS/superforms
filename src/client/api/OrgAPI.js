@@ -48,6 +48,16 @@ class OrgAPI {
     return data;
   }
 
+  static async getAncestors(id, options = {}) {
+    const url = getURLFromParts({
+      pathname: `/api/v1/org/${id}/parents`,
+      search: options,
+    });
+
+    const data = await fetch(url);
+    return data;
+  }
+
   static async getForms(id, options = {}) {
     const url = getURLFromParts({
       pathname: `/api/v1/org/${id}/forms`,
@@ -57,6 +67,24 @@ class OrgAPI {
     });
 
     const data = await fetch(url);
+    return data;
+  }
+
+  static async setEmail(id, email) {
+    const data = await fetch(`/api/v1/org/${id}`, {
+      method: 'PATCH',
+      body: { email },
+    });
+
+    return data;
+  }
+
+  static async setActive(id, active) {
+    const data = await fetch(`/api/v1/org/${id}`, {
+      method: 'PATCH',
+      body: { active },
+    });
+
     return data;
   }
 

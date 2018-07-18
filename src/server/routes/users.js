@@ -1,6 +1,12 @@
 import { isNotAuthenticated } from '../middleware/sessions';
 import { isActive } from '../middleware/users';
-import loadInstance from '../middleware/loadInstance';
+import {
+	loadParams,
+	createInstance,
+	loadInstance,
+	loadDependincies,
+} from '../middleware/instances';
+import { checkAccess } from '../middleware/access';
 import preloadReduxStore from '../middleware/preloadReduxStore';
 import User from '../models/User';
 import Org from '../models/Org';
@@ -13,7 +19,7 @@ import { actions as userActions } from '../../client/apps/app/shared/redux/users
 
 export default (app) => {
 	/*----------------------------------------------------------------------------
-	---------------------------------- API ---------------------------------------
+	------------------------------- SENDING EMAIL --------------------------------
 	----------------------------------------------------------------------------*/
 
 	// send email for password reset
@@ -37,7 +43,7 @@ export default (app) => {
 	);
 
 
-	// send email with new password
+	// get email with new password
 	app.get(
 		'/user/password',
 		isNotAuthenticated,
@@ -68,37 +74,29 @@ export default (app) => {
 	);
 
 
-	// create user
-	app.post(
-		'/api/v1/user',
-		isActive,
-		(req, res, next) => {
-			const { author } = req;
-			const user = new User({ ...req.body });
-
-			return user.save({ author })
-				.then(() => user.resetPassword({ author }))
-				.then(() => mailer.sendRegistrationEmail(user))
-				.then(() => res.json(user))
-				.catch(next);
-		},
-	);
-
+	/*----------------------------------------------------------------------------
+	---------------------------- SERVER SIDE RENDERING ---------------------------
+	----------------------------------------------------------------------------*/
 
 	app.use(
-		[
-			/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/\w{1,12})?$/, // api
-			/^\/user\/\d{1,8}(\/(info|settings|forms))?$/, // ssr
-		],
+		/^\/user\/\d{1,8}(\/(info|settings|forms))?\/?$/, // ssr
 		isActive,
+		loadParams,
 		loadInstance,
+		loadDependincies,
+		checkAccess,
+		preloadReduxStore,
 	);
 
+
 	app.get(
-		/^\/user\/\d{1,8}(\/(info|settings))?$/,
-		preloadReduxStore,
+		// all static routes with specified user id
+		[
+			'/user/:id/info',
+			'/user/:id/settings',
+		],
 		(req, res, next) => {
-			const { user } = req.loaded;
+			const user = req.loaded.instance;
 			const { reduxStore } = req;
 			const entitiesMap = { users: user.toStore() };
 			reduxStore.dispatch(entitiesActions.add(entitiesMap));
@@ -107,11 +105,11 @@ export default (app) => {
 		},
 	);
 
+
 	app.get(
 		'/user/:id/forms',
-		preloadReduxStore,
 		(req, res, next) => {
-			const { user } = req.loaded;
+			const user = req.loaded.instance;
 			const options = req.query;
 			const { reduxStore } = req;
 			const entitiesMap = { users: user.toStore() };
@@ -133,11 +131,48 @@ export default (app) => {
 		},
 	);
 
+
+	/*----------------------------------------------------------------------------
+	---------------------------------- API ---------------------------------------
+	----------------------------------------------------------------------------*/
+
+	// create user
+	app.post(
+		'/api/v1/user',
+		isActive,
+		loadParams,
+		createInstance,
+		loadDependincies,
+		checkAccess,
+		(req, res, next) => {
+			const { author } = req;
+			const user = req.loaded.instance;
+
+			user.save({ author })
+				.then(() => user.resetPassword({ author }))
+				.then(() => { mailer.sendRegistrationEmail(user); }) // do not await
+				.then(() => res.json(user))
+				.catch(next);
+		},
+	);
+
+
+	app.use(
+		// all api routes with user id
+		/^\/api\/v\d{1,2}\/user\/\d{1,8}(\/(forms))?\/?$/, // api
+		isActive,
+		loadParams,
+		loadInstance,
+		loadDependincies,
+		checkAccess,
+	);
+
+
 	// get user
 	app.get(
 		'/api/v1/user/:id',
 		(req, res, next) => {
-			const { user } = req.loaded;
+			const user = req.loaded.instance;
 
 			Org.findById(user.orgId)
 				.then((org) => {
@@ -151,39 +186,30 @@ export default (app) => {
 	);
 
 
-	// find forms of specified user
-	app.get(
-		'/api/v1/user/:id/forms',
-		(req, res, next) => {
-			const { user } = req.loaded;
-			const options = req.query;
-
-			user.findForms(options)
-				.then(forms => res.json(forms))
-				.catch(next);
-		},
-	);
-
-
 	// update user
 	app.patch(
 		'/api/v1/user/:id',
 		(req, res, next) => {
 			const { author } = req;
-			const { user } = req.loaded;
+			const user = req.loaded.instance;
 			const props = req.body;
 
-			let updateChain = Promise.resolve();
-			const { password } = props;
-			if(password) {
-				updateChain = updateChain
-					.then(() => User.encrypt(password))
-					.then((hash) => { props.hash = hash; });
-			}
-
-			updateChain
-				.then(() => user.update({ props, author }))
+			user.update({ props, author })
 				.then(() => res.send(user))
+				.catch(next);
+		},
+	);
+
+
+	// find forms of specified user
+	app.get(
+		'/api/v1/user/:id/forms',
+		(req, res, next) => {
+			const user = req.loaded.instance;
+			const options = req.query;
+
+			user.findForms(options)
+				.then(forms => res.json(forms))
 				.catch(next);
 		},
 	);
