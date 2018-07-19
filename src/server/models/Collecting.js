@@ -1,3 +1,4 @@
+import moment from 'moment';
 import AbstractModel from './AbstractModel';
 import {
 	isString,
@@ -24,8 +25,26 @@ class Collecting extends AbstractModel {
 	------------------------------ INSTANCE METHODS ------------------------------
 	----------------------------------------------------------------------------*/
 
+	assign(props) {
+		super.assign(props);
+		if(this.start) this.start = moment(this.start);
+		if(this.stop) this.stop = moment(this.stop);
+		return this;
+	}
+
+
 	start() {
 		this.start = new Date();
+	}
+
+
+	isInProgress() {
+		return !this.stop || moment().isBefore(this.stop);
+	}
+
+
+	bySharedLink(secret) {
+		return this.shared && this.shared === secret;
 	}
 }
 

@@ -28,7 +28,7 @@ export default (app) => {
 
 			Promise.resolve()
 				.then(() => {
-					if(!form.isShared() || form.collecting.shared !== response.secret) {
+					if(!form.isActive() || !form.isDistributedByLink(response.secret)) {
 						throw accessError;
 					}
 				})

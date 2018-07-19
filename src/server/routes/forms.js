@@ -42,14 +42,14 @@ export default (app) => {
 
 			if(!secret) {
 				const { author } = req;
-				let subpath = form.isActive() ? 'responses' : 'edit';
-				if(author && author.isSimpleUser() && form.ownerId !== author.id) {
-					subpath = 'preview';
-				}
+				const subpath = form.isActive()	&& author && form.ownerId === author.id
+					? 'responses'
+					: 'preview';
+
 				return res.redirect(`/form/${form.id}/${subpath}`);
 			}
 
-			if(form.isShared() && form.collecting.shared === secret) {
+			if(form.isActive() && form.isDistributedByLink(secret)) {
 				return res.send(ssr.interview({ form }));
 			}
 

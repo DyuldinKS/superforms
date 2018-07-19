@@ -190,13 +190,12 @@ class Form extends AbstractModel {
 	// is stage of response collecting
 	isActive() {
 		const { deleted, collecting } = this;
-		return !deleted && collecting && !collecting.inactive
-			&& (!collecting.expires	|| new Date(collecting.expires) > new Date());
+		return !deleted && collecting && collecting.isInProgress();
 	}
 
 
-	isShared() {
-		return this.collecting && this.collecting.shared;
+	isDistributedByLink(secret) {
+		return this.collecting.bySharedLink(secret);
 	}
 
 
