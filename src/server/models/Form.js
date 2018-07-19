@@ -1,7 +1,9 @@
 import moment from 'moment';
+import diff from 'object-diff';
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
 import User from './User';
+import Collecting from './Collecting';
 import {
 	isNumber,
 	isNatural,
@@ -9,6 +11,7 @@ import {
 	isObject,
 	isArray,
 	isDate,
+	isEmpty,
 } from '../utils/extras';
 import { HTTPError } from '../errors';
 
@@ -49,12 +52,6 @@ class Form extends AbstractModel {
 		const ids = Object.keys(items);
 		return ids.length === order.length
 			&& order.every(id => isObject(items[id]));
-	}
-
-
-	static checkCollecting(c) {
-		// here is stub before implementing Collecting class
-		return isObject(c);
 	}
 
 
@@ -118,6 +115,17 @@ class Form extends AbstractModel {
 	------------------------------ INSTANCE METHODS ------------------------------
 	----------------------------------------------------------------------------*/
 
+	// @overrides
+	assign(props) {
+		if(!props) return null;
+		super.assign(props);
+		if(this.collecting) {
+			this.collecting = new Collecting(this.collecting);
+		}
+		return this;
+	}
+
+
 	async loadDependincies() {
 		if(this.parentOrgIds) return;
 		if(!this.ownerId) throw new Error('form.ownerId is not specified');
@@ -138,6 +146,29 @@ class Form extends AbstractModel {
 		this.ownerId = author.id;
 
 		return super.save({ author });
+	}
+
+
+	update({ props, author }) {
+		if(props.collecting) {
+			let clct = new Collecting(props.collecting);
+			let propsToUpdate;
+			if(this.collecting) {
+				propsToUpdate = diff(this.collecting, props.collecting);
+				propsToUpdate = clct.filterProps(propsToUpdate, 'writable', 'update');
+			} else {
+				clct.start();
+				propsToUpdate = clct.filterProps(clct, 'writable', 'create');
+			}
+
+			if(isEmpty(propsToUpdate)) {
+				delete props.collecting;
+			} else {
+				props.collecting = propsToUpdate;
+			}
+		}
+
+		return super.update({ props, author });
 	}
 
 
@@ -214,7 +245,7 @@ Form.prototype.props = {
 	deleted: { writable: false, readable: true, check: d => d === null || isDate(d) },
 
 	// values set by model
-	collecting: { writable: true, readable: true, check: Form.checkCollecting },
+	collecting: { writable: true, readable: true, check: Collecting.check },
 	ownerId: { writable: true, readable: true, check: isNatural },
 	authorId: { writable: false, readable: true, check: isNatural },
 

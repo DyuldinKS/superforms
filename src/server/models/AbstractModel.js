@@ -37,7 +37,6 @@ class AbstractModel {
 				filtered[prop] = props[prop];
 			}
 		});
-
 		return filtered;
 	}
 
@@ -55,7 +54,7 @@ class AbstractModel {
 			}
 			checker = this.props[key].check;
 			if(checker !== undefined && !checker(props[key])) {
-				throw new HTTPError(500, `Invalid ${key} value`);
+				throw new HTTPError(500, `Invalid ${this.entityName}.${key} value`);
 			}
 		});
 	}
@@ -94,15 +93,15 @@ class AbstractModel {
 		const newProps = diff(this, writableProps);
 		if(isEmpty(newProps)) return this;
 		this.check(newProps); // throws error if new props contain invalid values
-
 		// update only new props
-		return db.query(
+		const result = await db.query(
 			`SELECT _updated.* FROM ${typeConverter}(
 				${updateFunc}($1::int, $2::json, $3::int)
 			) _updated`,
 			[this.id, newProps, author.id],
-		)
-			.then(res => this.assign(res));
+		);
+
+		return this.assign(result);
 	}
 
 
