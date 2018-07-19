@@ -91,7 +91,6 @@ class FormDistributionByLink extends Component {
         <FormGroup className="form-distribution-public-link">
           <InputGroup>
             <Input
-              bsSize="lg"
               type="text"
               name="title"
               readOnly

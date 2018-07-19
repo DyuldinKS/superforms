@@ -4,12 +4,13 @@ import PropTypes from 'prop-types';
 import {
   Button,
   Card,
-  Form,
   FormGroup,
   Input,
   Label,
 } from 'reactstrap';
+import moment from 'moment';
 import * as formsModule from 'apps/app/shared/redux/forms';
+
 
 const propTypes = {
   collecting: PropTypes.object,
@@ -24,96 +25,44 @@ const defaultProps = {
   updating: false,
 };
 
-const defaultState = {
-  inactive: false,
-  expires: false,
-  expireDate: '',
-  refilling: false,
-};
+const DATE_TEMPLATE = 'YYYY-MM-DD';
+const DATETIME_TEMPLATE = `${DATE_TEMPLATE} hh:mm`;
 
-function transformPropsToState(props) {
-  const state = {
-    ...defaultState,
-    inactive: !!props.inactive,
-    refilling: !!props.refilling,
-  };
-
-  if (props.expires) {
-    state.expireDate = props.expires;
-    state.expires = true;
-  }
-
-  return state;
-}
-
-function transformStateToPayload(state) {
-  const {
-    expires,
-    expireDate,
-    ...payload
-  } = state;
-
-  if (expires && expireDate) {
-    payload.expires = expireDate;
-  } else {
-    payload.expires = false;
-  }
-
-  return payload;
-}
 
 class SettingsTab extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = transformPropsToState(props.collecting);
-
-    this.handleChange = this.handleChange.bind(this);
-    this.handleRadioChange = this.handleRadioChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
+  setStopDate = (stop) => {
+    this.props.onUpdate({
+      ...this.props.collecting,
+      stop,
+    });
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.setState(() => transformPropsToState(nextProps.collecting));
+  resumeCollecting = () => {
+    this.setStopDate(null);
   }
 
-  getValue(name) {
-    return this.state[name];
+  stopCollecting = () => {
+    this.setStopDate(moment());
   }
 
-  handleChange(event) {
-    const { target } = event;
-    const { name, value } = target;
-
-    this.setState(state => ({
-      ...state,
-      [name]: value,
-    }));
+  onStopDateChange = (event) => {
+    const { value } = event.target;
+    this.setStopDate(value ? moment(value) : null);
   }
 
-  handleRadioChange(event) {
-    const { target } = event;
-    const { name, value } = target;
-
-    this.setState(state => ({
-      ...state,
-      [name]: value === 'true',
-    }));
-  }
-
-  handleSubmit(event) {
-    event.preventDefault();
-    const { onUpdate, updating } = this.props;
-
-    if (updating) {
-      return;
-    }
-
-    const payload = transformStateToPayload(this.state);
-    onUpdate(payload);
+  onRefillingClick = () => {
+    const { collecting } = this.props;
+    this.props.onUpdate({
+      ...collecting,
+      refilling: !collecting.refilling,
+    });
   }
 
   render() {
+    const { stop, start, refilling } = this.props.collecting;
+    const { stopCollecting, resumeCollecting } = this;
+    const isActive = !stop || moment().isBefore(stop);
+
     return (
       <Card body className="form-distribution-settings">
         <h3>
@@ -123,112 +72,47 @@ class SettingsTab extends Component {
           </small>
         </h3>
 
-        <Form onSubmit={this.handleSubmit}>
-          <FormGroup tag="fieldset">
-            <Label><strong>Сбор ответов</strong></Label>
-            <FormGroup check>
-              <Label check>
-                <Input
-                  type="radio"
-                  name="inactive"
-                  checked={!this.getValue('inactive')}
-                  onChange={this.handleRadioChange}
-                  value="false"
-                />
-                Активен
-              </Label>
-            </FormGroup>
-            <FormGroup check>
-              <Label check>
-                <Input
-                  type="radio"
-                  name="inactive"
-                  checked={this.getValue('inactive')}
-                  onChange={this.handleRadioChange}
-                  value="true"
-                />
-                Остановлен
-              </Label>
-            </FormGroup>
-          </FormGroup>
-
-          <FormGroup tag="fieldset">
-            <Label><strong>Срок сбора ответов</strong></Label>
-            <FormGroup check>
-              <Label check>
-                <Input
-                  type="radio"
-                  name="expires"
-                  checked={!this.getValue('expires')}
-                  onChange={this.handleRadioChange}
-                  value="false"
-                />
-                Не ограничен
-              </Label>
-            </FormGroup>
-            <FormGroup check>
-              <Label check>
-                <Input
-                  type="radio"
-                  name="expires"
-                  checked={this.getValue('expires')}
-                  onChange={this.handleRadioChange}
-                  value="true"
-                />
-                <div className="form-inline">
-                  До:
-                  <Input
-                    bsSize="sm"
-                    type="date"
-                    name="expireDate"
-                    value={this.getValue('expireDate')}
-                    onChange={this.handleChange}
-                    style={{ marginLeft: '10px' }}
-                  />
-                </div>
-              </Label>
-            </FormGroup>
-          </FormGroup>
-
-          <FormGroup tag="fieldset">
-            <Label><strong>Повторное заполнение формы</strong></Label>
-            <FormGroup check>
-              <Label check>
-                <Input
-                  type="radio"
-                  name="refilling"
-                  checked={this.getValue('refilling')}
-                  onChange={this.handleRadioChange}
-                  value="true"
-                />
-                Разрешено
-              </Label>
-            </FormGroup>
-            <FormGroup check>
-              <Label check>
-                <Input
-                  type="radio"
-                  name="refilling"
-                  checked={!this.getValue('refilling')}
-                  onChange={this.handleRadioChange}
-                  value="false"
-                />
-                Запрещено
-              </Label>
-            </FormGroup>
-          </FormGroup>
+        <FormGroup>
+          <div>
+            {`Начало сбора: ${moment(start).format(DATETIME_TEMPLATE)}`}
+          </div>
+          <div className="mb-1 form-inline">
+            Окончание сбора:
+            <Input
+              bsSize="sm"
+              type="date"
+              value={stop ? moment(stop).format(DATE_TEMPLATE) : ''}
+              onChange={this.onStopDateChange}
+            />
+          </div>
 
           <Button
-            color="primary"
+            bsSize="sm"
+            color="secondary"
             type="submit"
+            outline
+            onClick={isActive ? stopCollecting : resumeCollecting}
           >
             {
-              this.props.updating
-              ? 'Сохранение...'
-              : 'Сохранить'
+              isActive
+                ? 'Остановить сбор ответов'
+                : 'Возобновить сбор ответов'
             }
           </Button>
-        </Form>
+        </FormGroup>
+
+        <FormGroup check>
+          <Label check>
+            <Input
+              type="checkbox"
+              name="refilling"
+              checked={refilling}
+              onChange={this.onRefillingClick}
+              value="true"
+            />
+            Повторное заполнение опроса
+          </Label>
+        </FormGroup>
       </Card>
     );
   }
