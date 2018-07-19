@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 
 const isBool = b => typeof b === 'boolean';
 // is finite number
@@ -18,6 +20,9 @@ const isDate = d => (
 	d && Object.prototype.toString.call(d) === '[object Date]'
 		&& !Number.isNaN(d.getTime())
 );
+
+const isISODateString = str => str && moment(str, 'YYYY-MM-DD', true).isValid();
+const isISOTimeString = str => str && moment(str, 'hh:mm:ss').isValid();
 
 const isSet = s => (
 	s && Object.prototype.toString.call(s) === '[object Set]'
@@ -64,6 +69,8 @@ export {
 	isArray,
 	isObject,
 	isDate,
+	isISODateString,
+	isISOTimeString,
 	isSet,
 	isMap,
 	len,

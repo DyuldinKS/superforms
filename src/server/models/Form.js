@@ -11,6 +11,8 @@ import {
 	isObject,
 	isArray,
 	isDate,
+	isISODateString,
+	isISOTimeString,
 	isEmpty,
 } from '../utils/extras';
 import { HTTPError } from '../errors';
@@ -99,15 +101,13 @@ class Form extends AbstractModel {
 
 	static isDateAnswerValid(question, answer) {
 		if(!isString(answer)) return false;
-		const time = moment(answer, 'YYYY-MM-DD', true);
-		return time.isValid();
+		return isISODateString(answer);
 	}
 
 
 	static isTimeAnswerValid(question, answer) {
 		if(!isString(answer)) return false;
-		const time = moment(answer, 'hh:mm:ss');
-		return time.isValid();
+		return isISOTimeString(answer);
 	}
 
 
