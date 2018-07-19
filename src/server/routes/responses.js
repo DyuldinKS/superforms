@@ -16,11 +16,9 @@ export default (app) => {
 	// create response (save filled form)
 	app.post(
 		'/api/v1/response',
-		isActive,
 		loadParams,
 		createInstance,
 		loadDependincies,
-		checkAccess,
 		(req, res, next) => {
 			const { author } = req;
 			const response = req.loaded.instance;
