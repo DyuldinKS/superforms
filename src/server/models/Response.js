@@ -45,9 +45,17 @@ class Response extends AbstractModel {
 	}
 
 
-	// @implements
-	save({ author }) {
-		return super.save({ author });
+	async save({ author }) {
+		const newProps = this.filterProps(this, 'writable', 'create');
+		this.check(newProps); // throws error if new props contain invalid values
+
+		return db.query(
+			`SELECT _new.* FROM to_${this.entityName}_full (
+				create_${this.entityName}($1::json, $2::int)
+			) _new`,
+			[newProps, author ? author.id : null],
+		)
+			.then(res => this.assign(res));
 	}
 }
 
