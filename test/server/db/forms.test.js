@@ -259,6 +259,7 @@ describe('forms sql-functions test', () => {
 					collecting: {
 						start: updatedProps.collecting.start,
 						id: createdForm.id,
+						refilling: false,
 					},
 				};
 				assert.deepStrictEqual(expected, { ...actual });
@@ -351,7 +352,7 @@ describe('forms sql-functions test', () => {
 			ownerId: bot.id,
 			collecting: {
 				start: new Date(),
-				shared: 'unique'
+				shared: 'unique',
 			},
 		};
 
@@ -366,7 +367,7 @@ describe('forms sql-functions test', () => {
 					...form.collecting,
 					id: form.id,
 					stop: null,
-					refilling: null,
+					refilling: false,
 				}
 				assert.deepStrictEqual(expected, { ...actual });
 			})

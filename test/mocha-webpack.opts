@@ -2,6 +2,6 @@
 --webpack-config webpack/webpack.test.js
 --require babel-polyfill
 --recursive
---glob '*access/*.test.js'
+--glob '*.test.js'
 test
 test/setup.js
