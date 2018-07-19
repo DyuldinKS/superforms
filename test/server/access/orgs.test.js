@@ -110,8 +110,9 @@ describe('organization access', () => {
 
 
 		describe('admin', () => {
+			const notAvailable = ['orgs', 'orgs/new'];
 			it('can read any subpath of his org except orgs/new', () => {
-				subpaths.filter(sp => sp !== 'orgs/new')
+				subpaths.filter(sp => !notAvailable.includes(sp))
 					.forEach((subpath) => {
 						assert(can(u[1.2]).read(o[1], { subpath, query: {} }));
 						assert(can(u[3.2]).read(o[3], { subpath, query: {} }));
@@ -120,10 +121,11 @@ describe('organization access', () => {
 			});
 
 			it('can NOT get page to create orgs (orgs/new)', () => {
-				const subpath = 'orgs/new';
-				assert(can(u[1.2]).read(o[1], { subpath }) === false);
-				assert(can(u[3.2]).read(o[3], { subpath }) === false);
-				assert(can(u[4.2]).read(o[4], { subpath }) === false);
+				notAvailable.forEach((subpath) => {
+					assert(can(u[1.2]).read(o[1], { subpath }) === false);
+					assert(can(u[3.2]).read(o[3], { subpath }) === false);
+					assert(can(u[4.2]).read(o[4], { subpath }) === false);
+				})
 			});
 
 			it('can NOT set maxDepth option for user search', () => {

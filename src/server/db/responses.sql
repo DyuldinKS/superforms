@@ -109,11 +109,11 @@ $$
 		_inserted responses;
 	BEGIN
 		_inserted := to_responses(_props);
-
 		-- set default values
+		_author_id := coalesce(_author_id, get_bot_id());
 		_inserted.id = nextval('responses_id_seq');
 		_inserted.created = coalesce(_inserted.created, _time);
-		_inserted.author_id = coalesce(_author_id, get_bot_id());
+		_inserted.author_id = _author_id;
 
 		INSERT INTO responses
 		SELECT _inserted.*
