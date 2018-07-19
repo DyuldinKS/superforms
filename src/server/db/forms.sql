@@ -240,15 +240,17 @@ $$
 		IF _props->>'collecting' IS null THEN RETURN; END IF;
 
 		_new := to_collecting(_props->'collecting');
-		_new.id := _form_id;
 
 		-- try to update
 		UPDATE collecting c
 		SET start = coalesce(_new.start, c.start),
-			stop = coalesce(_new.stop, c.stop),
+			stop = CASE
+				WHEN _props#>'{collecting,stop}' IS NULL THEN c.stop
+				ELSE _new.stop -- set new value even if it is null
+			END,
 			shared = coalesce(_new.shared, c.shared),
 			refilling = coalesce(_new.refilling, c.refilling)
-		WHERE c.id = _new.id;
+		WHERE c.id = _form_id;
 
 		-- if update is successful
 		IF found THEN
@@ -257,13 +259,13 @@ $$
 			-- set default values and insert new record
 			_new.start = coalesce(_new.start, _time);
 			_new.refilling = coalesce(_new.refilling, false);
-			INSERT INTO collecting SELECT _new.*;
+			INSERT INTO collecting SELECT _form_id, _new.*;
 			_action = 'I';
 		END IF;
 
 		-- log changes
 		_changes := json_strip_nulls(row_to_json(_new));
-		PERFORM log(_action, 'clct', _new.id, _changes, _author_id, _time);
+		PERFORM log(_action, 'clct', _form_id, _changes, _author_id, _time);
 	END;
 $$
 LANGUAGE plpgsql;
