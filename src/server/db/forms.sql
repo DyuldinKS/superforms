@@ -69,7 +69,6 @@ CREATE TYPE form_extra AS (
 	deleted timestamptz,
 	author_id integer,
 	collecting collecting,
-	question_count integer,
 	response_count integer
 );
 
@@ -85,7 +84,6 @@ CREATE TYPE form_full AS (
 	deleted timestamptz,
 	"authorId" integer,
 	collecting json,
-	"questionCount" integer,
 	"responseCount" integer
 );
 
@@ -94,10 +92,10 @@ CREATE TYPE form_short AS (
 	id integer,
 	title text,
 	description text,
+	scheme json,
 	"ownerId" integer,
 	created timestamptz,
 	collecting json,
-	"questionCount" integer,
 	"responseCount" integer
 );
 
@@ -109,7 +107,6 @@ CREATE OR REPLACE FUNCTION to_forms(
 $$
 	DECLARE
 		_form form_full;
-		_collecting collecting;
 	BEGIN
 		_record := json_populate_record(null::forms, _props);
 		_form := json_populate_record(null::form_full, _props);
@@ -153,7 +150,6 @@ $$
 		_form.deleted,
 		_form.author_id,
 		collecting_to_json(_form.collecting),
-		_form.question_count,
 		_form.response_count
 $$
 LANGUAGE SQL STABLE;
@@ -165,10 +161,13 @@ $$
 	SELECT _form.id,
 		_form.title,
 		_form.description,
+		json_build_object(
+			'itemCount', _form.scheme->'itemCount',
+			'questionCount', _form.scheme->'questionCount'
+		),
 		_form.owner_id,
 		_form.created,
 		collecting_to_json(_form.collecting),
-		_form.question_count,
 		_form.response_count
 $$
 LANGUAGE SQL STABLE;
@@ -190,37 +189,26 @@ WITH FUNCTION to_form_short(form_extra);
 /*******************************  CRUD METHODS ********************************/
 
 
-CREATE OR REPLACE FUNCTION get_form(_id integer)
-	RETURNS form_extra AS
+CREATE OR REPLACE FUNCTION get_forms(_ids integer[])
+	RETURNS SETOF form_extra AS
 $$
-	SELECT f.*,
-		collecting,
-		count_questions(scheme),
-		count_responses(id)
-		FROM forms f
-		LEFT JOIN collecting USING (id)
-		WHERE id = _id;
+	SELECT forms.*, collecting, responses.count
+	FROM forms
+	LEFT JOIN collecting USING (id)
+	LEFT JOIN (
+		SELECT form_id, count(id)::int AS count
+		FROM responses
+		GROUP BY form_id
+	) responses ON responses.form_id = forms.id
+	WHERE id = ANY (_ids);
 $$
 LANGUAGE SQL STABLE;
 
 
-CREATE OR REPLACE FUNCTION get_forms(_ids integer[])
-	RETURNS SETOF form_extra AS
+CREATE OR REPLACE FUNCTION get_form(_id integer)
+	RETURNS form_extra AS
 $$
-	SELECT forms.*, collecting, questions.count, responses.count
-	FROM forms
-	LEFT JOIN collecting USING (id)
-	LEFT JOIN (
-		SELECT form_id AS id, count(id)::int AS count
-		FROM responses
-		GROUP BY form_id
-	) responses USING (id),
-	LATERAL (
-		SELECT count(*)::int AS count
-		FROM json_each(scheme->'items')
-		WHERE value->>'itemType' != 'delimeter'
-	) questions
-	WHERE id = ANY (_ids);
+	SELECT * FROM get_forms(array[_id]);
 $$
 LANGUAGE SQL STABLE;
 
@@ -240,6 +228,7 @@ $$
 		IF _props->>'collecting' IS null THEN RETURN; END IF;
 
 		_new := to_collecting(_props->'collecting');
+		_new.id := _form_id;
 
 		-- try to update
 		UPDATE collecting c
@@ -250,7 +239,7 @@ $$
 			END,
 			shared = coalesce(_new.shared, c.shared),
 			refilling = coalesce(_new.refilling, c.refilling)
-		WHERE c.id = _form_id;
+		WHERE c.id = _new.id;
 
 		-- if update is successful
 		IF found THEN
@@ -259,13 +248,13 @@ $$
 			-- set default values and insert new record
 			_new.start = coalesce(_new.start, _time);
 			_new.refilling = coalesce(_new.refilling, false);
-			INSERT INTO collecting SELECT _form_id, _new.*;
+			INSERT INTO collecting SELECT _new.*;
 			_action = 'I';
 		END IF;
 
 		-- log changes
 		_changes := json_strip_nulls(row_to_json(_new));
-		PERFORM log(_action, 'clct', _form_id, _changes, _author_id, _time);
+		PERFORM log(_action, 'clct', _new.id, _changes, _author_id, _time);
 	END;
 $$
 LANGUAGE plpgsql;

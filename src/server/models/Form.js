@@ -144,7 +144,7 @@ class Form extends AbstractModel {
 	// @implements
 	save({ author }) {
 		this.ownerId = author.id;
-
+		this.complementScheme(this.scheme);
 		return super.save({ author });
 	}
 
@@ -153,6 +153,7 @@ class Form extends AbstractModel {
 		if(props.collecting) {
 			let clct = new Collecting(props.collecting);
 			let propsToUpdate;
+
 			if(this.collecting) {
 				propsToUpdate = diff(this.collecting, props.collecting);
 				propsToUpdate = clct.filterProps(propsToUpdate, 'writable', 'update');
@@ -167,6 +168,8 @@ class Form extends AbstractModel {
 				props.collecting = propsToUpdate;
 			}
 		}
+
+		if(props.scheme) this.complementScheme(props.scheme);
 
 		return super.update({ props, author });
 	}
@@ -225,6 +228,25 @@ class Form extends AbstractModel {
 				}
 			});
 	}
+
+
+	countItems(type) {
+		const { items, order } = this.scheme;
+		let itemType;
+		if(type === 'question') itemType = 'input';
+		// annoying spelling mistake of the whole system in 'delimiter'
+		else if(type === 'delimeter') itemType = 'delimeter';
+		else return order.length;
+
+		return order.filter(id => items[id].itemType === itemType).length;
+	}
+
+
+	complementScheme(scheme) {
+		scheme.itemCount = this.countItems();
+		scheme.questionCount = this.countItems('question');
+		return scheme;
+	}
 }
 
 
@@ -252,8 +274,7 @@ Form.prototype.props = {
 	id: { writable: false, readable: true, check: isNatural },
 	created: { writable: false, readable: true, check: isDate },
 	updated: { writable: false, readable: true, check: isDate },
-	questionCount: { writable: false, readable: true },
-	responseCount: { writable: false, readable: true },
+	responseCount: { writable: false, readable: true }, // response count
 };
 
 Object.freeze(Form);

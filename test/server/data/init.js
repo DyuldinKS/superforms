@@ -148,6 +148,12 @@ const getOrCreateIMCForms = (author) => {
 					record.collecting.shared = shared;
 				}
 
+				const { items, order } = record.scheme;
+				Object.assign(record.scheme, {
+					itemCount: order.length,
+					questionCount: order.filter(id => items[id].itemType === 'input').length,
+				});
+
 				return db.query(
 					'SELECT id FROM create_form($1::json, $2::int)',
 					[record, author.id],
@@ -159,7 +165,6 @@ const getOrCreateIMCForms = (author) => {
 	})
 
 	return chain.then(() => {
-		console.log(JSON.stringify(imc.conversion.forms));
 		console.log(`${imc.forms.length} forms were exported`);
 	});
 };
