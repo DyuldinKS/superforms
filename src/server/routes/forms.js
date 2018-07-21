@@ -42,9 +42,11 @@ export default (app) => {
 
 			if(!secret) {
 				const { author } = req;
-				const subpath = form.isActive()	&& author && form.ownerId === author.id
-					? 'responses'
-					: 'preview';
+				let subpath = 'preview'; // default tab
+				if(!author) return next(new HTTPError(403, 'Not authenticated'));
+				if(form.ownerId === author.id) {
+					subpath = form.collecting ? 'responses' : 'edit';
+				}
 
 				return res.redirect(`/form/${form.id}/${subpath}`);
 			}
