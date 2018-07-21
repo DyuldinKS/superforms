@@ -55,8 +55,7 @@ describe('forms sql-functions test', () => {
 					...form,
 					id: actual.id,
 					deleted: null,
-					questionCount: 0,
-					responseCount: 0,
+					responseCount: null,
 				});
 
 				assert.deepStrictEqual(expected, { ...actual });
@@ -85,8 +84,7 @@ describe('forms sql-functions test', () => {
 					deleted: null,
 					ownerId: form.ownerId,
 					authorId: bot.id, // taken from the second create_form() param
-					questionCount: 0,
-					responseCount: 0,
+					responseCount: null,
 				});
 
 				assert(actual.created instanceof Date);
@@ -154,9 +152,15 @@ describe('forms sql-functions test', () => {
 
 
 	it(`should cast record to short form`, () => {
+		const scheme = {
+			items: { /* some questions and delimiters */ },
+			order: [/* ordered item ids */],
+			itemCount: 25,
+			questionCount: 21,
+		};
 		const form = {
+			scheme,
 			title: 'test6',
-			scheme: {},
 			ownerId: bot.id,
 		};
 
@@ -165,15 +169,16 @@ describe('forms sql-functions test', () => {
 			[form, bot.id],
 		)
 			.then((actual) => {
+				const { itemCount, questionCount } = scheme;
 				const expected = {
+					scheme: { itemCount, questionCount },
 					id: actual.id,
 					title: form.title,
 					description: null,
 					collecting: null,
 					ownerId: form.ownerId,
 					created: actual.created,
-					questionCount: 0,
-					responseCount: 0,
+					responseCount: null,
 				};
 
 				assert.deepStrictEqual(expected, { ...actual });
@@ -182,6 +187,12 @@ describe('forms sql-functions test', () => {
 
 
 	it(`should cast record to full form`, () => {
+		const scheme = {
+			items: { /* some questions and delimiters */ },
+			order: [/* ordered item ids */],
+			itemCount: 25,
+			questionCount: 21,
+		};
 		const form = {
 			title: 'test7',
 			scheme: {},
@@ -204,8 +215,7 @@ describe('forms sql-functions test', () => {
 					updated: null,
 					deleted: null,
 					authorId: bot.id,
-					questionCount: 0,
-					responseCount: 0,
+					responseCount: null,
 				};
 
 				assert.deepStrictEqual(expected, { ...actual });
@@ -252,8 +262,7 @@ describe('forms sql-functions test', () => {
 				const expected = {
 					...createdForm,
 					...updatedProps,
-					questionCount,
-					responseCount: 0,
+					responseCount: null,
 					updated: actual.updated,
 					authorId: bot.id,
 					collecting: {
@@ -300,8 +309,6 @@ describe('forms sql-functions test', () => {
 			scheme: {},
 			ownerId: 85,
 			authorId: bot.id,
-			questionCount: 0,
-			responseCount: 0,
 		};
 
 		const expected = {
