@@ -33,7 +33,7 @@ class Collecting extends AbstractModel {
 	}
 
 
-	start() {
+	begin() {
 		this.start = new Date();
 	}
 

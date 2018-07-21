@@ -158,7 +158,7 @@ class Form extends AbstractModel {
 				propsToUpdate = diff(this.collecting, props.collecting);
 				propsToUpdate = clct.filterProps(propsToUpdate, 'writable', 'update');
 			} else {
-				clct.start();
+				clct.begin();
 				propsToUpdate = clct.filterProps(clct, 'writable', 'create');
 			}
 
