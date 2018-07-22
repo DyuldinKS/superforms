@@ -68,7 +68,7 @@ Collecting.prototype.props = {
 
 	// values set by model
 	id: { writableOn: 'create', readable: true, check: isNatural },
-	start: { writableOn: 'create', readable: true, check: isDate },
+	start: { writableOn: 'create', readable: true, check: moment.isMoment },
 	shared: { writable: true, readable: true, check: s => s && isString(s) },
 };
 
