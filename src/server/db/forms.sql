@@ -131,7 +131,7 @@ CREATE OR REPLACE FUNCTION collecting_to_json(_collecting collecting)
 $$
 	SELECT CASE WHEN _collecting IS null
 		THEN null
-		ELSE json_strip_nulls(row_to_json(_collecting))
+		ELSE row_to_json(_collecting)
 	END;
 $$
 LANGUAGE SQL IMMUTABLE;
