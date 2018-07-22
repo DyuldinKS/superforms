@@ -1,8 +1,10 @@
+import { isDeepStrictEqual } from 'util';
 import moment from 'moment';
 import diff from 'object-diff';
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
 import User from './User';
+import FormScheme from './FormScheme';
 import Collecting from './Collecting';
 import {
 	isNumber,
@@ -120,6 +122,7 @@ class Form extends AbstractModel {
 		if(!props) return null;
 		super.assign(props);
 		if(this.collecting) {
+			this.scheme = new FormScheme(this.scheme);
 			this.collecting = new Collecting(this.collecting);
 		}
 		return this;
@@ -144,32 +147,39 @@ class Form extends AbstractModel {
 	// @implements
 	save({ author }) {
 		this.ownerId = author.id;
-		this.complementScheme(this.scheme);
 		return super.save({ author });
 	}
 
 
-	update({ props, author }) {
-		if(props.collecting) {
-			let clct = new Collecting(props.collecting);
-			let propsToUpdate;
+	async update({ props, author }) {
+		const { collecting, scheme } = props;
+		if(collecting) {
+			let clct = Collecting.create({ props: collecting });
+			let newProps;
 
 			if(this.collecting) {
-				propsToUpdate = diff(this.collecting, props.collecting);
-				propsToUpdate = clct.filterProps(propsToUpdate, 'writable', 'update');
+				newProps = diff(this.collecting, collecting);
+				newProps = clct.filterProps(newProps, 'writable', 'update');
 			} else {
 				clct.begin();
-				propsToUpdate = clct.filterProps(clct, 'writable', 'create');
+				newProps = clct.filterProps(clct, 'writable', 'create');
 			}
 
-			if(isEmpty(propsToUpdate)) {
+			if(isEmpty(newProps)) {
 				delete props.collecting;
 			} else {
-				props.collecting = propsToUpdate;
+				props.collecting = newProps;
 			}
 		}
 
-		if(props.scheme) this.complementScheme(props.scheme);
+		if(scheme) {
+			const newScheme = FormScheme.create({ props: scheme });
+			if(isDeepStrictEqual(this.scheme, newScheme)) {
+				delete props.scheme;
+			} else {
+				props.scheme = newScheme;
+			}
+		}
 
 		return super.update({ props, author });
 	}
@@ -227,25 +237,6 @@ class Form extends AbstractModel {
 					}
 				}
 			});
-	}
-
-
-	countItems(type) {
-		const { items, order } = this.scheme;
-		let itemType;
-		if(type === 'question') itemType = 'input';
-		// annoying spelling mistake of the whole system in 'delimiter'
-		else if(type === 'delimeter') itemType = 'delimeter';
-		else return order.length;
-
-		return order.filter(id => items[id].itemType === itemType).length;
-	}
-
-
-	complementScheme(scheme) {
-		scheme.itemCount = this.countItems();
-		scheme.questionCount = this.countItems('question');
-		return scheme;
 	}
 }
 
