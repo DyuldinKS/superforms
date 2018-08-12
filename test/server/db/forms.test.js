@@ -269,6 +269,8 @@ describe('forms sql-functions test', () => {
 						start: updatedProps.collecting.start,
 						id: createdForm.id,
 						refilling: false,
+						shared: null,
+						stop: null,
 					},
 				};
 				assert.deepStrictEqual(expected, { ...actual });
