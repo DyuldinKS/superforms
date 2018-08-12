@@ -26,9 +26,7 @@ const smtpConnectionConfig = {
 };
 
 const send = (message) => {
-	console.log(message);
 	const transporter = nodemailer.createTransport(smtpConnectionConfig);
-	console.log(transporter);
 	return transporter.sendMail({ ...message, from: SIGN })
 		.catch((err) => { throw new SMTPError(err); });
 };
