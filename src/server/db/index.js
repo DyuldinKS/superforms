@@ -1,9 +1,9 @@
 import { Pool } from 'pg';
-import config from '../config';
 import { PgError } from '../errors';
 
 
-const pool = new Pool(config.pg);
+// use env variables to connect
+const pool = new Pool();
 
 
 function queryAll(queryString, values) {

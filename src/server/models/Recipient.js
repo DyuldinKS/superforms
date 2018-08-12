@@ -1,6 +1,5 @@
 import emailValidator from 'email-validator';
 import emailSMTPVerificator from 'email-smtp-verificator';
-import config from '../config';
 import db from '../db/index';
 import AbstractModel from './AbstractModel';
 import { isNatural, isBool, isDate } from '../utils/extras';
@@ -61,7 +60,7 @@ class Recipient extends AbstractModel {
 
 	static verifyEmail = emailSMTPVerificator({
 		timeout: 12000,
-		sender: config.nodemailer.smtp.auth.user,
+		sender: process.env.SMTP_USER,
 	})
 
 

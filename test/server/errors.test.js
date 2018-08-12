@@ -142,29 +142,42 @@ describe('errors', () => {
 
 
 		it('should create HTTPError for development, debug', () => {
-			const smtpError = new SMTPError(smtpErr);
-			const err = smtpError.toHTTPError();
-			assert(err instanceof HTTPError);
+			const NODE_ENV = process.env.NODE_ENV;
+			process.env.NODE_ENV = 'development';
+			try {
+				const smtpError = new SMTPError(smtpErr);
+				const err = smtpError.toHTTPError();
+				assert(err instanceof HTTPError);
 
-			const message = JSON.parse(err.message);
-			const props = ['message', ...Object.keys(smtpError)]
-			expect(message).to.have.all.keys(props)
-			assert(err.status === 400);
+				const message = JSON.parse(err.message);
+				const props = ['message', ...Object.keys(smtpError)]
+				expect(message).to.have.all.keys(props)
+				assert(err.status === 400);
+			} catch (err) {
+				console.log(err);
+				assert(false);
+			} finally {
+				process.env.NODE_ENV = 'development';
+			}
 		});
 
 
 		it('should create HTTPError for production', () => {
 			const NODE_ENV = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'production';
-
-			const err = new SMTPError(smtpErr).toHTTPError();
-			// console.log(err)
-			assert(err instanceof HTTPError);
-			expect(err.message).to.be.equal('Bad email address')
-			assert(err.message === 'Bad email address');
-			assert(err.status === 400);
-
-			process.env.NODE_ENV = NODE_ENV;
+			try {
+				const err = new SMTPError(smtpErr).toHTTPError();
+				// console.log(err)
+				assert(err instanceof HTTPError);
+				expect(err.message).to.be.equal('Bad email address')
+				assert(err.message === 'Bad email address');
+				assert(err.status === 400);
+			} catch (err) {
+				assert(false);
+				console.log(err);
+			} finally {
+				process.env.NODE_ENV = NODE_ENV;
+			}
 		});
 
 	});

@@ -23,8 +23,8 @@ const devSerializers = {
 		if(!req || !req.connection) return req;
 		let author;
 		if(req.author) {
-			const { id, orgId, role, active } = req.author;
-			author = { id, orgId, role, active };
+			const { id, orgId, role, active, updated } = req.author;
+			author = JSON.stringify({ id, orgId, role, active, updated });
 		} else {
 			author = null;
 		}

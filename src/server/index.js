@@ -18,10 +18,10 @@ import log from './libs/logger';
 import logger from './middleware/logger';
 import errorHandler from './middleware/errorHandler';
 
-
 const app = express();
 app.disable('x-powered-by');
 
+// set NODE_ENV to debug or smth else to disable client's reassembly
 if(process.env.NODE_ENV === 'development') {
 	const compiler = webpack(webpackClientConfig);
 	app.use(webpackDevMiddleware(compiler, {
@@ -50,8 +50,9 @@ app.use(logger);
 router(app);
 app.use(errorHandler);
 
-app.listen(config.port, () => {
-	log.info(`Express server is listening on PORT ${config.port}`);
+const { PORT } = process.env;
+app.listen(PORT, () => {
+	log.info(`Express server is listening on PORT ${PORT}`);
 });
 
 process.on('unhandledRejection', (err) => {
