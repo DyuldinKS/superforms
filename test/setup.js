@@ -1,3 +1,4 @@
+import './envLoader';
 import db from 'Server/db';
 
 
