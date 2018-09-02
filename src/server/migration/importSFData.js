@@ -1,33 +1,53 @@
-import fs from 'fs';
-import path from 'path';
-import { promisify } from 'util';
-import db from '../../../src/server/db';
-import passwordGenerator from '../../../src/server/libs/passwordGenerator';
+require('dotenv/config');
+const fs = require('fs');
+const path = require('path');
+const { promisify } = require('util');
+const uuidv4 = require('uuid/v4');
+const { Pool } = require('pg');
 
+// use env variables to connect
+const pool = new Pool();
+
+pool.queryAll = (queryString, values) => (
+	pool.query(queryString, values).then(result => result.rows)
+);
+
+pool.queryOne = (queryString, values) => (
+	pool.queryAll(queryString, values).then(result => result[0])
+);
 
 const fsReadFile = promisify(fs.readFile);
 
+const imc = {
+	email: 'info@imc-mosk.ru',
+	info: {
+		label: 'ИМЦ Московского района',
+		shortName: 'ГБУ ДППО ЦПКС ИМЦ Московского района Санкт-Петербурга',
+		fullName: 'Государственное бюджетное учреждение дополнительного профессионального педагогического образования центр повышения квалификации специалистов «Информационно-методический центр» Московского района Санкт-Петербурга',
+	},
+	conversion: {},
+};
 
 const loadData = () => {
 	const files = [
-		'mscDistrictOrgs.json',
-		'imc-users.tmp',
-		'imc-forms.tmp',
-		'imc-responses.tmp',
+		'moscow-district-orgs.txt',
+		'imc-users.txt',
+		'imc-forms.txt',
+		'imc-responses.txt',
 	];
-
+	const dir = path.join(process.cwd(), '../data');
 	// read files
-	return Promise.all(
-		files.map(file => (
-			fsReadFile(path.join(__dirname, file))
-		)),
-	)
+	return Promise.all(files.map(file => (
+		fsReadFile(path.join(dir, file))
+	)))
 		// parse files
-		.then(([imcOrgs, ...imcData]) => {
-			const { schools, kindergartens } = JSON.parse(imcOrgs);
-			const orgs = [...schools.values, ...kindergartens.values];
-
-			const [users, forms, responses] = imcData.map(buffer => (
+		.then((data) => {
+			const [
+				orgs,
+				users,
+				forms,
+				responses,
+			] = data.map(buffer => (
 				buffer.toString()
 					.trim()
 					.replace(/\\\\/g, '\\') // replace '\\' with '\'
@@ -35,17 +55,22 @@ const loadData = () => {
 					.map(JSON.parse)
 			));
 
-			return { orgs, users, forms, responses };
-		})
+			return {
+				orgs,
+				users,
+				forms,
+				responses,
+			};
+		});
 };
 
 
-const getBot = () => db.query('SELECT min(id) AS id FROM users;');
-const getSystem = () => db.query('SELECT min(id) AS id FROM organizations;');
+const getBot = () => pool.queryOne('SELECT min(id) AS id FROM users;');
+const getSystem = () => pool.queryOne('SELECT min(id) AS id FROM organizations;');
 
 
 const getOrCreateOrg = (org, parent, author) => (
-	db.query('SELECT * FROM get_or_create_rcpt($1, $2)', [org, author.id])
+	pool.queryOne('SELECT * FROM get_or_create_rcpt($1, $2)', [org, author.id])
 		.then((rcpt) => {
 			org.parentId = parent.id;
 			org.id = rcpt.id;
@@ -53,11 +78,11 @@ const getOrCreateOrg = (org, parent, author) => (
 			switch (rcpt.type) {
 				case 'org': {
 					console.log(`Loading '${org.info.label}'`);
-					return db.query('SELECT * FROM get_org($1)', [org.id]);
+					return pool.queryOne('SELECT * FROM get_org($1)', [org.id]);
 				}
 				case 'rcpt': {
 					console.log(`Creating '${org.info.label}'`);
-					return db.query(
+					return pool.queryOne(
 						'SELECT * FROM create_org($1::int, $2::json, $3::int);',
 						[org.id, org, author.id],
 					);
@@ -72,27 +97,22 @@ const createIMCOrgs = (author) => {
 	console.log('\nCreating IMC subordinate organizations...')
 	let chain = Promise.resolve();
 
-	imc.orgs.forEach(([label, fullName,,,, email]) => {
+	imc.orgs.forEach(({ email, ...info }) => {
 		chain = chain.then(() => {
-			const org = {
-				email,
-				info: { label, fullName },
-				parentId: imc.id,
-				authorId: author.id,
-			};
-
-			return getOrCreateOrg(org, imc, author);
-		})
-	})
+			info.label = info.shortName;
+			// console.log({info,email})
+			return getOrCreateOrg({ email, info }, imc, author);
+		});
+	});
 	return chain.catch(console.error);
 };
 
 
 const getOrCreateIMCUsers = (author) => {
-	console.log('\nCreating IMC users...')
+	console.log('\nCreating IMC users...');
 	imc.conversion.users = {};
 
-	return db.queryAll(
+	return pool.queryAll(
 		`SELECT rcpt.* FROM json_array_elements($1::json) user_data,
 			LATERAL get_or_create_rcpt(user_data, $2) rcpt;`,
 		[JSON.stringify(imc.users), author.id],
@@ -115,7 +135,7 @@ const getOrCreateIMCUsers = (author) => {
 				}
 			})
 
-			return db.queryAll(
+			return pool.queryAll(
 				`SELECT usr.id FROM json_array_elements($1::json) user_data,
 					LATERAL create_user((user_data->>'id')::int, user_data, $2) usr;`,
 				[JSON.stringify(newUsers), author.id],
@@ -128,15 +148,15 @@ const getOrCreateIMCUsers = (author) => {
 
 
 const getOrCreateIMCForms = (author) => {
-	console.log('\nCreating IMC forms...')
+	console.log('\nCreating IMC forms...');
 	imc.conversion.forms = {};
 	let chain = Promise.resolve();
 
 	imc.forms.forEach((record) => {
 		chain = chain
-			.then(() => db.query(
+			.then(() => pool.queryOne(
 				'SELECT id FROM forms WHERE created = $1',
-				[record.created]
+				[record.created],
 			))
 			.then((form) => {
 				if(form) return form;
@@ -144,7 +164,7 @@ const getOrCreateIMCForms = (author) => {
 				// replace owner id with corresponding new id
 				record.owner_id = imc.conversion.users[record.owner_id];
 				if(record.collecting && record.collecting.start) {
-					const shared = passwordGenerator(8, 8, ['numbers', 'lowercase']);
+					const shared = uuidv4().slice(-8);
 					record.collecting.shared = shared;
 				}
 
@@ -154,7 +174,7 @@ const getOrCreateIMCForms = (author) => {
 					questionCount: order.filter(id => items[id].itemType === 'input').length,
 				});
 
-				return db.query(
+				return pool.queryOne(
 					'SELECT id FROM create_form($1::json, $2::int)',
 					[record, author.id],
 				);
@@ -171,15 +191,15 @@ const getOrCreateIMCForms = (author) => {
 
 
 const getOrCreateIMCResponses = (author) => {
-	console.log('\nCreating IMC responses...')
+	console.log('\nCreating IMC responses...');
 	// imc.conversion.responses = {};
 	const { responses } = imc;
 	responses.forEach((rspn) => {
 		rspn.form_id = imc.conversion.forms[rspn.form_id];
 		rspn.respondent = {};
-	})
+	});
 
-	return db.queryAll(
+	return pool.queryAll(
 		`WITH _merged AS (
 			SELECT responses.id, props
 			FROM json_array_elements($1::json) props
@@ -197,29 +217,7 @@ const getOrCreateIMCResponses = (author) => {
 		});
 };
 
-// education department
-const eDep = {
-	email: 'roo@tumos.gov.spb.ru',
-	info: {
-		label: 'Отдел образования Московского района Санкт-Петербурга',
-		shortName: '?',
-		fullName: '?',
-	},
-};
-
-
-const imc = {
-	email: 'info@imc-mosk.ru',
-	info: {
-		label: 'ИМЦ Московского района',
-		shortName: 'ГБУ ДППО ЦПКС ИМЦ Московского района Санкт-Петербурга',
-		fullName: 'Государственное бюджетное учреждение дополнительного профессионального педагогического образования центр повышения квалификации специалистов «Информационно-методический центр» Московского района Санкт-Петербурга',
-	},
-	conversion: {},
-};
-
-
-const run = () => {
+(function run() {
 	let author;
 
 	loadData()
@@ -228,16 +226,11 @@ const run = () => {
 		.then(getBot)
 		.then((bot) => { author = bot; })
 		.then(() => getSystem())
-		.then((system) => getOrCreateOrg(eDep, system, author))
-		// .then(() => createEducationDepartmentUsers())
-		.then(() => getOrCreateOrg(imc, eDep, author))
+		.then(system => getOrCreateOrg(imc, system, author))
 		.then(() => createIMCOrgs(author))
 		.then(() => getOrCreateIMCUsers(author))
 		.then(() => getOrCreateIMCForms(author))
 		.then(() => getOrCreateIMCResponses(author))
 		.then(() => console.log('\nSuccess!\nGood luck with this trash!'))
 		.catch(console.error);
-};
-
-
-run();
+}());

@@ -322,6 +322,6 @@ SELECT resp.* FROM forms,
 LATERAL rebuild_responses_by_form(id) resp;
 
 
-\copy (SELECT row_to_json(rebuild_user(id)) FROM users ORDER BY id) to 'test/server/data/imc-users.tmp'
-\copy (SELECT row_to_json(form) FROM new_forms form ORDER BY id) to 'test/server/data/imc-forms.tmp'
-\copy (SELECT row_to_json(resp) FROM new_responses resp ORDER BY id) to 'test/server/data/imc-responses.tmp'
+\copy (SELECT row_to_json(rebuild_user(id)) FROM users ORDER BY id) to '../data/imc-users.txt'
+\copy (SELECT row_to_json(form) FROM new_forms form ORDER BY id) to '../data/imc-forms.txt'
+\copy (SELECT row_to_json(resp) FROM new_responses resp ORDER BY id) to '../data/imc-responses.txt'
