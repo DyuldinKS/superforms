@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import webpack from 'webpack';
 import webpackDevMiddleware from 'webpack-dev-middleware';
@@ -21,8 +22,8 @@ import errorHandler from './middleware/errorHandler';
 const app = express();
 app.disable('x-powered-by');
 
-// set NODE_ENV to debug or smth else to disable client's reassembly
-if(process.env.NODE_ENV === 'development') {
+const { NODE_ENV, HOT_MODULE_REPLACEMENT } = process.env;
+if(NODE_ENV === 'development' && HOT_MODULE_REPLACEMENT === 'true') {
 	const compiler = webpack(webpackClientConfig);
 	app.use(webpackDevMiddleware(compiler, {
 		publicPath: webpackClientConfig.output.publicPath,
