@@ -12,12 +12,12 @@ const isArray = arr => Array.isArray(arr);
 
 // returns true if arg is simple object (direct instance of Object) else false
 const isObject = obj => (
-	obj && Object.prototype.toString.call(obj) === '[object Object]'
+	Object.prototype.toString.call(obj) === '[object Object]'
 );
 
 // returns true if arg is valid date else false
 const isDate = d => (
-	d && Object.prototype.toString.call(d) === '[object Date]'
+	Object.prototype.toString.call(d) === '[object Date]'
 		&& !Number.isNaN(d.getTime())
 );
 

@@ -36,7 +36,7 @@ describe('Object Extras', () => {
 		emptyObj: {},
 		date: new Date(),
 		invDate: new Date('invalid date'),
-		parsedDate: new Date('nope'),
+		parsedDate: Date.parse('nope'),
 	};
 
 
@@ -131,6 +131,7 @@ describe('Object Extras', () => {
 		});
 
 		it('should return false for parsed invalid Date', () => {
+			console.log(all.parsedDate, Number.isNaN(all.parsedDate))
 			assert(isDate(all.parsedDate) === false);
 		});
 
