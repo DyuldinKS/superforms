@@ -3,5 +3,5 @@
 --require babel-polyfill
 --recursive
 --glob '*.test.js'
-test
-test/setup.js
+src/__tests__
+src/__tests__/setup.js
