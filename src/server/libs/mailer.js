@@ -4,13 +4,13 @@ import { SMTPError } from '../errors';
 
 const {
 	HOST,
-	PORT,
+	EXTERNAL_PORT,
 	SMTP_HOST,
 	SMTP_PORT,
 	SMTP_USER,
 	SMTP_PASS,
 } = process.env;
-const APP_URL = `${HOST}:${PORT}`;
+const APP_URL = `${HOST}:${EXTERNAL_PORT}`;
 const SYSTEM_NAME = 'РАССИ';
 const SIGN = `${SYSTEM_NAME} <${SMTP_USER}>`;
 
