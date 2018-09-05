@@ -11,7 +11,7 @@
     "build:client:prod": "cross-env NODE_ENV=production webpack --config webpack/webpack.client.js",
     "build:client:dev": "cross-env NODE_ENV=development webpack --config webpack/webpack.client.js",
     "node:dev": "node ./dist/server.js dotenv_config_path=./env/dev | npx bunyan",
-    "node:dev:hmr": "HOT_MODULE_REPLACEMENT=true npm run node:dev",
+    "node:dev:hmr": "cross-env HOT_MODULE_REPLACEMENT=true npm run node:dev",
     "node:prod": "node ./dist/server.js dotenv_config_path=./env/prod | npx bunyan",
     "start:dev": "npm run build:server && npm run node:dev:hmr",
     "start:prod": "(npm run build:server & npm run build:client:prod) && npm run node:prod",
