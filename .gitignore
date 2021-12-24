@@ -1,7 +1,9 @@
 dist
-env
 logs
 node_modules
 **/.directory
 **/*.log
 **/*.tmp
+
+env/*
+!env/example
